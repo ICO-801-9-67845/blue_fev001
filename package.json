@@ -1,0 +1,21 @@
+{
+  "name": "blue-fev001",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "build": "npm run build -w frontend",
+    "start": "npm run start -w backend",
+    "prisma:migrate": "cd backend && npm run prisma:migrate",
+    "prisma:generate": "cd backend && npm run prisma:generate",
+    "prisma:seed": "cd backend && npm run prisma:seed",
+    "db:init": "cd backend && npm run db:init"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
