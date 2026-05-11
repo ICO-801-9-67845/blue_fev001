@@ -3,41 +3,158 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model tbl_educative_offer {
+  id           BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  level        String?   @db.VarChar(45)
+  clave        String?   @db.VarChar(15)
+  uniq         String?   @db.VarChar(15)
+  municipality String?   @db.VarChar(45)
+  logo         String?   @db.VarChar(45)
+  areas        String?   @db.VarChar(45)
+  name         String?   @db.VarChar(100)
+  short_name   String?   @db.VarChar(30)
+  description  String?   @db.VarChar(450)
+  address      String?   @db.VarChar(250)
+  telephone_1  String?   @db.VarChar(45)
+  telephone_2  String?   @db.VarChar(45)
+  email        String?   @db.VarChar(100)
+  website      String?   @db.VarChar(250)
+  facebook     String?   @db.VarChar(150)
+  twitter      String?   @db.VarChar(150)
+  instagram    String?   @db.VarChar(150)
+  youtube      String?   @db.VarChar(150)
+  linkedin     String?   @db.VarChar(150)
+  whatsapp     String?   @db.VarChar(150)
+  tiktok       String?   @db.VarChar(150)
+  url_video    String?   @db.Text
+  promotions   String?   @db.Text
+  text_promo   String?   @db.Text
+  pdf          String    @db.VarChar(250)
+  created_at   DateTime? @db.DateTime(0)
+  updated_at   DateTime? @db.DateTime(0)
+  active       Int?      @default(0)
+}
+
+model tbl_educative_offer_areas {
+  id         BigInt    @id @default(autoincrement())
+  name       String?   @db.VarChar(50)
+  created_at DateTime? @db.DateTime(0)
+  updated_at DateTime? @db.DateTime(0)
+  active     Int?
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model tbl_educative_offer_campus_careers {
+  id                           BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  ev_educative_offer_campus_id BigInt?
+  cv                           String?   @db.VarChar(200)
+  name                         String?   @db.VarChar(200)
+  modality                     String?   @db.VarChar(200)
+  type_incorporation           String?   @db.VarChar(200)
+  date_agreement               String?   @db.VarChar(200)
+  num_agreement                String?   @db.VarChar(200)
+  shift                        String?   @db.VarChar(200)
+  created_at                   DateTime? @db.DateTime(0)
+  updated_at                   DateTime? @db.DateTime(0)
+  active                       Int?      @default(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model tbl_educative_offer_campuses {
+  id                    BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  ev_educative_offer_id String?   @db.VarChar(45)
+  name                  String?   @db.VarChar(100)
+  cv_cct                String?   @db.VarChar(20)
+  level                 String?   @db.VarChar(45)
+  municipality          String?   @db.VarChar(45)
+  settlement            String?   @db.Text
+  address               String?   @db.Text
+  created_at            DateTime? @db.DateTime(0)
+  updated_at            DateTime? @db.DateTime(0)
+  active                Int?      @default(0)
+}
+
+model tbl_educative_offer_levels {
+  id         BigInt    @id @default(autoincrement())
+  name       String?   @db.VarChar(50)
+  created_at DateTime? @db.DateTime(0)
+  updated_at DateTime? @db.DateTime(0)
+  active     Int?
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model tbl_expo_practics {
+  id                     BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  image                  String?   @default("default.png") @db.VarChar(45)
+  name                   String?   @db.VarChar(200)
+  slug                   String?   @db.VarChar(200)
+  description            String?   @db.Text
+  why                    String?   @db.Text
+  level                  String?   @db.VarChar(150)
+  institution            String?   @db.VarChar(150)
+  institution_short_name String?   @db.VarChar(150)
+  municipality           String?   @db.VarChar(150)
+  career                 String?   @db.VarChar(150)
+  video_embed            String?   @db.Text
+  order                  Int?
+  created_at             DateTime? @db.DateTime(0)
+  updated_at             DateTime? @db.DateTime(0)
+  active                 Int?      @default(1)
+}
+
 model User {
-  id           String    @id @default(cuid())
-  name         String
-  email        String    @unique
-  passwordHash String
+  id           String   @id @default(cuid()) @db.VarChar(191)
+  name         String   @db.VarChar(191)
+  email        String   @unique @db.VarChar(191)
+  passwordHash String   @db.VarChar(255)
   chats        Chat[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  memory       UserMemory?
+  createdAt    DateTime @default(now()) @db.DateTime(3)
+  updatedAt    DateTime @updatedAt @db.DateTime(3)
+
+  @@map("app_users")
 }
 
 model Chat {
-  id        String    @id @default(cuid())
-  title     String
-  userId    String
+  id        String    @id @default(cuid()) @db.VarChar(191)
+  title     String    @db.VarChar(255)
+  summary   String?   @db.VarChar(700)
+  userId    String    @db.VarChar(191)
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages  Message[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime  @default(now()) @db.DateTime(3)
+  updatedAt DateTime  @updatedAt @db.DateTime(3)
 
   @@index([userId, updatedAt])
+  @@map("app_chats")
+}
+
+model UserMemory {
+  id        String   @id @default(cuid()) @db.VarChar(191)
+  userId    String   @unique @db.VarChar(191)
+  summary   String   @db.VarChar(1000)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @db.DateTime(3)
+  updatedAt DateTime @updatedAt @db.DateTime(3)
+
+  @@map("app_user_memories")
 }
 
 model Message {
-  id        String      @id @default(cuid())
-  chatId    String
+  id        String      @id @default(cuid()) @db.VarChar(191)
+  chatId    String      @db.VarChar(191)
   role      MessageRole
-  content   String
+  content   String      @db.LongText
   chat      Chat        @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  createdAt DateTime    @default(now())
+  createdAt DateTime    @default(now()) @db.DateTime(3)
 
   @@index([chatId, createdAt])
+  @@map("app_messages")
 }
 
 enum MessageRole {

@@ -2,6 +2,7 @@ import {
   createChat as createChatRecord,
   deleteChat as deleteChatRecord,
   findChatById,
+  listRecentChatSummariesByUserId,
   listChatsByUserId,
   updateChat,
 } from "../repositories/chatRepository.js";
@@ -10,8 +11,74 @@ import {
   createMessage,
   listMessagesByChatId,
 } from "../repositories/messageRepository.js";
+import prisma from "../config/prisma.js";
+import {
+  findUserMemoryByUserId,
+  upsertUserMemory,
+} from "../repositories/userMemoryRepository.js";
 import { ApiError } from "../utils/ApiError.js";
-import { generateAssistantReply } from "./aiService.js";
+import { generateAssistantReply, generateMemorySummaries } from "./aiService.js";
+
+const MEMORY_MESSAGE_LIMIT = 12;
+
+const EDUCATIVE_INTENT_PATTERN =
+  /\b(escuela|escuelas|universidad|universidades|prepa|prepas|preparatoria|preparatorias|bachillerato|carrera|carreras|licenciatura|licenciaturas|ingenieria|ingenierias|opcion|opciones|estudiar|donde estudiar)\b/i;
+
+const MUNICIPALITY_ALIASES = [
+  ["leon", "León"],
+  ["silao", "Silao"],
+  ["irapuato", "Irapuato"],
+  ["celaya", "Celaya"],
+  ["guanajuato", "Guanajuato"],
+  ["salamanca", "Salamanca"],
+  ["san miguel de allende", "San Miguel de Allende"],
+  ["dolores hidalgo", "Dolores Hidalgo"],
+  ["san francisco del rincon", "San Francisco del Rincón"],
+  ["purisima del rincon", "Purísima del Rincón"],
+];
+
+const CAREER_STOP_WORDS = new Set([
+  "escuela",
+  "escuelas",
+  "universidad",
+  "universidades",
+  "prepa",
+  "prepas",
+  "preparatoria",
+  "preparatorias",
+  "bachillerato",
+  "carrera",
+  "carreras",
+  "licenciatura",
+  "licenciaturas",
+  "ingenieria",
+  "ingenierias",
+  "opcion",
+  "opciones",
+  "estudiar",
+  "donde",
+  "para",
+  "sobre",
+  "quiero",
+  "busco",
+  "recomienda",
+  "recomiendas",
+  "recomendar",
+  "puedes",
+  "dar",
+  "dame",
+  "en",
+  "de",
+  "del",
+  "la",
+  "las",
+  "los",
+  "el",
+  "un",
+  "una",
+  "gto",
+  "guanajuato",
+]);
 
 function ensureContent(content) {
   if (!content || !content.trim()) {
@@ -22,6 +89,298 @@ function ensureContent(content) {
 function deriveChatTitle(content) {
   const normalized = content.trim().replace(/\s+/g, " ");
   return normalized.length > 48 ? `${normalized.slice(0, 48)}...` : normalized;
+}
+
+function normalizeSearchText(value) {
+  return `${value || ""}`
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function shouldSearchEducativeOffers(content) {
+  return EDUCATIVE_INTENT_PATTERN.test(normalizeSearchText(content));
+}
+
+function getRequestedMunicipality(content) {
+  const normalizedContent = normalizeSearchText(content);
+  const match = MUNICIPALITY_ALIASES.find(([alias]) => normalizedContent.includes(alias));
+  return match?.[1] || "";
+}
+
+function getRequestedLevel(content) {
+  const normalizedContent = normalizeSearchText(content);
+
+  if (
+    /\b(prepa|prepas|preparatoria|preparatorias|bachillerato)\b/.test(normalizedContent)
+  ) {
+    return "BACHILLERATO";
+  }
+
+  if (
+    /\b(universidad|universidades|licenciatura|licenciaturas|ingenieria|ingenierias)\b/.test(
+      normalizedContent,
+    )
+  ) {
+    return "ESCUELA UNIVERSITARIA";
+  }
+
+  return "";
+}
+
+function getCareerSearchTerms(content) {
+  const normalizedContent = normalizeSearchText(content);
+  const words = normalizedContent
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .map((word) => word.trim())
+    .filter((word) => word.length >= 4 && !CAREER_STOP_WORDS.has(word));
+
+  return [...new Set(words)].slice(0, 4);
+}
+
+async function findCareerMatches(searchTerms) {
+  if (!searchTerms.length) {
+    return [];
+  }
+
+  const careerQueries = searchTerms.map((term) =>
+    prisma.tbl_educative_offer_campus_careers.findMany({
+      where: {
+        active: 1,
+        name: {
+          contains: term,
+        },
+      },
+      orderBy: {
+        name: "asc",
+      },
+      take: 40,
+    }),
+  );
+
+  const careerResults = (await Promise.all(careerQueries)).flat();
+  const uniqueCareers = new Map();
+
+  careerResults.forEach((career) => {
+    uniqueCareers.set(career.id.toString(), career);
+  });
+
+  return [...uniqueCareers.values()];
+}
+
+async function buildEducativeOfferContext(content) {
+  if (!shouldSearchEducativeOffers(content)) {
+    return [];
+  }
+
+  const municipality = getRequestedMunicipality(content);
+  const level = getRequestedLevel(content);
+  const careerSearchTerms = getCareerSearchTerms(content);
+
+  if (!municipality && !level && !careerSearchTerms.length) {
+    return [];
+  }
+
+  const matchedCareers = await findCareerMatches(careerSearchTerms);
+
+  if (careerSearchTerms.length && !matchedCareers.length) {
+    return [];
+  }
+
+  const matchedCampusIds = [
+    ...new Set(
+      matchedCareers
+        .map((career) => career.ev_educative_offer_campus_id)
+        .filter((campusId) => campusId !== null && campusId !== undefined)
+        .map((campusId) => campusId.toString()),
+    ),
+  ];
+
+  if (careerSearchTerms.length && !matchedCampusIds.length) {
+    return [];
+  }
+
+  const campusWhere = {
+    active: 1,
+    ...(matchedCampusIds.length
+      ? {
+          id: {
+            in: matchedCampusIds.map((campusId) => BigInt(campusId)),
+          },
+        }
+      : {}),
+    ...(municipality
+      ? {
+          municipality: {
+            contains: municipality,
+          },
+        }
+      : {}),
+    ...(level ? { level } : {}),
+  };
+
+  const campuses = await prisma.tbl_educative_offer_campuses.findMany({
+    where: campusWhere,
+    take: 25,
+  });
+
+  const offerIds = [
+    ...new Set(
+      campuses
+        .map((campus) => campus.ev_educative_offer_id)
+        .filter(Boolean)
+        .map((offerId) => offerId.toString()),
+    ),
+  ];
+
+  const offerWhere =
+    offerIds.length > 0
+      ? {
+          id: {
+            in: offerIds.map((offerId) => BigInt(offerId)),
+          },
+          active: 1,
+        }
+      : {
+          active: 1,
+          ...(municipality
+            ? {
+                municipality: {
+                  contains: municipality,
+                },
+              }
+            : {}),
+          ...(level ? { level } : {}),
+        };
+
+  const offers = await prisma.tbl_educative_offer.findMany({
+    where: offerWhere,
+    orderBy: {
+      name: "asc",
+    },
+    take: 5,
+  });
+
+  if (!offers.length) {
+    return [];
+  }
+
+  const offerIdSet = new Set(offers.map((offer) => offer.id.toString()));
+  const selectedCampuses = campuses.filter((campus) =>
+    offerIdSet.has(campus.ev_educative_offer_id?.toString()),
+  );
+  const selectedCampusIds = selectedCampuses.map((campus) => campus.id);
+
+  const relevantCareers = selectedCampusIds.length
+    ? await prisma.tbl_educative_offer_campus_careers.findMany({
+        where: {
+          active: 1,
+          ev_educative_offer_campus_id: {
+            in: selectedCampusIds,
+          },
+          ...(careerSearchTerms.length
+            ? {
+                OR: careerSearchTerms.map((term) => ({
+                  name: {
+                    contains: term,
+                  },
+                })),
+              }
+            : {}),
+        },
+        orderBy: {
+          name: "asc",
+        },
+        take: 80,
+      })
+    : [];
+
+  const careersByCampusId = relevantCareers.reduce((careersMap, career) => {
+    const campusId = career.ev_educative_offer_campus_id?.toString();
+
+    if (!campusId) {
+      return careersMap;
+    }
+
+    const currentCareers = careersMap.get(campusId) || [];
+    currentCareers.push({
+      name: career.name,
+      modality: career.modality,
+      shift: career.shift,
+    });
+    careersMap.set(campusId, currentCareers);
+
+    return careersMap;
+  }, new Map());
+
+  return offers.map((offer) => {
+    const offerCampuses = selectedCampuses.filter(
+      (campus) => campus.ev_educative_offer_id?.toString() === offer.id.toString(),
+    );
+    const careers = offerCampuses.flatMap(
+      (campus) => careersByCampusId.get(campus.id.toString()) || [],
+    );
+
+    return {
+      name: offer.name,
+      short_name: offer.short_name,
+      level: offer.level,
+      municipality: offer.municipality || offerCampuses[0]?.municipality,
+      description: offer.description,
+      address: offer.address || offerCampuses[0]?.address,
+      telephone_1: offer.telephone_1,
+      telephone_2: offer.telephone_2,
+      email: offer.email,
+      website: offer.website,
+      promotions: offer.promotions,
+      text_promo: offer.text_promo,
+      careers,
+    };
+  });
+}
+
+async function buildMemoryContext(userId, chat) {
+  const [userMemory, previousChatSummaries] = await Promise.all([
+    findUserMemoryByUserId(userId),
+    listRecentChatSummariesByUserId(userId, chat.id, 2),
+  ]);
+
+  return {
+    userMemorySummary: userMemory?.summary || "",
+    currentChatSummary: chat.summary || "",
+    previousChatSummaries,
+  };
+}
+
+async function updateSummariesAfterReply({
+  chatId,
+  messages,
+  currentChatSummary,
+  userMemorySummary,
+  userId,
+}) {
+  try {
+    const summaries = await generateMemorySummaries({
+      messages,
+      currentChatSummary,
+      userMemorySummary,
+    });
+
+    if (!summaries) {
+      return;
+    }
+
+    if (summaries.chatSummary) {
+      await updateChat(chatId, { summary: summaries.chatSummary });
+    }
+
+    if (summaries.userMemorySummary) {
+      await upsertUserMemory(userId, summaries.userMemorySummary);
+    }
+  } catch (error) {
+    console.error(`No fue posible actualizar memoria resumida: ${error.message}`);
+  }
 }
 
 async function getOwnedChat(chatId, userId) {
@@ -68,7 +427,15 @@ export async function sendMessage(chatId, userId, content) {
   });
 
   const history = await listMessagesByChatId(chatId);
-  const assistantReply = await generateAssistantReply(history);
+  const recentHistory = history.slice(-MEMORY_MESSAGE_LIMIT);
+  const offerContext = await buildEducativeOfferContext(content);
+  const memoryContext = await buildMemoryContext(userId, chat);
+  console.log("OFFER CONTEXT:", offerContext);
+  const assistantReply = await generateAssistantReply(
+    recentHistory,
+    offerContext,
+    memoryContext,
+  );
 
   const assistantMessage = await createMessage({
     chatId,
@@ -83,6 +450,14 @@ export async function sendMessage(chatId, userId, content) {
   if (chat.title === "Nueva conversacion" && totalMessages <= 2) {
     await updateChat(chatId, { title: deriveChatTitle(content) });
   }
+
+  await updateSummariesAfterReply({
+    chatId,
+    messages: [...recentHistory, assistantMessage],
+    currentChatSummary: memoryContext.currentChatSummary,
+    userMemorySummary: memoryContext.userMemorySummary,
+    userId,
+  });
 
   return {
     userMessage,

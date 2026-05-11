@@ -1,4 +1,12 @@
+import { useEffect, useRef } from "react";
+
 export default function MessageList({ messages, isSending }) {
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, isSending]);
+
   return (
     <div className="messages-panel">
       {messages.length ? (
@@ -30,6 +38,8 @@ export default function MessageList({ messages, isSending }) {
           <span />
         </div>
       ) : null}
+
+      <div ref={messagesEndRef} />
     </div>
   );
 }
