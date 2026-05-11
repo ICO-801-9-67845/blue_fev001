@@ -36,3 +36,24 @@ export function deleteChat(id) {
     where: { id },
   });
 }
+
+export function listRecentChatSummariesByUserId(userId, excludeChatId, take = 2) {
+  return prisma.chat.findMany({
+    where: {
+      userId,
+      id: {
+        not: excludeChatId,
+      },
+      summary: {
+        not: null,
+      },
+    },
+    orderBy: { updatedAt: "desc" },
+    select: {
+      id: true,
+      title: true,
+      summary: true,
+    },
+    take,
+  });
+}

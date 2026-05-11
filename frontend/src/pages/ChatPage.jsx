@@ -22,12 +22,37 @@ export default function ChatPage() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(
+    () => typeof window !== "undefined" && window.innerWidth > 860,
+  );
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     loadChats();
   }, []);
+
+  useEffect(() => {
+    function handleResize() {
+      setIsSidebarOpen(window.innerWidth > 860);
+    }
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  function closeSidebarOnCompactScreens() {
+    if (typeof window !== "undefined" && window.innerWidth <= 860) {
+      setIsSidebarOpen(false);
+    }
+  }
+
+  function toggleSidebar() {
+    setIsSidebarOpen((current) => !current);
+  }
 
   async function refreshChats() {
     const nextChats = await getChatsRequest();
@@ -80,9 +105,15 @@ export default function ChatPage() {
     try {
       const chat = await createChatRequest();
       await loadChats(chat.id);
+      closeSidebarOnCompactScreens();
     } catch (requestError) {
       setError(requestError.response?.data?.message || "No fue posible crear la conversacion");
     }
+  }
+
+  async function handleSelectChat(chatId) {
+    await loadMessages(chatId);
+    closeSidebarOnCompactScreens();
   }
 
   async function handleDeleteChat(chatId) {
@@ -140,17 +171,29 @@ export default function ChatPage() {
   }
 
   return (
-    <main className="chat-page">
+    <main className={`chat-page ${isSidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
+      <button
+        className="sidebar-overlay"
+        type="button"
+        aria-label="Cerrar historial"
+        onClick={() => setIsSidebarOpen(false)}
+      />
+
       <ChatSidebar
         chats={chats}
         activeChatId={activeChatId}
         onCreateChat={handleCreateChat}
-        onSelectChat={loadMessages}
+        onSelectChat={handleSelectChat}
         onDeleteChat={handleDeleteChat}
       />
 
       <section className="chat-main">
-        <AppHeader user={user} onLogout={handleLogout} />
+        <AppHeader
+          user={user}
+          onLogout={handleLogout}
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={toggleSidebar}
+        />
 
         <div className="chat-content">
           <div className="conversation-card">
