@@ -24,6 +24,11 @@ const MEMORY_MESSAGE_LIMIT = 12;
 const EDUCATIVE_INTENT_PATTERN =
   /\b(escuela|escuelas|universidad|universidades|prepa|prepas|preparatoria|preparatorias|bachillerato|carrera|carreras|licenciatura|licenciaturas|ingenieria|ingenierias|opcion|opciones|estudiar|donde estudiar)\b/i;
 
+const EDUCATIVE_FOLLOW_UP_PATTERN =
+  /\b(dame\s+mas\s+opciones|mas\s+opciones|otras\s+opciones|dame\s+otras|hay\s+mas|quiero\s+mas)\b/i;
+
+const EDUCATIVE_OFFER_DETAIL_ID_PATTERN = /oferta-educativa\/detalle\/(\d+)/gi;
+
 const MUNICIPALITY_ALIASES = [
   ["leon", "León"],
   ["silao", "Silao"],
@@ -67,6 +72,14 @@ const CAREER_STOP_WORDS = new Set([
   "puedes",
   "dar",
   "dame",
+  "dime",
+  "tengo",
+  "tienes",
+  "tienen",
+  "mas",
+  "otras",
+  "otros",
+  "hay",
   "en",
   "de",
   "del",
@@ -100,6 +113,46 @@ function normalizeSearchText(value) {
 
 function shouldSearchEducativeOffers(content) {
   return EDUCATIVE_INTENT_PATTERN.test(normalizeSearchText(content));
+}
+
+function isEducativeFollowUp(content) {
+  return EDUCATIVE_FOLLOW_UP_PATTERN.test(normalizeSearchText(content));
+}
+
+function buildFollowUpSearchContent(history) {
+  const userMessages = history
+    .filter((message) => message.role === "user")
+    .slice(-4)
+    .map((message) => message.content)
+    .filter(Boolean);
+
+  return userMessages.join("\n");
+}
+
+function extractShownOfferIds(messages) {
+  const shownOfferIds = new Set();
+
+  messages.forEach((message) => {
+    const text = `${message?.content || ""}`;
+    let match = EDUCATIVE_OFFER_DETAIL_ID_PATTERN.exec(text);
+
+    while (match) {
+      shownOfferIds.add(match[1]);
+      match = EDUCATIVE_OFFER_DETAIL_ID_PATTERN.exec(text);
+    }
+
+    EDUCATIVE_OFFER_DETAIL_ID_PATTERN.lastIndex = 0;
+  });
+
+  return [...shownOfferIds];
+}
+
+function buildEmptyOfferReply(isFollowUp) {
+  if (isFollowUp) {
+    return "No encontre mas opciones en la base con esos filtros. Quieres que ampliemos a otros municipios o carreras relacionadas?";
+  }
+
+  return "No encontre opciones exactas en la base con esos datos. Me dices municipio, nivel o carrera para buscar mejor?";
 }
 
 function getRequestedMunicipality(content) {
@@ -169,11 +222,16 @@ async function findCareerMatches(searchTerms) {
   return [...uniqueCareers.values()];
 }
 
-async function buildEducativeOfferContext(content) {
+async function buildEducativeOfferContext(content, options = {}) {
   if (!shouldSearchEducativeOffers(content)) {
     return [];
   }
 
+  const excludedOfferIds = Array.isArray(options.excludeOfferIds)
+    ? options.excludeOfferIds
+        .filter((offerId) => /^\d+$/.test(`${offerId}`))
+        .map((offerId) => BigInt(offerId))
+    : [];
   const municipality = getRequestedMunicipality(content);
   const level = getRequestedLevel(content);
   const careerSearchTerms = getCareerSearchTerms(content);
@@ -239,11 +297,19 @@ async function buildEducativeOfferContext(content) {
       ? {
           id: {
             in: offerIds.map((offerId) => BigInt(offerId)),
+            ...(excludedOfferIds.length ? { notIn: excludedOfferIds } : {}),
           },
           active: 1,
         }
       : {
           active: 1,
+          ...(excludedOfferIds.length
+            ? {
+                id: {
+                  notIn: excludedOfferIds,
+                },
+              }
+            : {}),
           ...(municipality
             ? {
                 municipality: {
@@ -256,6 +322,14 @@ async function buildEducativeOfferContext(content) {
 
   const offers = await prisma.tbl_educative_offer.findMany({
     where: offerWhere,
+    select: {
+      id: true,
+      name: true,
+      short_name: true,
+      level: true,
+      municipality: true,
+      redirect_url: true,
+    },
     orderBy: {
       name: "asc",
     },
@@ -323,18 +397,12 @@ async function buildEducativeOfferContext(content) {
     );
 
     return {
+      id: offer.id.toString(),
       name: offer.name,
       short_name: offer.short_name,
       level: offer.level,
       municipality: offer.municipality || offerCampuses[0]?.municipality,
-      description: offer.description,
-      address: offer.address || offerCampuses[0]?.address,
-      telephone_1: offer.telephone_1,
-      telephone_2: offer.telephone_2,
-      email: offer.email,
-      website: offer.website,
-      promotions: offer.promotions,
-      text_promo: offer.text_promo,
+      redirect_url: offer.redirect_url,
       careers,
     };
   });
@@ -428,14 +496,25 @@ export async function sendMessage(chatId, userId, content) {
 
   const history = await listMessagesByChatId(chatId);
   const recentHistory = history.slice(-MEMORY_MESSAGE_LIMIT);
-  const offerContext = await buildEducativeOfferContext(content);
+  const previousMessages = history.filter((message) => message.id !== userMessage.id);
+  const isFollowUp = isEducativeFollowUp(content);
+  const isEducativeRequest = shouldSearchEducativeOffers(content) || isFollowUp;
+  const searchContent = isFollowUp ? buildFollowUpSearchContent(history) : content;
+  const excludedOfferIds = isFollowUp ? extractShownOfferIds(previousMessages) : [];
+  const offerContext = await buildEducativeOfferContext(searchContent, {
+    excludeOfferIds: excludedOfferIds,
+  });
   const memoryContext = await buildMemoryContext(userId, chat);
+  console.log("EDUCATIVE FOLLOW UP:", isFollowUp);
+  console.log("FOLLOW UP SEARCH CONTENT:", isFollowUp ? searchContent : "");
+  console.log("EXCLUDED OFFER IDS:", excludedOfferIds);
   console.log("OFFER CONTEXT:", offerContext);
-  const assistantReply = await generateAssistantReply(
-    recentHistory,
-    offerContext,
-    memoryContext,
-  );
+  const assistantReply =
+    isEducativeRequest && offerContext.length === 0
+      ? buildEmptyOfferReply(isFollowUp)
+      : await generateAssistantReply(recentHistory, offerContext, memoryContext, {
+          isEducativeRequest,
+        });
 
   const assistantMessage = await createMessage({
     chatId,

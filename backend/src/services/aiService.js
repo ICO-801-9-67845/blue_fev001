@@ -36,13 +36,19 @@ const EDUCATIVE_OFFER_RULES = `
 Reglas adicionales para recomendaciones educativas:
 - No inventes escuelas, universidades, preparatorias, carreras, telefonos, correos, promociones, direcciones ni sitios web.
 - Si se proporcionan opciones educativas desde la base de datos, usa unicamente esas opciones.
+- Si no hay opciones educativas proporcionadas en el contexto, no recomiendes escuelas ni muestres links.
+- Solo puedes mencionar escuelas incluidas explicitamente en las opciones educativas del contexto.
+- Usa unicamente redirect_url como link de redireccion. No uses website como link principal.
+- Copia redirect_url exactamente como viene. Nunca cambies el ID del link.
+- No inventes enlaces ni construyas links tipo /detalle/ID. Si una escuela no tiene redirect_url, no muestres link.
 - Si no se proporcionan opciones educativas desde la base de datos, no menciones nombres concretos de escuelas.
 - Si todavia falta informacion, pregunta solo lo indispensable: nivel, area de interes o municipio.
 - Cuando recomiendes escuelas, responde con formato breve:
   1. Nombre de la escuela
   2. Por que encaja
   3. Carreras relevantes, si existen
-  4. Website, correo o telefono, si existe
+  4. Link: redirect_url, si existe
+- Si incluyes link, escribelo como URL completa en una linea asi: Link: https://...
 - Si algun dato no viene en la base, omitelo. No lo inventes.
 - Prioriza precision sobre cantidad.
 `;
@@ -60,6 +66,11 @@ No guardes datos triviales, sensibles innecesarios ni texto enorme.
 Responde solo JSON valido con esta forma:
 {"chatSummary":"maximo 700 caracteres","userMemorySummary":"maximo 1000 caracteres"}
 `;
+
+const OFFER_DETAIL_ID_PATTERN = /\/oferta-educativa\/detalle\/(\d+)/gi;
+
+const INVALID_OFFER_LINK_RESPONSE =
+  "Encontre un problema validando los enlaces. Para evitar darte informacion incorrecta, intenta pedirme la busqueda de nuevo con carrera y municipio.";
 
 function isRecoverableGeminiError(error) {
   const message = `${error?.message || ""}`.toLowerCase();
@@ -79,6 +90,10 @@ function toSafeString(value) {
   }
 
   return String(value).trim();
+}
+
+function getOfferId(offer) {
+  return toSafeString(offer?.id || offer?.offerId || offer?.offer_id);
 }
 
 function getLevelLabel(level) {
@@ -151,7 +166,7 @@ function buildOfferContextText(offerContext = []) {
 
   const offers = offerContext
     .filter((offer) => toSafeString(offer?.name))
-    .slice(0, 5);
+    .slice(0, 3);
 
   if (offers.length === 0) {
     return "";
@@ -160,29 +175,21 @@ function buildOfferContextText(offerContext = []) {
   const formattedOffers = offers
     .map((offer, index) => {
       const name = toSafeString(offer?.name);
+      const id = getOfferId(offer);
       const shortName = toSafeString(offer?.shortName || offer?.short_name);
       const levelLabel = toSafeString(offer?.levelLabel) || getLevelLabel(offer?.level);
       const municipality = toSafeString(offer?.municipality);
-      const description = toSafeString(offer?.description);
-      const address = toSafeString(offer?.address);
-      const email = toSafeString(offer?.email);
-      const website = toSafeString(offer?.website);
-      const promotions = toSafeString(offer?.promotions || offer?.text_promo);
+      const redirectUrl = toSafeString(offer?.redirectUrl || offer?.redirect_url);
       const careers = normalizeCareers(offer?.careers);
-      const phones = normalizePhones(offer);
 
       const lines = [
         `${index + 1}. ${name}`,
+        id ? `ID: ${id}` : "",
         shortName ? `Abreviacion: ${shortName}` : "",
         levelLabel ? `Nivel: ${levelLabel}` : "",
         municipality ? `Municipio: ${municipality}` : "",
-        description ? `Descripcion: ${description}` : "",
         careers.length ? `Carreras relevantes: ${careers.join(", ")}` : "",
-        address ? `Direccion: ${address}` : "",
-        phones.length ? `Telefono: ${phones.join(", ")}` : "",
-        email ? `Correo: ${email}` : "",
-        website ? `Website: ${website}` : "",
-        promotions ? `Promocion: ${promotions}` : "",
+        redirectUrl ? `redirect_url: ${redirectUrl}` : "",
       ];
 
       return lines.filter(Boolean).join("\n");
@@ -314,6 +321,39 @@ function extractJsonFromText(text) {
   }
 }
 
+function getAllowedOfferLinkIds(offerContext = []) {
+  return new Set(
+    (Array.isArray(offerContext) ? offerContext : [])
+      .filter((offer) => toSafeString(offer?.redirectUrl || offer?.redirect_url))
+      .map(getOfferId)
+      .filter(Boolean),
+  );
+}
+
+function extractOfferDetailIds(text) {
+  const ids = [];
+  let match = OFFER_DETAIL_ID_PATTERN.exec(toSafeString(text));
+
+  while (match) {
+    ids.push(match[1]);
+    match = OFFER_DETAIL_ID_PATTERN.exec(toSafeString(text));
+  }
+
+  OFFER_DETAIL_ID_PATTERN.lastIndex = 0;
+  return ids;
+}
+
+function hasInvalidOfferLinks(response, offerContext = []) {
+  const linkedIds = extractOfferDetailIds(response);
+
+  if (!linkedIds.length) {
+    return false;
+  }
+
+  const allowedOfferLinkIds = getAllowedOfferLinkIds(offerContext);
+  return linkedIds.some((id) => !allowedOfferLinkIds.has(id));
+}
+
 export async function generateMemorySummaries({
   messages,
   currentChatSummary = "",
@@ -382,9 +422,18 @@ ${transcript}
   return null;
 }
 
-export async function generateAssistantReply(history, offerContext = [], memoryContext = {}) {
+export async function generateAssistantReply(
+  history,
+  offerContext = [],
+  memoryContext = {},
+  options = {},
+) {
   if (!GEMINI_API_KEYS.length) {
     throw new ApiError(500, "No hay API keys de Gemini configuradas");
+  }
+
+  if (options?.isEducativeRequest && (!Array.isArray(offerContext) || offerContext.length === 0)) {
+    return "No encontre opciones exactas en la base con esos datos. Me dices municipio, nivel o carrera para buscar mejor?";
   }
 
   let lastError;
@@ -409,6 +458,11 @@ export async function generateAssistantReply(history, offerContext = [], memoryC
 
       if (!response) {
         throw new Error("Gemini devolvio una respuesta vacia");
+      }
+
+      if (hasInvalidOfferLinks(response, offerContext)) {
+        console.error("Gemini response blocked because it included invalid offer links");
+        return INVALID_OFFER_LINK_RESPONSE;
       }
 
       return response;

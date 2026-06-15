@@ -18,7 +18,7 @@ export const DATABASE_URL = required("DATABASE_URL");
 export const JWT_SECRET = required("JWT_SECRET");
 export const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 export const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
-export const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
+export const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 export const GEMINI_API_KEYS = required("GEMINI_API_KEYS")
   .split(",")
   .map((key) => key.trim())

@@ -29,6 +29,7 @@ model tbl_educative_offer {
   instagram    String?   @db.VarChar(150)
   youtube      String?   @db.VarChar(150)
   linkedin     String?   @db.VarChar(150)
+  redirect_url String?   @db.VarChar(500)
   whatsapp     String?   @db.VarChar(150)
   tiktok       String?   @db.VarChar(150)
   url_video    String?   @db.Text

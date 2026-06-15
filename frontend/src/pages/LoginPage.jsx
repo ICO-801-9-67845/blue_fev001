@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import AuthForm from "../components/AuthForm";
 import { useAuth } from "../hooks/useAuth";
 
@@ -13,7 +13,9 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
+  const successMessage = location.state?.successMessage || "";
 
   function handleChange(event) {
     setValues((current) => ({ ...current, [event.target.name]: event.target.value }));
@@ -50,7 +52,9 @@ export default function LoginPage() {
       <section className="auth-panel">
         <AuthForm
           title="Bienvenido de vuelta"
-          subtitle="Entra a tu espacio y retoma la conversacion donde la dejaste."
+          subtitle={
+            successMessage || "Entra a tu espacio y retoma la conversacion donde la dejaste."
+          }
           fields={[
             {
               name: "email",
