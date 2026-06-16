@@ -1,5 +1,22 @@
 import { useEffect, useRef } from "react";
 
+const URL_PATTERN = /(https?:\/\/[^\s]+)/g;
+const URL_TEST_PATTERN = /^https?:\/\/[^\s]+$/;
+
+function renderMessageContent(content) {
+  return `${content || ""}`.split(URL_PATTERN).map((part, index) => {
+    if (!URL_TEST_PATTERN.test(part)) {
+      return part;
+    }
+
+    return (
+      <a key={`${part}-${index}`} href={part} target="_blank" rel="noopener noreferrer">
+        {part}
+      </a>
+    );
+  });
+}
+
 export default function MessageList({ messages, isSending }) {
   const messagesEndRef = useRef(null);
 
@@ -18,7 +35,7 @@ export default function MessageList({ messages, isSending }) {
             <span className="message-role">
               {message.role === "assistant" ? "Blue" : "Tu"}
             </span>
-            <p>{message.content}</p>
+            <p>{renderMessageContent(message.content)}</p>
           </article>
         ))
       ) : (

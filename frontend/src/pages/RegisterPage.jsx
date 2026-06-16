@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { registerRequest } from "../api/authApi";
 import AuthForm from "../components/AuthForm";
-import { useAuth } from "../hooks/useAuth";
 
 const initialValues = {
   name: "",
@@ -13,7 +13,6 @@ export default function RegisterPage() {
   const [values, setValues] = useState(initialValues);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
   const navigate = useNavigate();
 
   function handleChange(event) {
@@ -26,8 +25,13 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await register(values);
-      navigate("/chat");
+      await registerRequest(values);
+      navigate("/login", {
+        replace: true,
+        state: {
+          successMessage: "Cuenta creada correctamente. Ahora inicia sesion.",
+        },
+      });
     } catch (requestError) {
       setError(requestError.response?.data?.message || "No fue posible crear la cuenta");
     } finally {
