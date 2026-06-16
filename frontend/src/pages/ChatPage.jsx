@@ -8,7 +8,6 @@ import {
   sendMessageRequest,
 } from "../api/chatApi";
 import AppHeader from "../components/AppHeader";
-import CharacterPanel from "../components/CharacterPanel";
 import ChatSidebar from "../components/ChatSidebar";
 import MessageComposer from "../components/MessageComposer";
 import MessageList from "../components/MessageList";
@@ -207,8 +206,6 @@ export default function ChatPage() {
               </>
             )}
           </div>
-
-          <CharacterPanel />
         </div>
       </section>
     </main>
