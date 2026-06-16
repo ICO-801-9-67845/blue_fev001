@@ -402,7 +402,7 @@ a:hover {
 
 .chat-content {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   min-width: 0;
   min-height: 0;
@@ -464,21 +464,74 @@ a:hover {
   overflow-wrap: anywhere;
 }
 
+.message-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.message-row.user {
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.message-row.assistant {
+  justify-content: flex-start;
+}
+
+.message-avatar {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--color-surface);
+  border: 1px solid rgba(220, 226, 240, 0.9);
+  box-shadow: var(--shadow-card);
+}
+
+.user-avatar {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex-basis: 30px;
+  color: var(--color-primary);
+  background: var(--color-surface);
+  border-color: rgba(105, 116, 255, 0.24);
+  box-shadow: 0 8px 18px rgba(44, 47, 168, 0.14);
+}
+
+.user-avatar svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
 .message-bubble p {
   margin: 0.4rem 0 0;
   white-space: pre-wrap;
 }
 
 .message-bubble.user {
-  align-self: flex-end;
+  max-width: min(78%, calc(100% - 38px));
   background: linear-gradient(135deg, var(--color-primary), var(--color-accent-violet));
   color: var(--color-surface);
 }
 
+.message-bubble.user p {
+  margin-top: 0;
+}
+
 .message-bubble.assistant {
-  align-self: flex-start;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
+}
+
+.message-bubble.assistant p {
+  margin-top: 0;
 }
 
 .message-role {
@@ -488,10 +541,22 @@ a:hover {
   font-weight: 700;
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .message-composer {
   margin-top: 1rem;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: end;
   gap: 0.9rem;
   min-width: 0;
@@ -501,6 +566,68 @@ a:hover {
   resize: vertical;
   min-height: 82px;
   max-height: 180px;
+}
+
+.send-button {
+  width: 52px;
+  min-width: 52px;
+  height: 52px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+}
+
+.send-button svg {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.voice-button {
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  width: 52px;
+  min-width: 52px;
+  height: 52px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  font-weight: 800;
+  color: var(--color-primary);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.voice-button:hover:not(:disabled) {
+  border-color: var(--color-accent-blue);
+  transform: translateY(-1px);
+}
+
+.voice-button.listening {
+  color: var(--color-surface);
+  background: var(--color-danger);
+  border-color: transparent;
+  animation: voicePulse 1.25s ease-in-out infinite;
+}
+
+.voice-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.voice-button svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
 }
 
 .character-panel {
@@ -670,6 +797,16 @@ a:hover {
   }
 }
 
+@keyframes voicePulse {
+  0%,
+  100% {
+    box-shadow: var(--shadow-card);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(224, 90, 114, 0.16), var(--shadow-card);
+  }
+}
+
 @media (max-width: 860px) {
   .chat-page {
     height: auto;
@@ -768,6 +905,17 @@ a:hover {
     max-width: 100%;
   }
 
+  .message-bubble.user {
+    max-width: calc(100% - 36px);
+  }
+
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+    flex-basis: 28px;
+    font-size: 0.74rem;
+  }
+
   .character-card {
     min-height: 320px;
   }
@@ -818,5 +966,14 @@ a:hover {
 
   .message-composer .primary-button {
     width: 100%;
+  }
+
+  .send-button {
+    min-width: 0;
+  }
+
+  .voice-button {
+    width: 100%;
+    min-width: 0;
   }
 }
