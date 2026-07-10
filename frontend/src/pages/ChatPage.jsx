@@ -12,6 +12,7 @@ import ChatSidebar from "../components/ChatSidebar";
 import MessageComposer from "../components/MessageComposer";
 import MessageList from "../components/MessageList";
 import { useAuth } from "../hooks/useAuth";
+import { useAnalyticsSession } from "../hooks/useAnalyticsSession";
 
 export default function ChatPage() {
   const [chats, setChats] = useState([]);
@@ -26,6 +27,7 @@ export default function ChatPage() {
   );
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  useAnalyticsSession(user);
 
   useEffect(() => {
     loadChats();
