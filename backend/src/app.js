@@ -3,6 +3,8 @@ import express from "express";
 import { FRONTEND_URL } from "./config/env.js";
 import authRoutes from "./routes/authRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
+import adminAnalyticsRoutes from "./routes/adminAnalyticsRoutes.js";
 import { errorHandler, notFoundHandler } from "./middlewares/errorMiddleware.js";
 
 const app = express();
@@ -21,6 +23,8 @@ app.get("/api/health", (_request, response) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/chats", chatRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/admin/analytics", adminAnalyticsRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

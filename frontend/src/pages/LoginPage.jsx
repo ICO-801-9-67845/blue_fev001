@@ -16,6 +16,14 @@ export default function LoginPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const successMessage = location.state?.successMessage || "";
+  const requestedPath =
+    new URLSearchParams(location.search).get("from") || location.state?.from;
+  const destination =
+    typeof requestedPath === "string" &&
+    requestedPath.startsWith("/") &&
+    !requestedPath.startsWith("//")
+      ? requestedPath
+      : "/chat";
 
   function handleChange(event) {
     setValues((current) => ({ ...current, [event.target.name]: event.target.value }));
@@ -28,7 +36,7 @@ export default function LoginPage() {
 
     try {
       await login(values);
-      navigate("/chat");
+      navigate(destination, { replace: true });
     } catch (requestError) {
       setError(requestError.response?.data?.message || "No fue posible iniciar sesion");
     } finally {

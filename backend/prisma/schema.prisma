@@ -113,12 +113,29 @@ model User {
   name         String   @db.VarChar(191)
   email        String   @unique @db.VarChar(191)
   passwordHash String   @db.VarChar(255)
-  chats        Chat[]
-  memory       UserMemory?
+  chats             Chat[]
+  memory            UserMemory?
+  analyticsSessions AnalyticsSession[]
   createdAt    DateTime @default(now()) @db.DateTime(3)
   updatedAt    DateTime @updatedAt @db.DateTime(3)
 
   @@map("app_users")
+}
+
+model AnalyticsSession {
+  id              String    @id @default(cuid()) @db.VarChar(191)
+  userId          String    @db.VarChar(191)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startedAt       DateTime  @default(now()) @db.DateTime(3)
+  lastSeenAt      DateTime  @default(now()) @db.DateTime(3)
+  endedAt         DateTime? @db.DateTime(3)
+  durationSeconds Int       @default(0)
+  createdAt       DateTime  @default(now()) @db.DateTime(3)
+  updatedAt       DateTime  @updatedAt @db.DateTime(3)
+
+  @@index([userId, startedAt])
+  @@index([lastSeenAt, endedAt])
+  @@map("app_analytics_sessions")
 }
 
 model Chat {
