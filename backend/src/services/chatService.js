@@ -18,6 +18,7 @@ import {
 } from "../repositories/userMemoryRepository.js";
 import { ApiError } from "../utils/ApiError.js";
 import { generateAssistantReply, generateMemorySummaries } from "./aiService.js";
+import { buildEducativeSearchReply, searchEducativeOffers } from "./educativeSearchService.js";
 
 const MEMORY_MESSAGE_LIMIT = 12;
 
@@ -497,24 +498,37 @@ export async function sendMessage(chatId, userId, content) {
   const history = await listMessagesByChatId(chatId);
   const recentHistory = history.slice(-MEMORY_MESSAGE_LIMIT);
   const previousMessages = history.filter((message) => message.id !== userMessage.id);
-  const isFollowUp = isEducativeFollowUp(content);
-  const isEducativeRequest = shouldSearchEducativeOffers(content) || isFollowUp;
-  const searchContent = isFollowUp ? buildFollowUpSearchContent(history) : content;
-  const excludedOfferIds = isFollowUp ? extractShownOfferIds(previousMessages) : [];
-  const offerContext = await buildEducativeOfferContext(searchContent, {
-    excludeOfferIds: excludedOfferIds,
+  const recentUserMessages = previousMessages
+    .filter((message) => message.role === "user")
+    .slice(-20);
+  const recentAssistantMessages = previousMessages
+    .filter((message) => message.role === "assistant")
+    .slice(-MEMORY_MESSAGE_LIMIT);
+  const educativeSearchContext = await searchEducativeOffers({
+    prisma,
+    message: content,
+    userMessages: recentUserMessages,
+    assistantMessages: recentAssistantMessages,
+    limit: 3,
   });
-  const memoryContext = await buildMemoryContext(userId, chat);
-  console.log("EDUCATIVE FOLLOW UP:", isFollowUp);
-  console.log("FOLLOW UP SEARCH CONTENT:", isFollowUp ? searchContent : "");
-  console.log("EXCLUDED OFFER IDS:", excludedOfferIds);
-  console.log("OFFER CONTEXT:", offerContext);
-  const assistantReply =
-    isEducativeRequest && offerContext.length === 0
-      ? buildEmptyOfferReply(isFollowUp)
-      : await generateAssistantReply(recentHistory, offerContext, memoryContext, {
-          isEducativeRequest,
-        });
+  const isEducativeRequest =
+    educativeSearchContext.isEducativeIntent ||
+    educativeSearchContext.isFollowUp ||
+    educativeSearchContext.isRefinement;
+  const shouldUseBackendEducativeReply = Boolean(
+    isEducativeRequest && educativeSearchContext.careerKeywords?.length
+  );
+  console.log("EDUCATIVE BACKEND DIRECT REPLY", shouldUseBackendEducativeReply);
+  console.log("GEMINI CALLED", !shouldUseBackendEducativeReply);
+
+  const memoryContext = shouldUseBackendEducativeReply
+    ? null
+    : await buildMemoryContext(userId, chat);
+  const assistantReply = shouldUseBackendEducativeReply
+    ? buildEducativeSearchReply(educativeSearchContext)
+    : await generateAssistantReply(recentHistory, educativeSearchContext.offerContext || [], memoryContext, {
+        isEducativeRequest,
+      });
 
   const assistantMessage = await createMessage({
     chatId,
@@ -530,13 +544,15 @@ export async function sendMessage(chatId, userId, content) {
     await updateChat(chatId, { title: deriveChatTitle(content) });
   }
 
-  await updateSummariesAfterReply({
-    chatId,
-    messages: [...recentHistory, assistantMessage],
-    currentChatSummary: memoryContext.currentChatSummary,
-    userMemorySummary: memoryContext.userMemorySummary,
-    userId,
-  });
+  if (!shouldUseBackendEducativeReply) {
+    await updateSummariesAfterReply({
+      chatId,
+      messages: [...recentHistory, assistantMessage],
+      currentChatSummary: memoryContext.currentChatSummary,
+      userMemorySummary: memoryContext.userMemorySummary,
+      userId,
+    });
+  }
 
   return {
     userMessage,
