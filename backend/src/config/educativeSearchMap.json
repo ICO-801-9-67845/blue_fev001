@@ -1,0 +1,982 @@
+{
+  "computacion_sistemas_ti": {
+    "label": "Computación, sistemas y tecnologías de la información",
+    "triggers": [
+      "computacion",
+      "computación",
+      "ingenieria en computacion",
+      "ingeniería en computación",
+      "sistemas",
+      "sistemas computacionales",
+      "software",
+      "desarrollo de software",
+      "desarrollo del software",
+      "programacion",
+      "programación",
+      "tecnologias de la informacion",
+      "tecnologías de la información",
+      "tecnologias de informacion",
+      "tecnologías de información",
+      "informatica",
+      "informática",
+      "ciberseguridad",
+      "redes",
+      "redes digitales",
+      "infraestructura de redes",
+      "ciencia de datos",
+      "datos",
+      "inteligencia artificial",
+      "entornos virtuales",
+      "negocios digitales",
+      "computacion matematica",
+      "computación matemática",
+      "ti",
+      "it",
+      "tic",
+      "tecnologias de la informacion y comunicaciones",
+      "tecnologías de la información y comunicaciones"
+    ],
+    "programs": {
+      "bachillerato": [
+        "PROGRAMACIÓN",
+        "BACHILLERATO BIVALENTE MILITARIZADO CON FORMACIÓN EN CIBERSEGURIDAD"
+      ],
+      "tsu": [
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN TECNOLOGÍAS DE LA INFORMACIÓN ÁREA DESARROLLO DE SOFTWARE MULTIPLATAFORMA",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN TECNOLOGÍAS DE LA INFORMACIÓN ÁREA DESARROLLO DEL SOFTWARE MULTIPLATAFORMA",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN TECNOLOGÍAS DE LA INFORMACIÓN ÁREA ENTORNOS VIRTUALES Y NEGOCIOS DIGITALES",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN TECNOLOGÍAS DE LA INFORMACIÓN ÁREA INFRAESTRUCTURA DE REDES DIGITALES",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN TECNOLOGÍAS DE LA INFORMACIÓN Y COMUNICACIONES ÁREA SISTEMAS INFORMÁTICOS"
+      ],
+      "licenciatura_ingenieria": [
+        "INGENIERÍA EN COMPUTACIÓN",
+        "INGENIERÍA EN SISTEMAS COMPUTACIONALES",
+        "INGENIERÍA EN DESARROLLO Y GESTIÓN DE SOFTWARE",
+        "INGENIERÍA EN CIENCIA DE DATOS",
+        "INGENIERÍA EN GESTIÓN DE TECNOLOGÍAS DE LA INFORMACIÓN",
+        "INGENIERÍA EN TECNOLOGÍAS DE LA INFORMACIÓN",
+        "INGENIERÍA EN TECNOLOGÍAS DE LA INFORMACIÓN Y COMUNICACIONES",
+        "INGENIERÍA EN TECNOLOGÍAS DE LA INFORMACIÓN Y NEGOCIOS",
+        "INGENIERÍA EN REDES INTELIGENTES Y CIBERSEGURIDAD",
+        "INGENIERÍA EN REDES GESTIÓN Y DESARROLLO DE SOFTWARE",
+        "INGENIERÍA EN ENTORNOS VIRTUALES Y NEGOCIOS DIGITALES",
+        "LICENCIATURA EN COMPUTACIÓN MATEMÁTICA",
+        "LICENCIATURA EN INGENIERÍA DE SOFTWARE Y SISTEMAS COMPUTACIONALES",
+        "LICENCIATURA EN INGENIERÍA EN SISTEMAS COMPUTACIONALES",
+        "LICENCIATURA EN INGENIERÍA EN TECNOLOGÍAS DE LA INFORMACIÓN",
+        "LICENCIATURA EN INGENIERÍA INFORMÁTICA",
+        "LICENCIATURA EN TECNOLOGÍAS DE LA INFORMACIÓN",
+        "LICENCIATURA EN INGENIERÍA EN COMPUTACIÓN",
+        "LICENCIATURA EN SISTEMAS DE INFORMACIÓN ADMINISTRATIVA",
+        "LICENCIATURA EN NEGOCIOS DIGITALES",
+        "LICENCIATURA EN TECNOLOGÍA Y SOLUCIONES DE NEGOCIOS"
+      ],
+      "posgrados": [
+        "MAESTRÍA EN CIENCIAS COMPUTACIONALES",
+        "MAESTRÍA EN NEGOCIOS ELECTRÓNICOS",
+        "MAESTRÍA EN GESTIÓN E INNOVACIÓN TECNOLÓGICA"
+      ]
+    },
+    "preferredLevel": "2"
+  },
+  "administracion_negocios_mercadotecnia": {
+    "label": "Administración, negocios, mercadotecnia y gestión empresarial",
+    "triggers": [
+      "administracion",
+      "administración",
+      "negocios",
+      "gestion empresarial",
+      "gestión empresarial",
+      "mercadotecnia",
+      "marketing",
+      "capital humano",
+      "recursos humanos",
+      "desarrollo de negocios",
+      "emprendimiento",
+      "gestion de proyectos",
+      "gestión de proyectos",
+      "administracion de empresas",
+      "administración de empresas",
+      "finanzas administrativas",
+      "administracion publica",
+      "administración pública"
+    ],
+    "programs": {
+      "bachillerato": [
+        "ADMINISTRACIÓN DE RECURSOS HUMANOS"
+      ],
+      "tsu": [
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN DESARROLLO DE NEGOCIOS ÁREA MERCADOTECNIA",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN ADMINISTRACIÓN ÁREA CAPITAL HUMANO",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN ADMINISTRACIÓN ÁREA RECURSOS HUMANOS",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN ADMINISTRACIÓN ÁREA FORMULACIÓN Y EVALUACIÓN DE PROYECTOS"
+      ],
+      "licenciatura_ingenieria": [
+        "LICENCIATURA EN ADMINISTRACIÓN",
+        "LICENCIATURA EN ADMINISTRACIÓN DE EMPRESAS",
+        "LICENCIATURA EN ADMINISTRACIÓN Y GESTIÓN DE EMPRESAS",
+        "LICENCIATURA EN ADMINISTRACIÓN DE NEGOCIOS",
+        "LICENCIATURA EN ADMINISTRACIÓN Y DESARROLLO DE NEGOCIOS",
+        "LICENCIATURA EN ADMINISTRACIÓN FINANCIERA",
+        "LICENCIATURA EN ADMINISTRACIÓN DE LA MERCADOTECNIA",
+        "LICENCIATURA EN ADMINISTRACIÓN DE LAS FINANZAS",
+        "LICENCIATURA EN ADMINISTRACIÓN DEL CAPITAL HUMANO",
+        "LICENCIATURA EN GESTIÓN Y DESARROLLO EMPRESARIAL",
+        "LICENCIATURA EN GESTIÓN DEL CAPITAL HUMANO",
+        "LICENCIATURA EN DESARROLLO DE NEGOCIOS",
+        "LICENCIATURA EN INNOVACIÓN DE NEGOCIOS Y MERCADOTÉCNIA",
+        "LICENCIATURA EN INNOVACIÓN DE NEGOCIOS Y MERCADOTECNIA",
+        "LICENCIATURA EN NEGOCIOS INTERNACIONALES",
+        "LICENCIATURA EN NEGOCIOS DIGITALES",
+        "LICENCIATURA EN MERCADOTECNIA",
+        "LICENCIATURA EN MERCADOTECNIA ESTRATÉGICA",
+        "LICENCIATURA EN MERCADOTECNIA DIGITAL Y PUBLICIDAD",
+        "LICENCIATURA EN RELACIONES INDUSTRIALES",
+        "LICENCIATURA EN RECURSOS HUMANOS",
+        "LICENCIATURA EN ADMINISTRACIÓN PÚBLICA",
+        "LICENCIATURA EN CIENCIA POLÍTICA Y ADMINISTRACIÓN PÚBLICA",
+        "INGENIERÍA EN GESTIÓN EMPRESARIAL",
+        "INGENIERÍA EN NEGOCIOS Y GESTIÓN EMPRESARIAL",
+        "INGENIERÍA EN DESARROLLO E INNOVACIÓN EMPRESARIAL",
+        "INGENIERÍA EN GESTIÓN DE PROYECTOS",
+        "INGENIERÍA FINANCIERA Y FISCAL"
+      ],
+      "posgrados": [
+        "MAESTRÍA EN ESTUDIOS EMPRESARIALES",
+        "MAESTRÍA EN ADMINISTRACIÓN",
+        "MAESTRÍA EN ADMINISTRACIÓN ESTRATÉGICA",
+        "MAESTRÍA EN ADMINISTRACIÓN DE ORGANIZACIONES",
+        "MAESTRÍA EN DESARROLLO ORGANIZACIONAL",
+        "MAESTRÍA EN DIRECCIÓN ESTRATÉGICA DEL CAPITAL HUMANO",
+        "MAESTRÍA EN ADMINISTRACIÓN PÚBLICA",
+        "MAESTRÍA EN GESTIÓN, DESARROLLO Y GOBIERNO",
+        "MAESTRÍA EN GESTIÓN ADMINISTRATIVA",
+        "MASTER IN MANAGEMENT"
+      ]
+    },
+    "preferredLevel": "2"
+  },
+  "contabilidad_finanzas_economia": {
+    "label": "Contabilidad, finanzas, economía y fiscal",
+    "triggers": [
+      "contabilidad",
+      "contaduria",
+      "contaduría",
+      "contador publico",
+      "contador público",
+      "finanzas",
+      "economia",
+      "economía",
+      "fiscal",
+      "impuestos",
+      "administracion financiera",
+      "administración financiera"
+    ],
+    "programs": {
+      "bachillerato": [
+        "CONTABILIDAD"
+      ],
+      "tsu": [
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN CONTADURÍA"
+      ],
+      "licenciatura_ingenieria": [
+        "CONTADURIA",
+        "CONTADURÍA",
+        "CONTADOR PÚBLICO",
+        "LICENCIATURA EN CONTADURÍA",
+        "LICENCIATURA EN CONTADURÍA PUBLICA",
+        "LICENCIATURA EN CONTADURÍA PÚBLICA",
+        "LICENCIATURA EN FINANZAS",
+        "LICENCIATURA EN ECONOMÍA",
+        "LICENCIATURA EN ADMINISTRACIÓN FINANCIERA",
+        "INGENIERÍA FINANCIERA Y FISCAL"
+      ],
+      "posgrados": [
+        "MAESTRÍA EN ECONOMÍA Y FINANZAS",
+        "MAESTRÍA EN FINANZAS",
+        "MAESTRÍA EN FISCAL",
+        "DOCTORADO INTERINSTITUCIONAL EN ECONOMÍA SOCIAL SOLIDARIA"
+      ]
+    },
+    "preferredLevel": "2"
+  },
+  "derecho_politica_gobierno": {
+    "label": "Derecho, ciencias políticas, gobierno y administración pública",
+    "triggers": [
+      "derecho",
+      "leyes",
+      "abogado",
+      "abogada",
+      "juridico",
+      "jurídico",
+      "politica",
+      "política",
+      "gobierno",
+      "administracion publica",
+      "administración pública",
+      "derechos humanos",
+      "notaria",
+      "notaría",
+      "amparo",
+      "juicios orales"
+    ],
+    "programs": {
+      "bachillerato": [],
+      "tsu": [],
+      "licenciatura_ingenieria": [
+        "DERECHO",
+        "LICENCIATURA EN DERECHO",
+        "LICENCIATURA EN CIENCIA POLÍTICA",
+        "LICENCIATURA EN CIENCIA POLÍTICA Y ADMINISTRACIÓN PÚBLICA",
+        "LICENCIATURA EN ADMINISTRACIÓN PÚBLICA",
+        "LICENCIATURA EN GOBERNANZA Y POLÍTICAS PÚBLICAS"
+      ],
+      "posgrados": [
+        "MAESTRÍA EN DERECHO",
+        "MAESTRIA EN DERECHO CIVIL",
+        "MAESTRIA EN DERECHO PENAL",
+        "MAESTRÍA EN AMPARO",
+        "MAESTRÍA EN JUICIOS ORALES",
+        "MAESTRÍA EN ANÁLISIS POLÍTICO",
+        "MAESTRÍA EN SOCIEDAD Y PATRIMONIO",
+        "MAESTRÍA EN CIENCIAS JURÍDICO PENALES",
+        "MAESTRÍA EN JUSTICIA CONSTITUCIONAL",
+        "MAESTRÍA INTERINSTITUCIONAL EN DERECHOS HUMANOS",
+        "DOCTORADO INTERINSTITUCIONAL EN DERECHO",
+        "DOCTORADO EN ESTUDIOS JURÍDICOS, POLÍTICOS Y DE GOBIERNO",
+        "DOCTORADO INTERINSTITUCIONAL EN DERECHOS HUMANOS",
+        "ESPECIALIDAD EN NOTARIA PÚBLICA"
+      ]
+    },
+    "preferredLevel": "2"
+  },
+  "salud_medicina_enfermeria_nutricion": {
+    "label": "Salud, medicina, enfermería, nutrición, terapia y odontología",
+    "triggers": [
+      "salud",
+      "medicina",
+      "medico",
+      "médico",
+      "medico cirujano",
+      "médico cirujano",
+      "enfermeria",
+      "enfermería",
+      "nutricion",
+      "nutrición",
+      "odontologia",
+      "odontología",
+      "fisioterapia",
+      "terapia fisica",
+      "terapia física",
+      "rehabilitacion",
+      "rehabilitación",
+      "qfb",
+      "quimico farmaceutico biologo",
+      "químico farmacéutico biólogo",
+      "psiquiatria",
+      "psiquiatría",
+      "urologia",
+      "urología",
+      "cirugia",
+      "cirugía"
+    ],
+    "programs": {
+      "bachillerato": [
+        "ENFERMERIA",
+        "ENFERMERÍA",
+        "PRÓTESIS DENTAL",
+        "LABORATORISTA QUÍMICO"
+      ],
+      "tsu": [
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN TERAPIA FÍSICA ÁREA REHABILITACIÓN",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN TERAPIA FÍSICA ÁREA TURISMO DE SALUD Y BIENESTAR"
+      ],
+      "licenciatura_ingenieria": [
+        "MÉDICO CIRUJANO",
+        "MEDICO CIRUJANO",
+        "LICENCIATURA EN MÉDICO CIRUJANO",
+        "LICENCIATURA EN ENFERMERÍA",
+        "LICENCIATURA EN ENFERMERÍA Y OBSTETRICIA",
+        "LICENCIATURA EN TERAPIA FÍSICA Y REHABILITACIÓN",
+        "LICENCIATURA EN FISIOTERAPIA",
+        "LICENCIATURA EN TERAPIA FÍSICA",
+        "LICENCIATURA EN NUTRICIÓN",
+        "LICENCIATURA EN CIENCIAS DE LA ACTIVIDAD FÍSICA Y SALUD",
+        "LICENCIATURA EN CULTURA FÍSICA Y DEPORTES",
+        "LICENCIATURA EN ODONTOLOGÍA",
+        "ODONTOLOGÍA",
+        "QUÍMICO FARMACÉUTICO BIÓLOGO",
+        "LICENCIATURA EN QUÍMICO FARMACÉUTICO BIÓLOGO",
+        "LICENCIATURA EN PSICOLOGÍA CLÍNICA"
+      ],
+      "posgrados": [
+        "ESPECIALIDAD EN TERAPIA FAMILIAR",
+        "ESPECIALIDAD EN ANESTESIOLOGÍA",
+        "ESPECIALIDAD EN ANESTESIOLOGÍA PEDIÁTRICA",
+        "ESPECIALIDAD EN CARDIOLOGÍA",
+        "ESPECIALIDAD EN CIRUGÍA GENERAL",
+        "ESPECIALIDAD EN CIRUGÍA PEDIÁTRICA",
+        "ESPECIALIDAD EN GERIATRÍA",
+        "ESPECIALIDAD EN GINECOLOGÍA Y OBSTETRICIA",
+        "ESPECIALIDAD EN MEDICINA DEL ENFERMO EN ESTADO CRÍTICO",
+        "ESPECIALIDAD EN MEDICINA DE URGENCIAS",
+        "ESPECIALIDAD EN MEDICINA DEL TRABAJO Y AMBIENTAL",
+        "ESPECIALIDAD EN MEDICINA FAMILIAR",
+        "ESPECIALIDAD EN MEDICINA INTERNA",
+        "ESPECIALIDAD EN CIRUGÍA DE COLUMNA",
+        "ESPECIALIDAD EN ORTOPEDIA Y TRAUMATOLOGÍA",
+        "ESPECIALIDAD EN OTORRINOLARINGOLOGÍA Y CIRUGÍA DE CABEZA Y CUELLO",
+        "ESPECIALIDAD EN PEDIATRÍA MÉDICA",
+        "ESPECIALIDAD EN NEONATOLOGÍA",
+        "ESPECIALIDAD EN PSIQUIATRÍA",
+        "ESPECIALIDAD EN RADIODIAGNÓSTICO",
+        "ESPECIALIDAD EN IMAGENOLOGÍA DIAGNÓSTICA Y TERAPÉUTICA",
+        "ESPECIALIDAD EN UROLOGÍA",
+        "ESPECIALIDAD EN ENFERMERÍA EN CUIDADOS INTENSIVOS",
+        "ESPECIALIDAD EN ENFERMERÍA PEDIÁTRICA",
+        "ESPECIALIDAD EN ENFERMERÍA MÉDICO QUIRÚRGICA",
+        "ESPECIALIDAD EN PERIODONCIA",
+        "ESPECIALIDAD EN ENDODONCIA",
+        "MAESTRÍA EN CIENCIAS DE LA ENFERMERÍA",
+        "MAESTRÍA EN CIENCIAS MÉDICAS",
+        "MAESTRÍA EN INVESTIGACIÓN CLÍNICA",
+        "MAESTRÍA EN EPIDEMIOLOGÍA Y ADMINISTRACIÓN EN SALUD",
+        "DOCTORADO EN CIENCIAS DE ENFERMERÍA",
+        "DOCTORADO EN CIENCIAS MÉDICAS (SALUD)"
+      ]
+    },
+    "preferredLevel": "2"
+  },
+  "psicologia": {
+    "label": "Psicología",
+    "triggers": [
+      "psicologia",
+      "psicología",
+      "psicologia clinica",
+      "psicología clínica",
+      "psicologia organizacional",
+      "psicología organizacional",
+      "psicologia educativa",
+      "psicología educativa",
+      "psicologia social",
+      "psicología social"
+    ],
+    "programs": {
+      "bachillerato": [],
+      "tsu": [],
+      "licenciatura_ingenieria": [
+        "PSICOLOGIA",
+        "PSICOLOGÍA",
+        "LICENCIATURA EN PSICOLOGÍA",
+        "LICENCIATURA EN PSICOLOGÍA CLÍNICA",
+        "LICENCIATURA EN PSICOLOGÍA EDUCATIVA",
+        "LICENCIATURA EN PSICOLOGÍA ORGANIZACIONAL",
+        "LICENCIATURA EN PSICOLOGÍA SOCIAL"
+      ],
+      "posgrados": [
+        "DOCTORADO EN PSICOLOGÍA"
+      ]
+    },
+    "preferredLevel": "2"
+  },
+  "educacion_pedagogia_docencia": {
+    "label": "Educación, pedagogía, docencia y normal",
+    "triggers": [
+      "educacion",
+      "educación",
+      "pedagogia",
+      "pedagogía",
+      "docencia",
+      "maestro",
+      "maestra",
+      "preescolar",
+      "primaria",
+      "educacion especial",
+      "educación especial",
+      "enseñanza",
+      "ingles",
+      "inglés",
+      "español"
+    ],
+    "programs": {
+      "bachillerato": [],
+      "tsu": [],
+      "licenciatura_ingenieria": [
+        "LICENCIATURA EN EDUCACIÓN",
+        "LICENCIATURA EN CIENCIAS DE LA EDUCACIÓN",
+        "LICENCIATURA EN PEDAGOGÍA",
+        "LICENCIATURA EN EDUCACIÓN PREESCOLAR",
+        "LICENCIATURA EN EDUCACIÓN PRIMARIA",
+        "LICENCIATURA EN EDUCACIÓN ESPECIAL EN EL ÁREA DE ATENCIÓN INTELECTUAL",
+        "LICENCIATURA EN ENSEÑANZA DEL INGLÉS",
+        "LICENCIATURA EN ENSEÑANZA DEL ESPAÑOL COMO SEGUNDA LENGUA"
+      ],
+      "posgrados": [
+        "MAESTRÍA EN EDUCACIÓN",
+        "MAESTRÍA EN EDUCACIÓN ESPECIAL",
+        "MAESTRÍA EN DESARROLLO EDUCATIVO",
+        "MAESTRÍA EN DESARROLLO DOCENTE",
+        "MAESTRÍA EN INVESTIGACIÓN EDUCATIVA",
+        "MAESTRÍA EN DOCENCIA SUPERIOR",
+        "MAESTRÍA EN COMUNICACIÓN EDUCATIVA",
+        "MAESTRÍA EN EDUCACIÓN CON ENFOQUE EN INNOVACIÓN DE LA PRÁCTICA DOCENTE",
+        "MAESTRÍA EN EDUCACIÓN CON ENFOQUE EN EDUCACIÓN EN LÍNEA",
+        "MAESTRÍA EN LINGÜÍSTICA APLICADA A LA ENSEÑANZA DEL INGLÉS",
+        "DOCTORADO EN EDUCACIÓN"
+      ]
+    },
+    "preferredLevel": "2"
+  },
+  "ingenieria_industrial_mecatronica_mecanica": {
+    "label": "Ingenierías industrial, mecánica, mecatrónica, automotriz y manufactura",
+    "triggers": [
+      "ingenieria",
+      "ingeniería",
+      "industrial",
+      "mecatronica",
+      "mecatrónica",
+      "mecanica",
+      "mecánica",
+      "automotriz",
+      "manufactura",
+      "mantenimiento",
+      "electromecanica",
+      "electromecánica",
+      "robotica",
+      "robótica",
+      "metal mecanica",
+      "metal mecánica",
+      "electronica",
+      "electrónica",
+      "produccion",
+      "producción"
+    ],
+    "programs": {
+      "bachillerato": [
+        "MECÁNICA INDUSTRIAL",
+        "MECATRÓNICA",
+        "ELECTRICIDAD",
+        "PRODUCCIÓN INDUSTRIAL",
+        "CONSTRUCCIÓN"
+      ],
+      "tsu": [
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN MECATRÓNICA ÁREA AUTOMATIZACIÓN",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN MECATRÓNICA ÁREA OPTOMECATRÓNICA",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN MECATRÓNICA ÁREA SISTEMAS DE MANUFACTURA FLEXIBLE",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN MANTENIMIENTO ÁREA INDUSTRIAL",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN PROCESOS INDUSTRIALES ÁREA AUTOMOTRIZ",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN PROCESOS INDUSTRIALES ÁREA MANUFACTURA",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN PROCESOS INDUSTRIALES ÁREA PLÁSTICOS",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN MECÁNICA ÁREA INDUSTRIAL",
+        "T.S.U EN MECÁNICA AUTOMOTRIZ"
+      ],
+      "licenciatura_ingenieria": [
+        "INGENIERÍA INDUSTRIAL",
+        "INGENIERÍA INDUSTRIAL Y LOGÍSTICA",
+        "LICENCIATURA EN INGENIERÍA INDUSTRIAL",
+        "LICENCIATURA EN INGENIERÍA MECÁNICA AUTOMOTRIZ",
+        "INGENIERÍA EN MECÁNICA AUTOMOTRIZ",
+        "INGENIERÍA MECÁNICA",
+        "INGENIERÍA EN MECATRÓNICA",
+        "LICENCIATURA EN INGENIERÍA MECATRÓNICA",
+        "INGENIERÍA EN MANTENIMIENTO INDUSTRIAL",
+        "INGENIERÍA EN SISTEMAS PRODUCTIVOS",
+        "INGENIERÍA EN PROCESOS INDUSTRIALES",
+        "INGENIERÍA EN METAL MECÁNICA",
+        "INGENIERÍA EN DISEÑO INDUSTRIAL",
+        "LICENCIATURA EN DISEÑO INDUSTRIAL",
+        "LICENCIATURA EN ROBÓTICA",
+        "LICENCIATURA EN INGENIERÍA ELECTROMECÁNICA",
+        "LICENCIATURA EN INGENIERÍA ELECTROMECÁNICA INDUSTRIAL",
+        "INGENIERÍA ELECTROMECÁNICA",
+        "INGENIERÍA ELECTRÓNICA",
+        "INGENIERÍA EN ELECTRÓNICA",
+        "INGENIERÍA EN SISTEMAS AUTOMOTRICES"
+      ],
+      "posgrados": [
+        "MAESTRÍA EN CIENCIAS DE LA INGENIERÍA",
+        "MAESTRÍA EN CIENCIAS EN INGENIERÍA MECÁNICA",
+        "MAESTRÍA EN CIENCIAS EN INGENIERÍA MECATRÓNICA",
+        "MAESTRÍA EN CIENCIAS EN INGENIERÍA ELECTRÓNICA",
+        "MAESTRÍA EN INGENIERÍA INDUSTRIAL",
+        "DOCTORADO EN CIENCIAS DE LA INGENIERÍA",
+        "DOCTORADO EN CIENCIAS EN INGENIERÍA ELECTRÓNICA"
+      ]
+    },
+    "preferredLevel": "2"
+  },
+  "arquitectura_construccion_civil": {
+    "label": "Arquitectura, ingeniería civil, construcción y urbanismo",
+    "triggers": [
+      "arquitectura",
+      "arquitecto",
+      "arquitecta",
+      "ingenieria civil",
+      "ingeniería civil",
+      "civil",
+      "construccion",
+      "construcción",
+      "urbanismo",
+      "edificios",
+      "obra"
+    ],
+    "programs": {
+      "bachillerato": [
+        "CONSTRUCCIÓN"
+      ],
+      "tsu": [],
+      "licenciatura_ingenieria": [
+        "ARQUITECTURA",
+        "ARQUITECTO",
+        "LICENCIATURA EN ARQUITECTURA",
+        "LICENCIATURA EN ARQUITECTURA 3D",
+        "LICENCIATURA EN INGENIERO ARQUITECTO",
+        "LICENCIATURA EN INGENIERÍA CIVIL",
+        "INGENIERIA CIVIL",
+        "INGENIERÍA CIVIL"
+      ],
+      "posgrados": [
+        "ESPECIALIDAD EN VALUACIÓN DE INMUEBLES, MAQUINARIA Y EQUIPO",
+        "ESPECIALIDAD EN ECONOMÍA DE LA CONSTRUCCIÓN",
+        "MAESTRÍA EN GERENCIA DE PROYECTOS DE LA CONSTRUCCIÓN",
+        "MAESTRÍA EN RESTAURACIÓN DE MONUMENTOS Y SITIOS",
+        "MAESTRÍA EN PLANEAMIENTO URBANO REGIONAL",
+        "DOCTORADO EN ARQUITECTURA"
+      ]
+    },
+    "preferredLevel": "2"
+  },
+  "diseno_artes_moda": {
+    "label": "Diseño, arte, moda, música y creatividad",
+    "triggers": [
+      "diseño",
+      "diseno",
+      "arte",
+      "artes",
+      "moda",
+      "calzado",
+      "grafico",
+      "gráfico",
+      "diseño grafico",
+      "diseño gráfico",
+      "animacion",
+      "animación",
+      "musica",
+      "música",
+      "canto",
+      "composicion",
+      "composición",
+      "artes plasticas",
+      "artes plásticas",
+      "artes visuales",
+      "artes escenicas",
+      "artes escénicas",
+      "imagen"
+    ],
+    "programs": {
+      "bachillerato": [],
+      "tsu": [
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN DISEÑO Y MODA INDUSTRIAL ÁREA CALZADO Y COMPLEMENTOS",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN DISEÑO Y MODA INDUSTRIAL ÁREA PRODUCCIÓN",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN GESTIÓN Y PRODUCTIVIDAD DEL CALZADO"
+      ],
+      "licenciatura_ingenieria": [
+        "DISEÑO GRÁFICO",
+        "LICENCIATURA EN DISEÑO GRÁFICO",
+        "LICENCIATURA EN DISEÑO GRÁFICO DIGITAL",
+        "LICENCIATURA EN DISEÑO GRÁFICO ESTRATÉGICO",
+        "LICENCIATURA EN DISEÑO DE MODA",
+        "LICENCIATURA EN DISEÑO DE MODA Y CALZADO",
+        "LICENCIATURA EN DISEÑO DE MODAS Y CALZADO",
+        "LICENCIATURA EN DISEÑO, ANIMACIÓN Y ARTE DIGITAL",
+        "LICENCIATURA EN DISEÑO AMBIENTAL Y DE ESPACIOS",
+        "LICENCIATURA EN DISEÑO DE INTERIORES",
+        "LICENCIATURA EN DISEÑO INDUSTRIAL",
+        "LICENCIATURA EN ARTES PLÁSTICAS",
+        "LICENCIATURA EN ARTES VISUALES",
+        "LICENCIATURA EN ARTES ESCÉNICAS",
+        "LICENCIATURA EN ARTES ESCÉNICAS Y PRODUCCIÓN DE ESPECTÁCULOS",
+        "LICENCIATURA EN MÚSICA ESCOLAR",
+        "LICENCIATURA EN CANTO",
+        "LICENCIATURA EN COMPOSICIÓN",
+        "LICENCIATURA EN INSTRUMENTISTA MUSICAL",
+        "LICENCIATURA EN MÚSICA",
+        "LICENCIATURA EN DISEÑO DE IMAGEN Y RELACIONES PÚBLICAS",
+        "INGENIERÍA EN DISEÑO TEXTIL Y MODA"
+      ],
+      "posgrados": [
+        "ESPECIALIDAD EN DISEÑO DIGITAL",
+        "MAESTRÍA EN ARTES",
+        "MAESTRÍA EN DISEÑO DE IMAGEN",
+        "MAESTRÍA EN CONSULTORÍA DE IMAGEN",
+        "MAESTRÍA EN NUEVA GESTIÓN CULTURAL EN PATRIMONIO Y ARTE",
+        "DOCTORADO EN ARTES",
+        "DOCTORADO INTERINSTITUCIONAL EN ARTE Y CULTURA"
+      ]
+    },
+    "preferredLevel": "2"
+  },
+  "comunicacion_lenguas_humanidades": {
+    "label": "Comunicación, lenguas, literatura, historia, filosofía y humanidades",
+    "triggers": [
+      "comunicacion",
+      "comunicación",
+      "lenguas",
+      "idiomas",
+      "ingles",
+      "inglés",
+      "traduccion",
+      "traducción",
+      "literatura",
+      "letras",
+      "historia",
+      "filosofia",
+      "filosofía",
+      "humanidades",
+      "cultura",
+      "arte",
+      "antropologia",
+      "antropología",
+      "sociologia",
+      "sociología",
+      "trabajo social"
+    ],
+    "programs": {
+      "bachillerato": [
+        "COMUNICACIÓN",
+        "TRABAJO SOCIAL"
+      ],
+      "tsu": [],
+      "licenciatura_ingenieria": [
+        "LICENCIATURA EN COMUNICACIÓN",
+        "LICENCIATURA EN CIENCIAS DE LA COMUNICACIÓN",
+        "LICENCIATURA EN LENGUAS EXTRANJERAS",
+        "LICENCIATURA EN LENGUAS MODERNAS E INTERCULTURALIDAD",
+        "LICENCIATURA EN LETRAS ESPAÑOLAS",
+        "LICENCIATURA EN HISTORIA",
+        "LICENCIATURA EN FILOSOFÍA",
+        "LICENCIATURA EN CULTURA Y ARTE",
+        "LICENCIATURA EN ANTROPOLOGÍA SOCIAL",
+        "LICENCIATURA EN SOCIOLOGÍA",
+        "LICENCIATURA EN TRABAJO SOCIAL",
+        "LICENCIATURA EN DESARROLLO REGIONAL",
+        "LICENCIATURA EN DESARROLLO Y GESTIÓN DEL TERRITORIO",
+        "LICENCIATURA EN DESARROLLO Y GESTIÓN INTERCULTURALES",
+        "LICENCIATURA EN DESARROLLO TERRITORIAL",
+        "LICENCIATURA EN TRADUCCIÓN"
+      ],
+      "posgrados": [
+        "MAESTRÍA EN ESTUDIOS SOCIALES Y CULTURALES",
+        "MAESTRÍA EN ESTUDIOS PARA EL DESARROLLO",
+        "MAESTRÍA EN SOCIEDAD Y PATRIMONIO",
+        "MAESTRÍA EN LITERATURA HISPANOAMERICANA",
+        "MAESTRÍA EN HISTORIA (ESTUDIOS HISTÓRICOS INTERDISCIPLINARIOS)",
+        "MAESTRÍA EN FILOSOFÍA",
+        "DOCTORADO EN LITERATURA HISPANOAMERICANA",
+        "DOCTORADO EN HISTORIA",
+        "DOCTORADO EN FILOSOFÍA",
+        "DOCTORADO EN CIENCIAS SOCIALES"
+      ]
+    },
+    "preferredLevel": "2"
+  },
+  "criminologia_seguridad": {
+    "label": "Criminología, criminalística y seguridad",
+    "triggers": [
+      "criminologia",
+      "criminología",
+      "criminalistica",
+      "criminalística",
+      "seguridad",
+      "investigacion criminal",
+      "investigación criminal",
+      "cleu"
+    ],
+    "programs": {
+      "bachillerato": [],
+      "tsu": [],
+      "licenciatura_ingenieria": [
+        "LICENCIATURA EN CRIMINOLOGÍA",
+        "LICENCIATURA EN CRIMINOLOGÍA Y CRIMINALÍSTICA"
+      ],
+      "posgrados": []
+    },
+    "preferredLevel": "2"
+  },
+  "quimica_biologia_biotecnologia_ambiental": {
+    "label": "Química, biología, biotecnología, ambiental y energías renovables",
+    "triggers": [
+      "quimica",
+      "química",
+      "biologia",
+      "biología",
+      "biotecnologia",
+      "biotecnología",
+      "ambiental",
+      "medio ambiente",
+      "energias renovables",
+      "energías renovables",
+      "tecnologia ambiental",
+      "tecnología ambiental",
+      "bioquimica",
+      "bioquímica",
+      "farmaceutica",
+      "farmacéutica",
+      "laboratorista",
+      "alimentos"
+    ],
+    "programs": {
+      "bachillerato": [
+        "LABORATORISTA QUÍMICO"
+      ],
+      "tsu": [
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN QUÍMICA ÁREA TECNOLOGÍA AMBIENTAL",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN QUÍMICA ÁREA INDUSTRIAL",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN ENERGÍAS RENOVABLES ÁREA CALIDAD Y AHORRO DE ENERGÍA",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN ENERGÍAS RENOVABLES ÁREA ENERGÍA SOLAR",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN ENERGÍAS RENOVABLES ÁREA BIOENERGÍA"
+      ],
+      "licenciatura_ingenieria": [
+        "QUÍMICO",
+        "INGENIERÍA QUÍMICA",
+        "LICENCIATURA EN INGENIERÍA QUÍMICA SUSTENTABLE",
+        "INGENIERÍA EN PROCESOS QUÍMICOS",
+        "INGENIERÍA EN TECNOLOGÍA AMBIENTAL",
+        "INGENIERÍA AMBIENTAL",
+        "INGENIERÍA AMBIENTAL (AGUAS SUBTERRÁNEAS)",
+        "INGENIERÍA EN BIOTECNOLOGÍA",
+        "LICENCIATURA EN INGENIERÍA EN BIOTECNOLOGÍA",
+        "INGENIERÍA BIOQUÍMICA",
+        "LICENCIATURA EN BIOLOGÍA EXPERIMENTAL",
+        "QUÍMICO FARMACÉUTICO BIÓLOGO",
+        "INGENIERÍA EN ENERGÍAS RENOVABLES",
+        "LICENCIATURA EN INGENIERÍA EN ENERGÍAS RENOVABLES",
+        "INGENIERÍA EN FARMACÉUTICA"
+      ],
+      "posgrados": [
+        "MAESTRÍA EN BIOLOGÍA EXPERIMENTAL",
+        "MAESTRÍA EN CIENCIAS QUÍMICAS",
+        "MAESTRÍA EN INGENIERÍA QUÍMICA (INTEGRACIÓN DE PROCESOS)",
+        "MAESTRÍA EN CIENCIAS EN INGENIERÍA QUÍMICA",
+        "MAESTRÍA EN CIENCIAS EN INGENIERÍA BIOQUÍMICA",
+        "DOCTORADO EN BIOLOGÍA EXPERIMENTAL",
+        "DOCTORADO EN CIENCIAS QUÍMICAS",
+        "DOCTORADO EN QUÍMICA",
+        "DOCTORADO EN CIENCIAS EN INGENIERÍA QUÍMICA",
+        "DOCTORADO EN CIENCIAS EN INGENIERÍA BIOQUÍMICA"
+      ]
+    },
+    "preferredLevel": "2"
+  },
+  "agronomia_veterinaria_alimentos": {
+    "label": "Agronomía, veterinaria, agroindustria, alimentos y ciencias agropecuarias",
+    "triggers": [
+      "agronomia",
+      "agronomía",
+      "agronomo",
+      "agrónomo",
+      "agroindustrial",
+      "agroindustria",
+      "veterinaria",
+      "zootecnia",
+      "animales",
+      "alimentos",
+      "agricultura",
+      "agricola",
+      "agrícola",
+      "agrogenomicas",
+      "agrogenómicas",
+      "pecuaria",
+      "semillas",
+      "hortalizas"
+    ],
+    "programs": {
+      "bachillerato": [
+        "PRODUCCIÓN INDUSTRIAL"
+      ],
+      "tsu": [
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN AGRICULTURA SUSTENTABLE Y PROTEGIDA",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN PROCESOS ALIMENTARIOS"
+      ],
+      "licenciatura_ingenieria": [
+        "INGENIERÍA AGROINDUSTRIAL",
+        "INGENIERÍA EN INDUSTRIAS ALIMENTARIAS",
+        "INGENIERÍA DE LOS ALIMENTOS",
+        "INGENIERÍA AGRÓNOMO",
+        "INGENIERÍA EN AGRONOMÍA",
+        "LICENCIATURA EN AGRONOMÍA POR COMPETENCIAS",
+        "INGENIERÍA EN INNOVACIÓN AGRÍCOLA SUSTENTABLE",
+        "LICENCIATURA EN INNOVACIÓN AGRÍCOLA SUSTENTABLE",
+        "INGENIERÍA EN AGRICULTURA SUSTENTABLE Y PROTEGIDA",
+        "INGENIERÍA EN PROCESOS ALIMENTARIOS",
+        "LICENCIATURA EN AGRONEGOCIOS",
+        "LICENCIATURA EN MEDICINA VETERINARIA Y ZOOTECNIA",
+        "LICENCIATURA EN INGENIERO AGRÓNOMO EN PRODUCCIÓN",
+        "LICENCIATURA EN CIENCIAS AGROGENÓMICAS",
+        "LICENCIATURA EN ADMINISTRACIÓN AGROPECUARIA"
+      ],
+      "posgrados": [
+        "MAESTRÍA EN CIENCIAS EN PRODUCCIÓN Y TECNOLOGÍA DE SEMILLAS",
+        "MAESTRÍA INTERINSTITUCIONAL EN PRODUCCIÓN PECUARIA",
+        "MAESTRÍA INTERNACIONAL EN AGRICULTURA PROTEGIDA",
+        "MAESTRÍA EN PROTECCIÓN VEGETAL DE HORTALIZAS",
+        "MAESTRÍA EN BIOCIENCIAS",
+        "DOCTORADO EN CIENCIAS EN PRODUCCIÓN AGROALIMENTARIA",
+        "DOCTORADO EN BIOCIENCIAS"
+      ]
+    },
+    "preferredLevel": "2"
+  },
+  "logistica_comercio_internacional_transporte": {
+    "label": "Logística, comercio internacional, transporte y aduanas",
+    "triggers": [
+      "logistica",
+      "logística",
+      "transporte",
+      "comercio internacional",
+      "aduanas",
+      "negocios internacionales",
+      "redes logisticas",
+      "redes logísticas",
+      "distribucion",
+      "distribución",
+      "cadena de suministro"
+    ],
+    "programs": {
+      "bachillerato": [],
+      "tsu": [
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN LOGÍSTICA ÁREA TRANSPORTE TERRESTRE"
+      ],
+      "licenciatura_ingenieria": [
+        "LICENCIATURA EN LOGÍSTICA",
+        "LICENCIATURA EN LOGÍSTICA Y NEGOCIOS INTERNACIONALES",
+        "LICENCIATURA EN COMERCIO INTERNACIONAL",
+        "LICENCIATURA EN COMERCIO INTERNACIONAL Y ADUANAS",
+        "LICENCIATURA EN NEGOCIOS INTERNACIONALES",
+        "LICENCIATURA EN DISEÑO Y GESTIÓN DE REDES LOGÍSTICAS",
+        "LICENCIATURA EN INGENIERÍA EN LOGÍSTICA",
+        "INGENIERÍA INDUSTRIAL Y LOGÍSTICA"
+      ],
+      "posgrados": []
+    },
+    "preferredLevel": "2"
+  },
+  "gastronomia_turismo_hospitalidad": {
+    "label": "Gastronomía, turismo, hospitalidad y servicios",
+    "triggers": [
+      "gastronomia",
+      "gastronomía",
+      "turismo",
+      "hoteleria",
+      "hotelería",
+      "hospedaje",
+      "alimentos y bebidas",
+      "servicios gastronomicos",
+      "servicios gastronómicos",
+      "turistico",
+      "turístico"
+    ],
+    "programs": {
+      "bachillerato": [
+        "PREPARACIÓN DE ALIMENTOS Y BEBIDAS",
+        "SERVICIOS DE HOSPEDAJE"
+      ],
+      "tsu": [
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN GASTRONOMÍA",
+        "TÉCNICO SUPERIOR UNIVERSITARIO EN TURISMO"
+      ],
+      "licenciatura_ingenieria": [
+        "LICENCIATURA EN GASTRONOMÍA",
+        "LICENCIATURA EN GESTIÓN Y OPERACIÓN DE SERVICIOS GASTRONÓMICOS",
+        "LICENCIATURA EN TURISMO",
+        "LICENCIATURA EN TURISMO DE NEGOCIOS",
+        "LICENCIATURA EN NEGOCIOS TURÍSTICOS",
+        "LICENCIATURA INTERNACIONAL EN TURISMO Y REUNIONES",
+        "LICENCIATURA EN GESTIÓN Y DESARROLLO TURÍSTICO",
+        "LICENCIATURA EN ADMINISTRACIÓN DE RECURSOS TURÍSTICOS",
+        "LICENCIATURA EN TURISMO Y DESARROLLO SOSTENIBLE"
+      ],
+      "posgrados": [
+        "MAESTRÍA EN TURISMO, DESARROLLO Y PATRIMONIO"
+      ]
+    },
+    "preferredLevel": "2"
+  },
+  "fisico_matematicas_ciencias_exactas": {
+    "label": "Física, matemáticas, geografía, geología y ciencias exactas",
+    "triggers": [
+      "fisica",
+      "física",
+      "matematicas",
+      "matemáticas",
+      "actuaria",
+      "actuaría",
+      "astronomia",
+      "astronomía",
+      "astrofisica",
+      "astrofísica",
+      "geografia",
+      "geografía",
+      "geologia",
+      "geología",
+      "geomatica",
+      "geomática",
+      "minas",
+      "metalurgia",
+      "hidraulica",
+      "hidráulica"
+    ],
+    "programs": {
+      "bachillerato": [],
+      "tsu": [],
+      "licenciatura_ingenieria": [
+        "LICENCIATURA EN FÍSICA",
+        "INGENIERÍA EN FÍSICA",
+        "LICENCIATURA EN MATEMÁTICAS",
+        "LICENCIATURA EN COMPUTACIÓN MATEMÁTICA",
+        "LICENCIATURA EN ACTUARÍA",
+        "LICENCIATURA EN GEOGRAFÍA",
+        "INGENIERÍA EN GEOMÁTICA",
+        "INGENIERÍA GEÓLOGO",
+        "INGENIERÍA METALÚRGICA",
+        "INGENIERÍA DE MINAS",
+        "INGENIERÍA EN HIDRÁULICA"
+      ],
+      "posgrados": [
+        "MAESTRÍA EN CIENCIAS (ASTROFÍSICA)",
+        "MAESTRÍA EN FÍSICA",
+        "MAESTRÍA EN CIENCIAS APLICADAS",
+        "MAESTRÍA EN CIENCIAS DEL AGUA",
+        "DOCTORADO EN CIENCIAS (ASTROFÍSICA)",
+        "DOCTORADO EN FÍSICA",
+        "DOCTORADO EN CIENCIA Y TECNOLOGÍA DEL AGUA"
+      ]
+    },
+    "preferredLevel": "2"
+  },
+  "bachillerato_general": {
+    "label": "Bachillerato general, preparatoria y componente básico",
+    "triggers": [
+      "prepa",
+      "preparatoria",
+      "bachillerato",
+      "bachillerato general",
+      "bachillerato semestral",
+      "videobachillerato",
+      "media superior",
+      "componente basico",
+      "componente básico"
+    ],
+    "programs": {
+      "bachillerato": [
+        "BACHILLERATO GENERAL",
+        "BACHILLERATO SEMESTRAL",
+        "COMPONENTE BÁSICO INICIAL"
+      ],
+      "tsu": [],
+      "licenciatura_ingenieria": [],
+      "posgrados": []
+    },
+    "preferredLevel": "1"
+  }
+}
