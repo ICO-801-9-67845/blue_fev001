@@ -1,5 +1,6 @@
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { PrismaClient } from "@prisma/client";
+import { detectCanonicalProgramOptions } from "../src/services/educativeProgramRelationsService.js";
 
 const API_URL = process.env.BLUE_TEST_API_URL || "http://localhost:4000/api";
 const searchMap = JSON.parse(
@@ -7,6 +8,12 @@ const searchMap = JSON.parse(
     .replace(/^\uFEFF/, ""),
 );
 const prisma = new PrismaClient();
+const coverage = JSON.parse(
+  readFileSync(new URL("../../tmp/educative-program-relations/database-coverage.json", import.meta.url), "utf8"),
+);
+const coverageByProgramId = new Map(
+  coverage.programs.map((program) => [program.canonicalProgramId, program]),
+);
 const email = "educative-programs-" + Date.now() + "@bluefev.test";
 const password = "Test12345";
 const results = [];
@@ -99,6 +106,30 @@ try {
   let index = 0;
   for (const item of programs) {
     index += 1;
+    const catalogCandidates = detectCanonicalProgramOptions(buildProgramQuery(item), { limit: 3 });
+    const eligibleCatalogCandidates = catalogCandidates.filter((candidate) =>
+      ["PASS", "AMBIGUOUS_MAPPING"].includes(
+        coverageByProgramId.get(candidate.canonicalProgramId)?.status,
+      )
+    );
+    if (!eligibleCatalogCandidates.length) {
+      results.push({
+        index,
+        ...item,
+        detectedCareer: catalogCandidates[0] || null,
+        confirmationValid: false,
+        resultValid: true,
+        levelValid: catalogCandidates[0]?.level === item.expectedLevel || !catalogCandidates.length,
+        offerIds: [],
+        resultActionType: null,
+        status: "EXPECTED_DATA_GAP",
+        error: catalogCandidates.length
+          ? "NO_ELIGIBLE_OFFER"
+          : "NOT_IN_WORD_CATALOG_AS_EXACT_PROGRAM",
+      });
+      continue;
+    }
+
     const chat = await request("/chats", {
       method: "POST",
       body: JSON.stringify({ title: "Programa " + index }),
@@ -127,6 +158,8 @@ try {
             actionId: uiAction.id,
             career: career.normalizedName,
             level: career.level,
+            canonicalProgramId: career.canonicalProgramId,
+            academicLevel: career.academicLevel,
           },
         }),
       });
@@ -193,5 +226,10 @@ const summary = {
   results,
 };
 
-console.log(JSON.stringify(summary, null, 2));
+mkdirSync(new URL("../../tmp/educative-program-relations/", import.meta.url), { recursive: true });
+writeFileSync(
+  new URL("../../tmp/educative-program-relations/legacy-396-results.json", import.meta.url),
+  JSON.stringify(summary, null, 2) + "\n",
+);
+console.log(JSON.stringify({ ...summary, results: undefined }, null, 2));
 process.exitCode = summary.fail === 0 ? 0 : 1;

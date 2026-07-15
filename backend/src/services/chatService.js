@@ -24,13 +24,17 @@ import {
   classifyTypedAction,
   createUiAction,
   detectCareerOptions,
-  getRelatedCareerCandidates,
   isDirectEducativeRequest,
   isDirectInstitutionRequest,
   isStrongCareerReinforcement,
   normalizeEducativeState,
   normalizeEducativeText,
 } from "./educativeConfirmationService.js";
+import {
+  getFamilyCandidateIds,
+  getNearbyCandidateIds,
+  toCanonicalCareerCandidate,
+} from "./educativeProgramRelationsService.js";
 
 const MEMORY_MESSAGE_LIMIT = 12;
 
@@ -479,6 +483,7 @@ const ACTION_REQUESTS_BY_UI_TYPE = {
     "confirm_educative_search",
     "defer_educative_search",
     "clarify_educative_career",
+    "more_related_programs",
   ]),
   search_followup: new Set([
     "more_educative_results",
@@ -504,6 +509,13 @@ function getVisibleAction(action) {
     actionId: String(action.actionId || ""),
     career: action.career ? String(action.career) : null,
     level: action.level ? String(action.level) : null,
+    canonicalProgramId: action.canonicalProgramId ? String(action.canonicalProgramId) : null,
+    academicLevel: action.academicLevel ? String(action.academicLevel) : null,
+    familyId: action.familyId ? String(action.familyId) : null,
+    relatedStage: action.relatedStage ? String(action.relatedStage) : null,
+    cursor: action.cursor === undefined || action.cursor === null
+      ? null
+      : Number(action.cursor),
   };
 }
 
@@ -621,14 +633,36 @@ async function createAssistantWithAction(chat, content, uiAction, state) {
   return result;
 }
 
-async function createCareerConfirmation(chat, content, careers, directRequest, state) {
+async function createCareerConfirmation(
+  chat,
+  content,
+  careers,
+  directRequest,
+  state,
+  relatedContext = null,
+) {
   await expirePendingAction(chat, state);
   const uiAction = createUiAction("career_confirmation", {
-    careers: careers.map(({ name, normalizedName, level }) => ({
+    careers: careers.map(({
       name,
       normalizedName,
       level,
+      academicLevel,
+      canonicalProgramId,
+      familyId,
+    }) => ({
+      name,
+      normalizedName,
+      level,
+      academicLevel,
+      canonicalProgramId,
+      familyId,
     })),
+    relatedHasMore: Boolean(relatedContext?.hasMore),
+    relatedStage: relatedContext?.stage || null,
+    canonicalProgramId: relatedContext?.canonicalProgramId || null,
+    familyId: relatedContext?.familyId || null,
+    academicLevel: relatedContext?.academicLevel || null,
   });
   const nextState = {
     ...state,
@@ -641,6 +675,8 @@ async function createCareerConfirmation(chat, content, careers, directRequest, s
     lastPromptedCareers: careers,
     lastPromptedAt: new Date().toISOString(),
     hasMoreResults: false,
+    relatedHasMore: Boolean(relatedContext?.hasMore),
+    relatedStage: relatedContext?.stage || state.relatedStage,
   };
   const reply = content || buildConfirmationReply(careers, directRequest);
   return createAssistantWithAction(chat, reply, uiAction, nextState);
@@ -734,25 +770,40 @@ async function consumePendingAction(chat, state, clientAction, content, stateCha
 function getCareerFromAction(state, clientAction) {
   const requestedCareer = normalizeEducativeText(clientAction.career);
   const careers = state.pendingCareers || [];
-
-  if (!requestedCareer && careers.length === 1) {
-    return careers[0];
-  }
-
-  const selected = careers.find(
-    (career) =>
-      normalizeEducativeText(career.normalizedName) === requestedCareer ||
-      normalizeEducativeText(career.name) === requestedCareer,
-  );
+  const selected = !requestedCareer && careers.length === 1
+    ? careers[0]
+    : careers.find((career) =>
+        normalizeEducativeText(career.normalizedName) === requestedCareer ||
+        normalizeEducativeText(career.name) === requestedCareer
+      );
 
   if (!selected) {
     throw new ApiError(400, "La carrera elegida no forma parte de las opciones ofrecidas");
   }
-
+  if (
+    (clientAction.canonicalProgramId &&
+      clientAction.canonicalProgramId !== selected.canonicalProgramId) ||
+    (clientAction.academicLevel &&
+      clientAction.academicLevel !== selected.academicLevel) ||
+    (clientAction.familyId !== null &&
+      clientAction.familyId !== (selected.familyId || null)) ||
+    (clientAction.level !== null && clientAction.level !== selected.level)
+  ) {
+    throw new ApiError(409, "El programa canonico, familia o nivel de la accion fue manipulado");
+  }
   return selected;
 }
 
 function buildResultsState(state, career, result, offerIds) {
+  const previousProgramId = state.currentCanonicalProgramId;
+  const exploredProgramIds = career.fromRelated
+    ? [...new Set([
+        ...(state.exploredProgramIds || []),
+        previousProgramId,
+        career.canonicalProgramId,
+      ].filter(Boolean))]
+    : [career.canonicalProgramId];
+
   return {
     ...state,
     status: result.remainingCount > 0 ? "showing_results" : "exhausted",
@@ -767,6 +818,14 @@ function buildResultsState(state, career, result, offerIds) {
     activeConfirmedCareer: career,
     activeConfirmedLevel: career.level,
     activeSearchQuery: career.searchQuery,
+    currentCanonicalProgramId: career.canonicalProgramId,
+    currentLevel: career.academicLevel,
+    currentFamilyId: career.familyId || null,
+    exploredProgramIds,
+    shownFamilyProgramIds: [],
+    shownNearbyProgramIds: [],
+    relatedStage: "family",
+    relatedHasMore: false,
   };
 }
 
@@ -785,26 +844,28 @@ async function runConfirmedEducativeSearch(chat, state, career, isMore = false) 
     message: getConfirmedSearchMessage(career),
     excludeShownIds: state.excludedOfferIds || [],
     limit: 3,
+    canonicalProgramId: career.canonicalProgramId,
+    exactAliases: career.exactAliases,
+    academicLevel: career.academicLevel,
   });
   const offerIds = (result.offerContext || []).map((offer) => String(offer.id));
   const nextState = buildResultsState(state, career, result, offerIds);
   const hasResults = result.offerContext?.length > 0;
   const hasMoreResults = hasResults && result.remainingCount > 0;
   const reply = hasResults
-    ? buildEducativeSearchReply({
-        ...result,
-        isFollowUp: isMore,
-      })
+    ? buildEducativeSearchReply({ ...result, isFollowUp: isMore })
     : "Ya te mostre todas las opciones disponibles para " + career.name + " en la informacion actual.";
   const uiAction = createUiAction(
     hasMoreResults ? "search_followup" : "search_exhausted",
     {
       career: career.normalizedName,
       level: career.level,
+      academicLevel: career.academicLevel,
+      canonicalProgramId: career.canonicalProgramId,
+      familyId: career.familyId || null,
       hasMoreResults,
     },
   );
-
   return createAssistantWithAction(chat, reply, uiAction, nextState);
 }
 
@@ -812,10 +873,20 @@ async function replaceAmbiguousCareerConfirmation(chat, state, clientAction, con
   const actionMessage = await validatePendingAction(chat, state, clientAction);
   const careers = (state.pendingCareers || []).slice(0, 3);
   const uiAction = createUiAction("career_confirmation", {
-    careers: careers.map(({ name, normalizedName, level }) => ({
+    careers: careers.map(({
       name,
       normalizedName,
       level,
+      academicLevel,
+      canonicalProgramId,
+      familyId,
+    }) => ({
+      name,
+      normalizedName,
+      level,
+      academicLevel,
+      canonicalProgramId,
+      familyId,
     })),
   });
   const expectedVersion = Number(chat.educativeStateVersion) || 0;
@@ -878,58 +949,108 @@ async function replaceAmbiguousCareerConfirmation(chat, state, clientAction, con
   return result;
 }
 
-function isRelatedCareerMatch(candidate, result) {
-  const target = normalizeEducativeText(candidate.normalizedName || candidate.name);
-  return (result.offerContext || []).some((offer) =>
-    (offer.careers || []).some((program) => {
-      const normalizedProgram = normalizeEducativeText(program);
-      return normalizedProgram.includes(target) || target.includes(normalizedProgram);
-    }),
-  );
+async function isEligibleCanonicalCareer(candidate) {
+  if (!candidate?.canonicalProgramId) return false;
+  const result = await searchEducativeOffers({
+    prisma,
+    message: candidate.searchQuery,
+    excludeShownIds: [],
+    limit: 1,
+    canonicalProgramId: candidate.canonicalProgramId,
+    exactAliases: candidate.exactAliases,
+    academicLevel: candidate.academicLevel,
+  });
+  return (result.offerContext || []).length > 0;
 }
 
-async function findEligibleRelatedCareers(career, level) {
-  const related = [];
-  for (const candidate of getRelatedCareerCandidates(career, level)) {
-    const result = await searchEducativeOffers({
-      prisma,
-      message: getConfirmedSearchMessage(candidate),
-      excludeShownIds: [],
-      limit: 3,
-    });
-    if (isRelatedCareerMatch(candidate, result)) {
-      related.push(candidate);
+async function filterEligibleCanonicalCareers(careers) {
+  const eligible = [];
+  for (const career of careers || []) {
+    if (await isEligibleCanonicalCareer(career)) eligible.push(career);
+    if (eligible.length === 3) break;
+  }
+  return eligible;
+}
+
+async function getRelatedPage(state) {
+  const currentId = state.currentCanonicalProgramId;
+  const excluded = new Set([
+    currentId,
+    ...(state.exploredProgramIds || []),
+    ...(state.shownFamilyProgramIds || []),
+    ...(state.shownNearbyProgramIds || []),
+  ].filter(Boolean));
+
+  const collectEligible = async (ids, relationType) => {
+    const candidates = [];
+    for (const id of ids) {
+      if (excluded.has(id)) continue;
+      const candidate = toCanonicalCareerCandidate(id);
+      if (
+        !candidate ||
+        candidate.academicLevel !== state.currentLevel ||
+        !(await isEligibleCanonicalCareer(candidate))
+      ) continue;
+      candidates.push({ ...candidate, fromRelated: true, relationType });
     }
-    if (related.length === 3) {
-      break;
+    return candidates;
+  };
+
+  if (state.relatedStage !== "nearby" && state.relatedStage !== "exhausted") {
+    const family = await collectEligible(getFamilyCandidateIds(currentId), "family");
+    if (family.length) {
+      const nearbyAfterFamily = await collectEligible(
+        getNearbyCandidateIds(currentId),
+        "nearby",
+      );
+      return {
+        careers: family.slice(0, 3),
+        hasMore: family.length > 3 || nearbyAfterFamily.length > 0,
+        stage: "family",
+      };
     }
   }
-  return related;
+
+  const nearby = await collectEligible(getNearbyCandidateIds(currentId), "nearby");
+  if (nearby.length) {
+    return { careers: nearby.slice(0, 3), hasMore: nearby.length > 3, stage: "nearby" };
+  }
+  return { careers: [], hasMore: false, stage: "exhausted" };
 }
 
-async function validateExploreRelatedAction(chat, state, clientAction) {
+async function validateRelatedAction(chat, state, clientAction) {
   const actionMessage = await validatePendingAction(chat, state, clientAction);
-  const career = state.activeConfirmedCareer;
-  const level = state.activeConfirmedLevel || career?.level;
-  const expectedCareer = normalizeEducativeText(career?.normalizedName || career?.name);
-  const requestedCareer = normalizeEducativeText(clientAction.career);
-
-  if (
-    !career ||
-    !expectedCareer ||
-    requestedCareer !== expectedCareer ||
-    normalizeEducativeText(actionMessage.uiAction.career) !== expectedCareer ||
-    clientAction.level !== level ||
-    actionMessage.uiAction.level !== level
-  ) {
-    throw new ApiError(409, "La accion no corresponde a la busqueda educativa agotada");
+  const uiAction = actionMessage.uiAction;
+  if (clientAction.cursor !== null) {
+    throw new ApiError(409, "El cursor de carreras relacionadas fue manipulado");
   }
-
-  return { career, level };
+  if (
+    (clientAction.canonicalProgramId &&
+      clientAction.canonicalProgramId !== state.currentCanonicalProgramId) ||
+    (clientAction.academicLevel &&
+      clientAction.academicLevel !== state.currentLevel) ||
+    (clientAction.familyId &&
+      clientAction.familyId !== state.currentFamilyId) ||
+    (uiAction.canonicalProgramId || null) !== (state.currentCanonicalProgramId || null) ||
+    (uiAction.familyId || null) !== (state.currentFamilyId || null) ||
+    (uiAction.academicLevel || null) !== (state.currentLevel || null)
+  ) {
+    throw new ApiError(409, "La accion relacionada no corresponde a la busqueda activa");
+  }
+  if (
+    clientAction.type === "more_related_programs" &&
+    (
+      !state.relatedHasMore ||
+      clientAction.relatedStage !== state.relatedStage ||
+      uiAction.relatedStage !== state.relatedStage
+    )
+  ) {
+    throw new ApiError(409, "El cursor de carreras relacionadas fue manipulado");
+  }
 }
 
-async function exploreRelatedCareers(chat, content, state, clientAction) {
-  const { career, level } = await validateExploreRelatedAction(chat, state, clientAction);
+async function showRelatedCareers(chat, content, state, clientAction) {
+  await validateRelatedAction(chat, state, clientAction);
   const consumed = await consumePendingAction(
     chat,
     state,
@@ -937,16 +1058,39 @@ async function exploreRelatedCareers(chat, content, state, clientAction) {
     content,
     { status: "processing", hasMoreResults: false },
   );
-  const relatedCareers = await findEligibleRelatedCareers(career, level);
-  const reply = relatedCareers.length
-    ? "Estas son algunas carreras relacionadas con " + career.name + " que puedes explorar:"
-    : "No encontre otras carreras relacionadas con oferta disponible en la informacion actual. Podemos seguir conversando para explorar otros intereses.";
+  const page = await getRelatedPage(consumed.state);
+  const displayedIds = page.careers.map((career) => career.canonicalProgramId);
+  const nextState = {
+    ...consumed.state,
+    shownFamilyProgramIds: page.stage === "family"
+      ? [...new Set([...(consumed.state.shownFamilyProgramIds || []), ...displayedIds])]
+      : consumed.state.shownFamilyProgramIds,
+    shownNearbyProgramIds: page.stage === "nearby"
+      ? [...new Set([...(consumed.state.shownNearbyProgramIds || []), ...displayedIds])]
+      : consumed.state.shownNearbyProgramIds,
+    relatedStage: page.stage,
+    relatedHasMore: page.hasMore,
+  };
+  const currentName = consumed.state.activeConfirmedCareer?.name || "este programa";
+  const reply = page.stage === "family"
+    ? "Ya te mostre todas las instituciones disponibles para " + currentName +
+      ". Tambien puedes explorar otros programas de la misma familia:"
+    : page.stage === "nearby"
+      ? "Ya revisamos las variantes disponibles. Tambien puedes explorar estas carreras cercanas:"
+      : "No encontre otros programas relacionados con oferta elegible en el mismo nivel. Podemos seguir conversando.";
   const result = await createCareerConfirmation(
     chat,
     reply,
-    relatedCareers,
+    page.careers,
     false,
-    consumed.state,
+    nextState,
+    {
+      hasMore: page.hasMore,
+      stage: page.stage,
+      canonicalProgramId: consumed.state.currentCanonicalProgramId,
+      familyId: consumed.state.currentFamilyId,
+      academicLevel: consumed.state.currentLevel,
+    },
   );
   return { userMessage: consumed.userMessage, assistantMessage: result.assistantMessage };
 }
@@ -1006,8 +1150,11 @@ async function handleEducativeAction(chat, userId, content, rawAction, currentSt
     );
   }
 
-  if (clientAction.type === "explore_related_careers") {
-    return exploreRelatedCareers(chat, content, currentState, clientAction);
+  if (
+    clientAction.type === "explore_related_careers" ||
+    clientAction.type === "more_related_programs"
+  ) {
+    return showRelatedCareers(chat, content, currentState, clientAction);
   }
 
   if (
@@ -1039,6 +1186,20 @@ async function handleEducativeAction(chat, userId, content, rawAction, currentSt
         activeConfirmedCareer: career,
         activeConfirmedLevel: career.level,
         activeSearchQuery: career.searchQuery,
+        currentCanonicalProgramId: career.canonicalProgramId,
+        currentLevel: career.academicLevel,
+        currentFamilyId: career.familyId || null,
+        exploredProgramIds: career.fromRelated
+          ? [...new Set([
+              ...(currentState.exploredProgramIds || []),
+              currentState.currentCanonicalProgramId,
+              career.canonicalProgramId,
+            ].filter(Boolean))]
+          : [career.canonicalProgramId],
+        shownFamilyProgramIds: [],
+        shownNearbyProgramIds: [],
+        relatedStage: "family",
+        relatedHasMore: false,
       },
     );
     const result = await runConfirmedEducativeSearch(chat, state, career, false);
@@ -1112,12 +1273,19 @@ export async function sendMessage(chatId, userId, content, action = null) {
       ? {
           ...typedAction,
           actionId: currentState.pendingConfirmationActionId,
-          ...(typedAction.type === "explore_related_careers"
-            ? {
-                career: currentState.activeConfirmedCareer?.normalizedName,
-                level: currentState.activeConfirmedLevel,
-              }
-            : {}),
+          ...(
+            typedAction.type === "explore_related_careers" ||
+            typedAction.type === "more_related_programs"
+              ? {
+                  career: currentState.activeConfirmedCareer?.normalizedName,
+                  level: currentState.activeConfirmedLevel,
+                  canonicalProgramId: currentState.currentCanonicalProgramId,
+                  academicLevel: currentState.currentLevel,
+                  familyId: currentState.currentFamilyId,
+                  relatedStage: currentState.relatedStage,
+                }
+              : {}
+          ),
         }
       : null
   );
@@ -1144,7 +1312,7 @@ export async function sendMessage(chatId, userId, content, action = null) {
   });
   const history = await listMessagesByChatId(chatId);
   const recentHistory = history.slice(-MEMORY_MESSAGE_LIMIT);
-  const directCareers = detectCareerOptions(content);
+  const directCareers = await filterEligibleCanonicalCareers(detectCareerOptions(content));
   const normalizedContent = normalizeEducativeText(content);
   const isStandaloneCareer = directCareers.some(
     (career) =>
@@ -1209,7 +1377,7 @@ export async function sendMessage(chatId, userId, content, action = null) {
     memoryContext,
     { isEducativeRequest: false },
   );
-  const inferredCareers = detectCareerOptions(assistantReply);
+  const inferredCareers = await filterEligibleCanonicalCareers(detectCareerOptions(assistantReply));
   const inferredHasNewCareer = hasDifferentCareer(
     inferredCareers,
     currentState.lastPromptedCareers,
