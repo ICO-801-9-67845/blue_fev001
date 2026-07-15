@@ -1,6 +1,12 @@
 ﻿import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  getCanonicalProgram,
+  getStateLevelForAcademicLevel,
+  getStudyTypeForAcademicLevel,
+  normalizeProgramText,
+} from "./educativeProgramRelationsService.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const educativeSearchMap = JSON.parse(
@@ -507,12 +513,13 @@ function getCareerStudyType(careerName) {
 
   if (
     normalized.includes("tecnico superior universitario") ||
-    normalized.includes("tsu")
+    normalized.includes("tsu") ||
+    normalized.includes("t s u")
   ) {
     return "tsu";
   }
 
-  if (normalized.includes("maestria")) {
+  if (normalized.includes("maestria") || normalized.includes("master")) {
     return "maestria";
   }
 
@@ -887,12 +894,12 @@ function toPublicOffer(offer) {
 
 function addStudyTypeFilters(whereParts, requestedStudyType) {
   if (requestedStudyType === "tsu") {
-    whereParts.push("(UPPER(c.name) LIKE '%TÉCNICO SUPERIOR UNIVERSITARIO%' OR UPPER(c.name) LIKE '%TECNICO SUPERIOR UNIVERSITARIO%' OR UPPER(c.name) LIKE '%TSU%')");
+    whereParts.push("(UPPER(c.name) LIKE '%TÉCNICO SUPERIOR UNIVERSITARIO%' OR UPPER(c.name) LIKE '%TECNICO SUPERIOR UNIVERSITARIO%' OR UPPER(c.name) LIKE '%TSU%' OR UPPER(c.name) LIKE '%T.S.U%')");
     return;
   }
 
   if (requestedStudyType === "maestria") {
-    whereParts.push("(UPPER(c.name) LIKE '%MAESTRÍA%' OR UPPER(c.name) LIKE '%MAESTRIA%')");
+    whereParts.push("(UPPER(c.name) LIKE '%MAESTRÍA%' OR UPPER(c.name) LIKE '%MAESTRIA%' OR UPPER(c.name) LIKE '%MASTER%')");
     return;
   }
 
@@ -1175,6 +1182,75 @@ export function buildEducativeSearchContext({
   };
 }
 
+function buildExactProgramSearchContext({
+  canonicalProgramId,
+  exactAliases,
+  academicLevel,
+  excludeShownIds = [],
+}) {
+  const program = getCanonicalProgram(canonicalProgramId);
+  if (!program || (academicLevel && program.level !== academicLevel)) {
+    throw new Error("The canonical educational program is invalid");
+  }
+
+  const configuredAliases = uniqueValues(program.exactAliases || []);
+  const requestedAliases = uniqueValues(exactAliases || []);
+  if (requestedAliases.some((alias) =>
+    !configuredAliases.some((configured) =>
+      normalizeProgramText(configured) === normalizeProgramText(alias)
+    )
+  )) {
+    throw new Error("An exact alias is not declared for the canonical program");
+  }
+
+  const requestedStudyType = getStudyTypeForAcademicLevel(program.level);
+  const requestedLevel = ["bachillerato", "tecnico_bachillerato"].includes(program.level)
+    ? "1"
+    : "2";
+  const matchedPrograms = [{
+    categoryKey: null,
+    bucket: program.level,
+    program: program.canonicalName,
+    aliases: configuredAliases,
+  }];
+
+  return {
+    isEducativeIntent: true,
+    isFollowUp: false,
+    isPureFollowUp: false,
+    isExplicitSearchReset: false,
+    isRefinement: false,
+    sameSearchContinuation: false,
+    searchText: normalizeText(program.canonicalName),
+    originalQuery: program.canonicalName,
+    resolvedQuery: program.canonicalName,
+    matchedCategories: [],
+    matchedPrograms,
+    careerKeywords: configuredAliases,
+    requestedLevel,
+    requestedStudyType,
+    studyType: requestedStudyType,
+    searchSignature: JSON.stringify({
+      canonicalProgramId,
+      academicLevel: program.level,
+      aliases: configuredAliases.map(normalizeProgramText).sort(),
+    }),
+    previousSearchSignature: null,
+    excludedOfferIds: uniqueValues((excludeShownIds || []).map(formatOfferId)),
+    shownOfferIds: [],
+    allMatchedOfferIds: [],
+    totalMatches: 0,
+    remainingCount: 0,
+    noMoreResults: false,
+    offerContext: [],
+    canonicalProgramId,
+    academicLevel: program.level,
+    familyId: program.familyId || null,
+    exactMatch: true,
+    stateLevel: getStateLevelForAcademicLevel(program.level),
+  };
+}
+
 function getOfferLevelLabel(offer) {
   const careerTypes = (offer.careers || []).map(getCareerStudyType);
 
@@ -1257,17 +1333,27 @@ export async function searchEducativeOffers({
   assistantMessages = [],
   excludeShownIds = [],
   limit = MAX_CONTEXT_RESULTS,
+  canonicalProgramId = null,
+  exactAliases = [],
+  academicLevel = null,
 } = {}) {
   if (!prisma?.$queryRawUnsafe) {
     throw new Error("A Prisma client with $queryRawUnsafe is required");
   }
 
-  const searchContext = buildEducativeSearchContext({
-    message,
-    userMessages,
-    assistantMessages,
-    excludeShownIds,
-  });
+  const searchContext = canonicalProgramId
+    ? buildExactProgramSearchContext({
+        canonicalProgramId,
+        exactAliases,
+        academicLevel,
+        excludeShownIds,
+      })
+    : buildEducativeSearchContext({
+        message,
+        userMessages,
+        assistantMessages,
+        excludeShownIds,
+      });
   const shouldSearch =
     searchContext.isEducativeIntent ||
     searchContext.isFollowUp ||
@@ -1318,10 +1404,19 @@ export async function searchEducativeOffers({
 
   addStudyTypeFilters(whereParts, searchContext.requestedStudyType);
 
-  whereParts.push(
-    `(${searchContext.careerKeywords.map(() => "UPPER(c.name) LIKE ? ESCAPE \'\\\\\'").join(" OR ")})`
-  );
-  params.push(...searchContext.careerKeywords.map((keyword) => `%${escapeSqlLike(keyword)}%`));
+  if (searchContext.exactMatch) {
+    whereParts.push(
+      `(${searchContext.careerKeywords
+        .map(() => "REGEXP_REPLACE(UPPER(TRIM(c.name)), '[[:space:]]+', ' ') = UPPER(?)")
+        .join(" OR ")})`,
+    );
+    params.push(...searchContext.careerKeywords.map((keyword) => keyword.trim().replace(/\s+/g, " ")));
+  } else {
+    whereParts.push(
+      `(${searchContext.careerKeywords.map(() => "UPPER(c.name) LIKE ? ESCAPE \'\\\\\'").join(" OR ")})`,
+    );
+    params.push(...searchContext.careerKeywords.map((keyword) => `%${escapeSqlLike(keyword)}%`));
+  }
 
   const sql = `
     SELECT

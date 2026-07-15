@@ -10,8 +10,25 @@ function buildActions(uiAction) {
           actionId: uiAction.id,
           career: career.normalizedName,
           level: career.level,
+          canonicalProgramId: career.canonicalProgramId,
+          academicLevel: career.academicLevel,
         },
       })),
+      ...(uiAction.relatedHasMore
+        ? [{
+            key: "more-related",
+            label: "Mostrar más carreras relacionadas",
+            content: "Mostrar más carreras relacionadas",
+            action: {
+              type: "more_related_programs",
+              actionId: uiAction.id,
+              canonicalProgramId: uiAction.canonicalProgramId,
+              academicLevel: uiAction.academicLevel,
+              familyId: uiAction.familyId,
+              relatedStage: uiAction.relatedStage,
+            },
+          }]
+        : []),
       {
         key: "continue",
         label: "Seguir conversando",
@@ -62,6 +79,10 @@ function buildActions(uiAction) {
           actionId: uiAction.id,
           career: uiAction.career,
           level: uiAction.level,
+          canonicalProgramId: uiAction.canonicalProgramId,
+          academicLevel: uiAction.academicLevel,
+          familyId: uiAction.familyId,
+          relatedStage: "family",
         },
       },
       {
