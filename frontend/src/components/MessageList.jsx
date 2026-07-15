@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import EducativeActionMenu from "./EducativeActionMenu";
 
 const URL_PATTERN = /(https?:\/\/[^\s]+)/g;
 const URL_TEST_PATTERN = /^https?:\/\/[^\s]+$/;
@@ -17,7 +18,12 @@ function renderMessageContent(content) {
   });
 }
 
-export default function MessageList({ messages, isSending }) {
+export default function MessageList({
+  messages,
+  isSending,
+  activeActionId,
+  onEducativeAction,
+}) {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -49,6 +55,15 @@ export default function MessageList({ messages, isSending }) {
                   {isAssistant ? "Blue" : "Tu"}
                 </span>
                 <p>{renderMessageContent(message.content)}</p>
+                {isAssistant && message.uiAction ? (
+                  <EducativeActionMenu
+                    messageId={message.id}
+                    uiAction={message.uiAction}
+                    activeActionId={activeActionId}
+                    disabled={isSending}
+                    onAction={onEducativeAction}
+                  />
+                ) : null}
               </article>
 
               {!isAssistant ? (

@@ -1140,12 +1140,12 @@ export function buildEducativeSearchContext({
     ...matchedPrograms.flatMap((match) => match.aliases || [match.program]),
     ...getCareerKeywordsForCategories(matchedCategories, requestedStudyType),
   ]);
-  const excludedOfferIds = shouldReuseExcludedOfferIds
-    ? uniqueValues([
-        ...extractShownOfferIdsFromMessages(assistantMessages),
-        ...(excludeShownIds || []).map(formatOfferId),
-      ])
-    : [];
+  const excludedOfferIds = uniqueValues([
+    ...(shouldReuseExcludedOfferIds
+      ? extractShownOfferIdsFromMessages(assistantMessages)
+      : []),
+    ...(excludeShownIds || []).map(formatOfferId),
+  ]);
 
   return {
     isEducativeIntent,
@@ -1255,6 +1255,7 @@ export async function searchEducativeOffers({
   message,
   userMessages = [],
   assistantMessages = [],
+  excludeShownIds = [],
   limit = MAX_CONTEXT_RESULTS,
 } = {}) {
   if (!prisma?.$queryRawUnsafe) {
@@ -1265,6 +1266,7 @@ export async function searchEducativeOffers({
     message,
     userMessages,
     assistantMessages,
+    excludeShownIds,
   });
   const shouldSearch =
     searchContext.isEducativeIntent ||

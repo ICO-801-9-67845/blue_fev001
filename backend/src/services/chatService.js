@@ -19,6 +19,18 @@ import {
 import { ApiError } from "../utils/ApiError.js";
 import { generateAssistantReply, generateMemorySummaries } from "./aiService.js";
 import { buildEducativeSearchReply, searchEducativeOffers } from "./educativeSearchService.js";
+import {
+  buildConfirmationReply,
+  classifyTypedAction,
+  createUiAction,
+  detectCareerOptions,
+  getRelatedCareerCandidates,
+  isDirectEducativeRequest,
+  isDirectInstitutionRequest,
+  isStrongCareerReinforcement,
+  normalizeEducativeState,
+  normalizeEducativeText,
+} from "./educativeConfirmationService.js";
 
 const MEMORY_MESSAGE_LIMIT = 12;
 
@@ -462,6 +474,611 @@ async function getOwnedChat(chatId, userId) {
   return chat;
 }
 
+const ACTION_REQUESTS_BY_UI_TYPE = {
+  career_confirmation: new Set([
+    "confirm_educative_search",
+    "defer_educative_search",
+    "clarify_educative_career",
+  ]),
+  search_followup: new Set([
+    "more_educative_results",
+    "continue_conversation",
+  ]),
+  search_exhausted: new Set([
+    "explore_related_careers",
+    "continue_conversation",
+  ]),
+};
+
+function getChatEducativeState(chat) {
+  return normalizeEducativeState(chat?.educativeState);
+}
+
+function getVisibleAction(action) {
+  if (!action || typeof action !== "object") {
+    return null;
+  }
+
+  return {
+    type: String(action.type || ""),
+    actionId: String(action.actionId || ""),
+    career: action.career ? String(action.career) : null,
+    level: action.level ? String(action.level) : null,
+  };
+}
+
+function hasSameCareer(left, right) {
+  return normalizeEducativeText(left?.normalizedName || left?.name) ===
+    normalizeEducativeText(right?.normalizedName || right?.name);
+}
+
+function hasDifferentCareer(careers, previousCareers) {
+  return (careers || []).some(
+    (career) => !(previousCareers || []).some((previous) => hasSameCareer(career, previous)),
+  );
+}
+
+async function updateEducativeState(chat, state) {
+  const expectedVersion = Number(chat.educativeStateVersion) || 0;
+  const result = await prisma.chat.updateMany({
+    where: {
+      id: chat.id,
+      userId: chat.userId,
+      educativeStateVersion: expectedVersion,
+    },
+    data: {
+      educativeState: state,
+      educativeStateVersion: {
+        increment: 1,
+      },
+    },
+  });
+
+  if (result.count !== 1) {
+    throw new ApiError(409, "La conversacion cambio mientras procesabamos la accion");
+  }
+
+  chat.educativeState = state;
+  chat.educativeStateVersion = expectedVersion + 1;
+  return state;
+}
+
+async function setUiActionStatus(chatId, messageId, status) {
+  if (!messageId) {
+    return;
+  }
+
+  const message = await prisma.message.findFirst({
+    where: {
+      id: messageId,
+      chatId,
+      role: "assistant",
+    },
+    select: {
+      id: true,
+      uiAction: true,
+    },
+  });
+
+  if (!message?.uiAction || typeof message.uiAction !== "object") {
+    return;
+  }
+
+  await prisma.message.update({
+    where: { id: message.id },
+    data: {
+      uiAction: {
+        ...message.uiAction,
+        status,
+      },
+    },
+  });
+}
+
+async function expirePendingAction(chat, state) {
+  if (state.pendingActionMessageId) {
+    await setUiActionStatus(chat.id, state.pendingActionMessageId, "expired");
+  }
+}
+
+async function createAssistantWithAction(chat, content, uiAction, state) {
+  const expectedVersion = Number(chat.educativeStateVersion) || 0;
+  const result = await prisma.$transaction(async (transaction) => {
+    const assistantMessage = await transaction.message.create({
+      data: {
+        chatId: chat.id,
+        role: "assistant",
+        content,
+        uiAction,
+      },
+    });
+    const nextState = {
+      ...state,
+      pendingConfirmationActionId: uiAction.id,
+      pendingActionMessageId: assistantMessage.id,
+    };
+    const updated = await transaction.chat.updateMany({
+      where: {
+        id: chat.id,
+        userId: chat.userId,
+        educativeStateVersion: expectedVersion,
+      },
+      data: {
+        educativeState: nextState,
+        educativeStateVersion: { increment: 1 },
+      },
+    });
+
+    if (updated.count !== 1) {
+      throw new ApiError(409, "La conversacion cambio mientras procesabamos la accion");
+    }
+
+    return { assistantMessage, state: nextState };
+  });
+
+  chat.educativeState = result.state;
+  chat.educativeStateVersion = expectedVersion + 1;
+  return result;
+}
+
+async function createCareerConfirmation(chat, content, careers, directRequest, state) {
+  await expirePendingAction(chat, state);
+  const uiAction = createUiAction("career_confirmation", {
+    careers: careers.map(({ name, normalizedName, level }) => ({
+      name,
+      normalizedName,
+      level,
+    })),
+  });
+  const nextState = {
+    ...state,
+    status: "awaiting_confirmation",
+    pendingCareers: careers,
+    pendingLevel: careers.length === 1 ? careers[0].level : null,
+    searchConfirmed: false,
+    deferredSearch: false,
+    messagesSinceDeferral: 0,
+    lastPromptedCareers: careers,
+    lastPromptedAt: new Date().toISOString(),
+    hasMoreResults: false,
+  };
+  const reply = content || buildConfirmationReply(careers, directRequest);
+  return createAssistantWithAction(chat, reply, uiAction, nextState);
+}
+
+async function validatePendingAction(chat, state, clientAction) {
+  if (!clientAction?.actionId || clientAction.actionId !== state.pendingConfirmationActionId) {
+    throw new ApiError(409, "Esta accion ya no esta disponible");
+  }
+
+  const actionMessage = await prisma.message.findFirst({
+    where: {
+      id: state.pendingActionMessageId || "",
+      chatId: chat.id,
+      role: "assistant",
+    },
+    select: {
+      id: true,
+      uiAction: true,
+    },
+  });
+  const uiAction = actionMessage?.uiAction;
+
+  if (
+    !uiAction ||
+    uiAction.id !== clientAction.actionId ||
+    uiAction.status !== "pending" ||
+    !ACTION_REQUESTS_BY_UI_TYPE[uiAction.type]?.has(clientAction.type)
+  ) {
+    throw new ApiError(409, "Esta accion ya fue utilizada o expiro");
+  }
+
+  return actionMessage;
+}
+
+async function consumePendingAction(chat, state, clientAction, content, stateChanges = {}) {
+  const actionMessage = await validatePendingAction(chat, state, clientAction);
+  const nextState = {
+    ...state,
+    ...stateChanges,
+    pendingConfirmationActionId: null,
+    pendingActionMessageId: null,
+  };
+  const expectedVersion = Number(chat.educativeStateVersion) || 0;
+
+  const userMessage = await prisma.$transaction(async (transaction) => {
+    const updated = await transaction.chat.updateMany({
+      where: {
+        id: chat.id,
+        userId: chat.userId,
+        educativeStateVersion: expectedVersion,
+      },
+      data: {
+        educativeState: nextState,
+        educativeStateVersion: { increment: 1 },
+      },
+    });
+
+    if (updated.count !== 1) {
+      throw new ApiError(409, "Esta accion ya fue utilizada");
+    }
+
+    await transaction.message.update({
+      where: { id: actionMessage.id },
+      data: {
+        uiAction: {
+          ...actionMessage.uiAction,
+          status:
+            clientAction.type === "defer_educative_search" ||
+            clientAction.type === "continue_conversation"
+              ? "dismissed"
+              : "completed",
+        },
+      },
+    });
+
+    return transaction.message.create({
+      data: {
+        chatId: chat.id,
+        role: "user",
+        content: content.trim(),
+      },
+    });
+  });
+
+  chat.educativeState = nextState;
+  chat.educativeStateVersion = expectedVersion + 1;
+  return { userMessage, state: nextState };
+}
+
+function getCareerFromAction(state, clientAction) {
+  const requestedCareer = normalizeEducativeText(clientAction.career);
+  const careers = state.pendingCareers || [];
+
+  if (!requestedCareer && careers.length === 1) {
+    return careers[0];
+  }
+
+  const selected = careers.find(
+    (career) =>
+      normalizeEducativeText(career.normalizedName) === requestedCareer ||
+      normalizeEducativeText(career.name) === requestedCareer,
+  );
+
+  if (!selected) {
+    throw new ApiError(400, "La carrera elegida no forma parte de las opciones ofrecidas");
+  }
+
+  return selected;
+}
+
+function buildResultsState(state, career, result, offerIds) {
+  return {
+    ...state,
+    status: result.remainingCount > 0 ? "showing_results" : "exhausted",
+    pendingCareers: [],
+    pendingLevel: null,
+    searchConfirmed: true,
+    deferredSearch: false,
+    messagesSinceDeferral: 0,
+    confirmedSearchSignature: result.searchSignature,
+    excludedOfferIds: [...new Set([...(state.excludedOfferIds || []), ...offerIds])],
+    hasMoreResults: result.remainingCount > 0,
+    activeConfirmedCareer: career,
+    activeConfirmedLevel: career.level,
+    activeSearchQuery: career.searchQuery,
+  };
+}
+
+function getConfirmedSearchMessage(career) {
+  const levelHints = {
+    prepa: "bachillerato",
+    tsu: "TSU",
+    undergraduate: "universidad",
+    posgrado: "posgrado",
+  };
+  return [career.searchQuery, levelHints[career.level]].filter(Boolean).join(" ");
+}
+async function runConfirmedEducativeSearch(chat, state, career, isMore = false) {
+  const result = await searchEducativeOffers({
+    prisma,
+    message: getConfirmedSearchMessage(career),
+    excludeShownIds: state.excludedOfferIds || [],
+    limit: 3,
+  });
+  const offerIds = (result.offerContext || []).map((offer) => String(offer.id));
+  const nextState = buildResultsState(state, career, result, offerIds);
+  const hasResults = result.offerContext?.length > 0;
+  const hasMoreResults = hasResults && result.remainingCount > 0;
+  const reply = hasResults
+    ? buildEducativeSearchReply({
+        ...result,
+        isFollowUp: isMore,
+      })
+    : "Ya te mostre todas las opciones disponibles para " + career.name + " en la informacion actual.";
+  const uiAction = createUiAction(
+    hasMoreResults ? "search_followup" : "search_exhausted",
+    {
+      career: career.normalizedName,
+      level: career.level,
+      hasMoreResults,
+    },
+  );
+
+  return createAssistantWithAction(chat, reply, uiAction, nextState);
+}
+
+async function replaceAmbiguousCareerConfirmation(chat, state, clientAction, content) {
+  const actionMessage = await validatePendingAction(chat, state, clientAction);
+  const careers = (state.pendingCareers || []).slice(0, 3);
+  const uiAction = createUiAction("career_confirmation", {
+    careers: careers.map(({ name, normalizedName, level }) => ({
+      name,
+      normalizedName,
+      level,
+    })),
+  });
+  const expectedVersion = Number(chat.educativeStateVersion) || 0;
+  const result = await prisma.$transaction(async (transaction) => {
+    await transaction.message.update({
+      where: { id: actionMessage.id },
+      data: {
+        uiAction: {
+          ...actionMessage.uiAction,
+          status: "expired",
+        },
+      },
+    });
+    const userMessage = await transaction.message.create({
+      data: {
+        chatId: chat.id,
+        role: "user",
+        content: content.trim(),
+      },
+    });
+    const assistantMessage = await transaction.message.create({
+      data: {
+        chatId: chat.id,
+        role: "assistant",
+        content: "Tengo varias opciones pendientes. Elige cual quieres consultar.",
+        uiAction,
+      },
+    });
+    const nextState = {
+      ...state,
+      status: "awaiting_confirmation",
+      pendingCareers: careers,
+      pendingLevel: careers.length === 1 ? careers[0].level : null,
+      pendingConfirmationActionId: uiAction.id,
+      pendingActionMessageId: assistantMessage.id,
+      lastPromptedCareers: careers,
+      lastPromptedAt: new Date().toISOString(),
+    };
+    const updated = await transaction.chat.updateMany({
+      where: {
+        id: chat.id,
+        userId: chat.userId,
+        educativeStateVersion: expectedVersion,
+      },
+      data: {
+        educativeState: nextState,
+        educativeStateVersion: { increment: 1 },
+      },
+    });
+
+    if (updated.count !== 1) {
+      throw new ApiError(409, "Esta accion ya fue utilizada");
+    }
+
+    return { userMessage, assistantMessage, state: nextState };
+  });
+
+  chat.educativeState = result.state;
+  chat.educativeStateVersion = expectedVersion + 1;
+  return result;
+}
+
+function isRelatedCareerMatch(candidate, result) {
+  const target = normalizeEducativeText(candidate.normalizedName || candidate.name);
+  return (result.offerContext || []).some((offer) =>
+    (offer.careers || []).some((program) => {
+      const normalizedProgram = normalizeEducativeText(program);
+      return normalizedProgram.includes(target) || target.includes(normalizedProgram);
+    }),
+  );
+}
+
+async function findEligibleRelatedCareers(career, level) {
+  const related = [];
+  for (const candidate of getRelatedCareerCandidates(career, level)) {
+    const result = await searchEducativeOffers({
+      prisma,
+      message: getConfirmedSearchMessage(candidate),
+      excludeShownIds: [],
+      limit: 3,
+    });
+    if (isRelatedCareerMatch(candidate, result)) {
+      related.push(candidate);
+    }
+    if (related.length === 3) {
+      break;
+    }
+  }
+  return related;
+}
+
+async function validateExploreRelatedAction(chat, state, clientAction) {
+  const actionMessage = await validatePendingAction(chat, state, clientAction);
+  const career = state.activeConfirmedCareer;
+  const level = state.activeConfirmedLevel || career?.level;
+  const expectedCareer = normalizeEducativeText(career?.normalizedName || career?.name);
+  const requestedCareer = normalizeEducativeText(clientAction.career);
+
+  if (
+    !career ||
+    !expectedCareer ||
+    requestedCareer !== expectedCareer ||
+    normalizeEducativeText(actionMessage.uiAction.career) !== expectedCareer ||
+    clientAction.level !== level ||
+    actionMessage.uiAction.level !== level
+  ) {
+    throw new ApiError(409, "La accion no corresponde a la busqueda educativa agotada");
+  }
+
+  return { career, level };
+}
+
+async function exploreRelatedCareers(chat, content, state, clientAction) {
+  const { career, level } = await validateExploreRelatedAction(chat, state, clientAction);
+  const consumed = await consumePendingAction(
+    chat,
+    state,
+    clientAction,
+    content,
+    { status: "processing", hasMoreResults: false },
+  );
+  const relatedCareers = await findEligibleRelatedCareers(career, level);
+  const reply = relatedCareers.length
+    ? "Estas son algunas carreras relacionadas con " + career.name + " que puedes explorar:"
+    : "No encontre otras carreras relacionadas con oferta disponible en la informacion actual. Podemos seguir conversando para explorar otros intereses.";
+  const result = await createCareerConfirmation(
+    chat,
+    reply,
+    relatedCareers,
+    false,
+    consumed.state,
+  );
+  return { userMessage: consumed.userMessage, assistantMessage: result.assistantMessage };
+}
+
+async function continueConversationAfterAction(chat, userId, content, state, clientAction) {
+  const { userMessage, state: consumedState } = await consumePendingAction(
+    chat,
+    state,
+    clientAction,
+    content,
+    {
+      status: "deferred",
+      deferredSearch: true,
+      messagesSinceDeferral: 0,
+      hasMoreResults: false,
+    },
+  );
+  const history = await listMessagesByChatId(chat.id);
+  const recentHistory = history.slice(-MEMORY_MESSAGE_LIMIT);
+  const memoryContext = await buildMemoryContext(userId, chat);
+  const assistantReply = await generateAssistantReply(
+    recentHistory,
+    [],
+    memoryContext,
+    { isEducativeRequest: false },
+  );
+  const assistantMessage = await createMessage({
+    chatId: chat.id,
+    role: "assistant",
+    content: assistantReply,
+  });
+
+  await updateSummariesAfterReply({
+    chatId: chat.id,
+    messages: [...recentHistory, assistantMessage],
+    currentChatSummary: memoryContext.currentChatSummary,
+    userMemorySummary: memoryContext.userMemorySummary,
+    userId,
+  });
+
+  return { userMessage, assistantMessage, state: consumedState };
+}
+
+async function handleEducativeAction(chat, userId, content, rawAction, currentState) {
+  const clientAction = getVisibleAction(rawAction);
+
+  if (!clientAction?.type) {
+    throw new ApiError(400, "La accion educativa no es valida");
+  }
+
+  if (clientAction.type === "clarify_educative_career") {
+    return replaceAmbiguousCareerConfirmation(
+      chat,
+      currentState,
+      clientAction,
+      content,
+    );
+  }
+
+  if (clientAction.type === "explore_related_careers") {
+    return exploreRelatedCareers(chat, content, currentState, clientAction);
+  }
+
+  if (
+    clientAction.type === "defer_educative_search" ||
+    clientAction.type === "continue_conversation"
+  ) {
+    return continueConversationAfterAction(
+      chat,
+      userId,
+      content,
+      currentState,
+      clientAction,
+    );
+  }
+
+  if (clientAction.type === "confirm_educative_search") {
+    await validatePendingAction(chat, currentState, clientAction);
+    const career = getCareerFromAction(currentState, clientAction);
+    const { userMessage, state } = await consumePendingAction(
+      chat,
+      currentState,
+      clientAction,
+      content,
+      {
+        status: "processing",
+        searchConfirmed: true,
+        deferredSearch: false,
+        excludedOfferIds: [],
+        activeConfirmedCareer: career,
+        activeConfirmedLevel: career.level,
+        activeSearchQuery: career.searchQuery,
+      },
+    );
+    const result = await runConfirmedEducativeSearch(chat, state, career, false);
+    return { userMessage, assistantMessage: result.assistantMessage };
+  }
+
+  if (clientAction.type === "more_educative_results") {
+    const career = currentState.activeConfirmedCareer;
+    if (!career || !currentState.activeSearchQuery) {
+      throw new ApiError(409, "No hay una busqueda educativa activa");
+    }
+
+    const activeCareer = {
+      ...career,
+      searchQuery: currentState.activeSearchQuery,
+      level: currentState.activeConfirmedLevel || career.level,
+    };
+    const { userMessage, state } = await consumePendingAction(
+      chat,
+      currentState,
+      clientAction,
+      content,
+      { status: "processing" },
+    );
+    const result = await runConfirmedEducativeSearch(chat, state, activeCareer, true);
+    return { userMessage, assistantMessage: result.assistantMessage };
+  }
+
+  throw new ApiError(400, "La accion educativa no es compatible");
+}
+
+async function updateTitleAfterMessage(chat, content) {
+  const totalMessages = await countMessagesByChatId(chat.id);
+  if (chat.title === "Nueva conversacion" && totalMessages <= 2) {
+    await updateChat(chat.id, { title: deriveChatTitle(content) });
+  } else {
+    await updateChat(chat.id, {});
+  }
+}
+
 export async function listChats(userId) {
   const chats = await listChatsByUserId(userId);
   return chats.map((chat) => ({
@@ -485,81 +1102,170 @@ export async function getChatMessages(chatId, userId) {
   return listMessagesByChatId(chatId);
 }
 
-export async function sendMessage(chatId, userId, content) {
+export async function sendMessage(chatId, userId, content, action = null) {
   ensureContent(content);
   const chat = await getOwnedChat(chatId, userId);
+  const currentState = getChatEducativeState(chat);
+  const typedAction = action ? null : classifyTypedAction(content, currentState);
+  const requestedAction = action || (
+    typedAction
+      ? {
+          ...typedAction,
+          actionId: currentState.pendingConfirmationActionId,
+          ...(typedAction.type === "explore_related_careers"
+            ? {
+                career: currentState.activeConfirmedCareer?.normalizedName,
+                level: currentState.activeConfirmedLevel,
+              }
+            : {}),
+        }
+      : null
+  );
+
+  if (requestedAction) {
+    const result = await handleEducativeAction(
+      chat,
+      userId,
+      content,
+      requestedAction,
+      currentState,
+    );
+    await updateTitleAfterMessage(chat, content);
+    return {
+      userMessage: result.userMessage,
+      assistantMessage: result.assistantMessage,
+    };
+  }
 
   const userMessage = await createMessage({
     chatId,
     role: "user",
     content: content.trim(),
   });
-
   const history = await listMessagesByChatId(chatId);
   const recentHistory = history.slice(-MEMORY_MESSAGE_LIMIT);
-  const previousMessages = history.filter((message) => message.id !== userMessage.id);
-  const recentUserMessages = previousMessages
-    .filter((message) => message.role === "user")
-    .slice(-20);
-  const recentAssistantMessages = previousMessages
-    .filter((message) => message.role === "assistant")
-    .slice(-MEMORY_MESSAGE_LIMIT);
-  const educativeSearchContext = await searchEducativeOffers({
-    prisma,
-    message: content,
-    userMessages: recentUserMessages,
-    assistantMessages: recentAssistantMessages,
-    limit: 3,
-  });
-  const isEducativeRequest =
-    educativeSearchContext.isEducativeIntent ||
-    educativeSearchContext.isFollowUp ||
-    educativeSearchContext.isRefinement;
-  const shouldUseBackendEducativeReply = Boolean(
-    isEducativeRequest && educativeSearchContext.careerKeywords?.length
+  const directCareers = detectCareerOptions(content);
+  const normalizedContent = normalizeEducativeText(content);
+  const isStandaloneCareer = directCareers.some(
+    (career) =>
+      normalizedContent === normalizeEducativeText(career.name) ||
+      normalizedContent === normalizeEducativeText(career.normalizedName),
   );
-  console.log("EDUCATIVE BACKEND DIRECT REPLY", shouldUseBackendEducativeReply);
-  console.log("GEMINI CALLED", !shouldUseBackendEducativeReply);
+  const directRequest = directCareers.length > 0 && (
+    isDirectEducativeRequest(content) || isStandaloneCareer
+  );
+  const messagesSinceDeferral = currentState.deferredSearch
+    ? currentState.messagesSinceDeferral + 1
+    : currentState.messagesSinceDeferral;
+  const workingState = {
+    ...currentState,
+    messagesSinceDeferral,
+  };
+  const hasStrongReinforcement = isStrongCareerReinforcement(
+    content,
+    currentState.lastPromptedCareers,
+  );
+  const hasNewCareer = hasDifferentCareer(
+    directCareers,
+    currentState.lastPromptedCareers,
+  );
+  const canPromptAfterDeferral =
+    !currentState.deferredSearch ||
+    messagesSinceDeferral >= 3 ||
+    hasStrongReinforcement ||
+    hasNewCareer ||
+    isDirectInstitutionRequest(content);
 
-  const memoryContext = shouldUseBackendEducativeReply
-    ? null
-    : await buildMemoryContext(userId, chat);
-  const assistantReply = shouldUseBackendEducativeReply
-    ? buildEducativeSearchReply(educativeSearchContext)
-    : await generateAssistantReply(recentHistory, educativeSearchContext.offerContext || [], memoryContext, {
-        isEducativeRequest,
-      });
+  const shouldShowDirectConfirmation =
+    directCareers.length > 0 &&
+    canPromptAfterDeferral &&
+    (
+      directRequest ||
+      (
+        currentState.deferredSearch &&
+        (hasStrongReinforcement || hasNewCareer)
+      )
+    );
 
-  const assistantMessage = await createMessage({
-    chatId,
-    role: "assistant",
-    content: assistantReply,
-  });
-
-  await updateChat(chatId, {});
-
-  const totalMessages = await countMessagesByChatId(chatId);
-
-  if (chat.title === "Nueva conversacion" && totalMessages <= 2) {
-    await updateChat(chatId, { title: deriveChatTitle(content) });
+  if (shouldShowDirectConfirmation) {
+    const result = await createCareerConfirmation(
+      chat,
+      "",
+      directCareers,
+      true,
+      workingState,
+    );
+    await updateTitleAfterMessage(chat, content);
+    return {
+      userMessage,
+      assistantMessage: result.assistantMessage,
+    };
   }
 
-  if (!shouldUseBackendEducativeReply) {
-    await updateSummariesAfterReply({
+  const memoryContext = await buildMemoryContext(userId, chat);
+  const assistantReply = await generateAssistantReply(
+    recentHistory,
+    [],
+    memoryContext,
+    { isEducativeRequest: false },
+  );
+  const inferredCareers = detectCareerOptions(assistantReply);
+  const inferredHasNewCareer = hasDifferentCareer(
+    inferredCareers,
+    currentState.lastPromptedCareers,
+  );
+  const careersToPrompt = inferredCareers.length > 0
+    ? inferredCareers
+    : currentState.deferredSearch && messagesSinceDeferral >= 3
+      ? currentState.lastPromptedCareers
+      : [];
+  const canShowInferredConfirmation =
+    careersToPrompt.length > 0 &&
+    (
+      !currentState.deferredSearch ||
+      messagesSinceDeferral >= 3 ||
+      inferredHasNewCareer ||
+      hasStrongReinforcement
+    );
+
+  let assistantMessage;
+  if (canShowInferredConfirmation) {
+    const result = await createCareerConfirmation(
+      chat,
+      assistantReply,
+      careersToPrompt,
+      false,
+      workingState,
+    );
+    assistantMessage = result.assistantMessage;
+  } else {
+    assistantMessage = await createMessage({
       chatId,
-      messages: [...recentHistory, assistantMessage],
-      currentChatSummary: memoryContext.currentChatSummary,
-      userMemorySummary: memoryContext.userMemorySummary,
-      userId,
+      role: "assistant",
+      content: assistantReply,
     });
+
+    if (
+      workingState.messagesSinceDeferral !== currentState.messagesSinceDeferral
+    ) {
+      await updateEducativeState(chat, workingState);
+    }
   }
+
+  await updateTitleAfterMessage(chat, content);
+  await updateSummariesAfterReply({
+    chatId,
+    messages: [...recentHistory, assistantMessage],
+    currentChatSummary: memoryContext.currentChatSummary,
+    userMemorySummary: memoryContext.userMemorySummary,
+    userId,
+  });
 
   return {
     userMessage,
     assistantMessage,
   };
 }
-
 export async function removeChat(chatId, userId) {
   await getOwnedChat(chatId, userId);
   await deleteChatRecord(chatId);
