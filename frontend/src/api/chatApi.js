@@ -15,8 +15,11 @@ export async function getMessagesRequest(chatId) {
   return response.data.data;
 }
 
-export async function sendMessageRequest(chatId, content) {
-  const response = await http.post(`/chats/${chatId}/messages`, { content });
+export async function sendMessageRequest(chatId, content, action = null) {
+  const response = await http.post(`/chats/${chatId}/messages`, {
+    content,
+    ...(action ? { action } : {}),
+  });
   return response.data.data;
 }
 

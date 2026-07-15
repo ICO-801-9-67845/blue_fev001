@@ -1439,3 +1439,52 @@ a:hover {
   .admin-segmented button { flex: 1; }
   .admin-pagination { justify-content: space-between; }
 }
+.educative-action-menu {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  width: min(100%, 420px);
+}
+
+.educative-action {
+  min-height: 42px;
+  width: 100%;
+  border: 1px solid #17756d;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #145e58;
+  font: inherit;
+  font-weight: 700;
+  line-height: 1.25;
+  padding: 9px 12px;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.educative-action:hover:not(:disabled) {
+  background: #eaf7f4;
+}
+
+.educative-action:focus-visible {
+  outline: 3px solid rgba(23, 117, 109, 0.3);
+  outline-offset: 2px;
+}
+
+.educative-action.secondary {
+  border-color: #6b7280;
+  color: #4b5563;
+}
+
+.educative-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.educative-action-status {
+  color: #5b6470;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 2px 0;
+}
