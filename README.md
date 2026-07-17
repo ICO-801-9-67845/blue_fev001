@@ -62,6 +62,7 @@ GEMINI_CHAT_MAX_OUTPUT_TOKENS=300
 GEMINI_MEMORY_MAX_OUTPUT_TOKENS=600
 GEMINI_CHAT_TEMPERATURE=0.6
 GEMINI_MEMORY_TEMPERATURE=0.1
+GEMINI_MEMORY_EVERY_USER_MESSAGES=4
 
 SEED_USER_NAME=Demo User
 SEED_USER_EMAIL=demo@bluefev.dev
@@ -156,6 +157,7 @@ npm run dev -w frontend
 - `GEMINI_MODEL` se mantiene por compatibilidad y funciona como fallback para ambos usos.
 - `GEMINI_CHAT_MODEL` y `GEMINI_MEMORY_MODEL` tienen prioridad y permiten configurar por separado conversacion y memoria.
 - Los limites de salida y temperaturas de cada uso se configuran con las variables `GEMINI_*_MAX_OUTPUT_TOKENS` y `GEMINI_*_TEMPERATURE`.
+- `GEMINI_MEMORY_EVERY_USER_MESSAGES` limita cada cuantas respuestas conversacionales elegibles se regeneran los resumenes de memoria; no cambia la cantidad de mensajes recientes enviada a la conversacion principal.
 - El frontend nunca recibe las API keys; toda la integracion vive en el backend.
 - No subas archivos `.env`, dumps locales ni bases `.db` al repositorio.
 

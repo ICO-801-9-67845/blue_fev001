@@ -14,7 +14,7 @@ function required(name, fallback = "") {
   return value;
 }
 
-function positiveInteger(name, fallback) {
+export function positiveInteger(name, fallback) {
   const value = Number(process.env[name]);
 
   return Number.isFinite(value) && Number.isInteger(value) && value > 0
@@ -53,6 +53,10 @@ export const GEMINI_MEMORY_MAX_OUTPUT_TOKENS = positiveInteger(
 );
 export const GEMINI_CHAT_TEMPERATURE = temperature("GEMINI_CHAT_TEMPERATURE", 0.6);
 export const GEMINI_MEMORY_TEMPERATURE = temperature("GEMINI_MEMORY_TEMPERATURE", 0.1);
+export const GEMINI_MEMORY_EVERY_USER_MESSAGES = positiveInteger(
+  "GEMINI_MEMORY_EVERY_USER_MESSAGES",
+  4,
+);
 export const GEMINI_API_KEYS = required("GEMINI_API_KEYS")
   .split(",")
   .map((key) => key.trim())

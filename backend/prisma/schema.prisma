@@ -142,6 +142,8 @@ model Chat {
   id                    String    @id @default(cuid()) @db.VarChar(191)
   title                 String    @db.VarChar(255)
   summary               String?   @db.VarChar(700)
+  memoryEligibleTurnCount   Int    @default(0)
+  memorySummarizedTurnCount Int    @default(0)
   educativeState        Json?
   educativeStateVersion Int       @default(0)
   userId                String    @db.VarChar(191)

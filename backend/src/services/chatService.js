@@ -14,10 +14,13 @@ import {
 import prisma from "../config/prisma.js";
 import {
   findUserMemoryByUserId,
-  upsertUserMemory,
 } from "../repositories/userMemoryRepository.js";
 import { ApiError } from "../utils/ApiError.js";
-import { generateAssistantReply, generateMemorySummaries } from "./aiService.js";
+import { generateAssistantReply } from "./aiService.js";
+import {
+  MEMORY_REFRESH_FLOWS,
+  refreshMemoryAfterEligibleTurn,
+} from "./memoryRefreshService.js";
 import { buildEducativeSearchReply, searchEducativeOffers } from "./educativeSearchService.js";
 import {
   buildConfirmationReply,
@@ -438,35 +441,6 @@ async function buildMemoryContext(userId, chat) {
   };
 }
 
-async function updateSummariesAfterReply({
-  chatId,
-  messages,
-  currentChatSummary,
-  userMemorySummary,
-  userId,
-}) {
-  try {
-    const summaries = await generateMemorySummaries({
-      messages,
-      currentChatSummary,
-      userMemorySummary,
-    });
-
-    if (!summaries) {
-      return;
-    }
-
-    if (summaries.chatSummary) {
-      await updateChat(chatId, { summary: summaries.chatSummary });
-    }
-
-    if (summaries.userMemorySummary) {
-      await upsertUserMemory(userId, summaries.userMemorySummary);
-    }
-  } catch (error) {
-    console.error(`No fue posible actualizar memoria resumida: ${error.message}`);
-  }
-}
 
 async function getOwnedChat(chatId, userId) {
   const chat = await findChatById(chatId);
@@ -1123,7 +1097,8 @@ async function continueConversationAfterAction(chat, userId, content, state, cli
     content: assistantReply,
   });
 
-  await updateSummariesAfterReply({
+  await refreshMemoryAfterEligibleTurn({
+    flow: MEMORY_REFRESH_FLOWS.CONTINUE_AFTER_ACTION,
     chatId: chat.id,
     messages: [...recentHistory, assistantMessage],
     currentChatSummary: memoryContext.currentChatSummary,
@@ -1421,7 +1396,8 @@ export async function sendMessage(chatId, userId, content, action = null) {
   }
 
   await updateTitleAfterMessage(chat, content);
-  await updateSummariesAfterReply({
+  await refreshMemoryAfterEligibleTurn({
+    flow: MEMORY_REFRESH_FLOWS.CONVERSATION,
     chatId,
     messages: [...recentHistory, assistantMessage],
     currentChatSummary: memoryContext.currentChatSummary,
