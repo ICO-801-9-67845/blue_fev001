@@ -56,6 +56,12 @@ FRONTEND_URL=http://localhost:5173
 
 GEMINI_API_KEYS=tu_api_key_1,tu_api_key_2
 GEMINI_MODEL=gemini-2.5-flash-lite
+GEMINI_CHAT_MODEL=gemini-2.5-flash-lite
+GEMINI_MEMORY_MODEL=gemini-2.5-flash-lite
+GEMINI_CHAT_MAX_OUTPUT_TOKENS=300
+GEMINI_MEMORY_MAX_OUTPUT_TOKENS=600
+GEMINI_CHAT_TEMPERATURE=0.6
+GEMINI_MEMORY_TEMPERATURE=0.1
 
 SEED_USER_NAME=Demo User
 SEED_USER_EMAIL=demo@bluefev.dev
@@ -147,7 +153,9 @@ npm run dev -w frontend
 
 - Coloca una imagen del personaje en `frontend/public/character.png` si buscas reemplazar el personaje actual.
 - `GEMINI_API_KEYS` acepta varias keys separadas por comas.
-- `GEMINI_MODEL` permite cambiar el modelo sin modificar codigo.
+- `GEMINI_MODEL` se mantiene por compatibilidad y funciona como fallback para ambos usos.
+- `GEMINI_CHAT_MODEL` y `GEMINI_MEMORY_MODEL` tienen prioridad y permiten configurar por separado conversacion y memoria.
+- Los limites de salida y temperaturas de cada uso se configuran con las variables `GEMINI_*_MAX_OUTPUT_TOKENS` y `GEMINI_*_TEMPERATURE`.
 - El frontend nunca recibe las API keys; toda la integracion vive en el backend.
 - No subas archivos `.env`, dumps locales ni bases `.db` al repositorio.
 

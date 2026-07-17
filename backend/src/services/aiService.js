@@ -1,5 +1,13 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { GEMINI_API_KEYS, GEMINI_MODEL } from "../config/env.js";
+import {
+  GEMINI_API_KEYS,
+  GEMINI_CHAT_MAX_OUTPUT_TOKENS,
+  GEMINI_CHAT_MODEL,
+  GEMINI_CHAT_TEMPERATURE,
+  GEMINI_MEMORY_MAX_OUTPUT_TOKENS,
+  GEMINI_MEMORY_MODEL,
+  GEMINI_MEMORY_TEMPERATURE,
+} from "../config/env.js";
 import { ApiError } from "../utils/ApiError.js";
 
 const SYSTEM_PROMPT = `
@@ -71,6 +79,25 @@ const OFFER_DETAIL_ID_PATTERN = /\/oferta-educativa\/detalle\/(\d+)/gi;
 
 const INVALID_OFFER_LINK_RESPONSE =
   "Encontre un problema validando los enlaces. Para evitar darte informacion incorrecta, intenta pedirme la busqueda de nuevo con carrera y municipio.";
+
+function getUsageCount(usageMetadata, property) {
+  const value = Number(usageMetadata?.[property]);
+
+  return Number.isFinite(value) && value >= 0 ? value : 0;
+}
+
+function logGeminiUsage(requestType, model, usageMetadata) {
+  console.log({
+    event: "gemini_usage",
+    requestType,
+    model,
+    promptTokenCount: getUsageCount(usageMetadata, "promptTokenCount"),
+    candidatesTokenCount: getUsageCount(usageMetadata, "candidatesTokenCount"),
+    thoughtsTokenCount: getUsageCount(usageMetadata, "thoughtsTokenCount"),
+    cachedContentTokenCount: getUsageCount(usageMetadata, "cachedContentTokenCount"),
+    totalTokenCount: getUsageCount(usageMetadata, "totalTokenCount"),
+  });
+}
 
 function isRecoverableGeminiError(error) {
   const message = `${error?.message || ""}`.toLowerCase();
@@ -389,8 +416,13 @@ ${transcript}
     try {
       const client = new GoogleGenerativeAI(apiKey);
       const model = client.getGenerativeModel({
-        model: GEMINI_MODEL,
+        model: GEMINI_MEMORY_MODEL,
         systemInstruction: MEMORY_SUMMARY_PROMPT,
+        generationConfig: {
+          maxOutputTokens: GEMINI_MEMORY_MAX_OUTPUT_TOKENS,
+          temperature: GEMINI_MEMORY_TEMPERATURE,
+          responseMimeType: "application/json",
+        },
       });
       const result = await model.generateContent({
         contents: [
@@ -400,6 +432,7 @@ ${transcript}
           },
         ],
       });
+      logGeminiUsage("memory", GEMINI_MEMORY_MODEL, result.response?.usageMetadata);
       const parsed = extractJsonFromText(result.response.text());
 
       if (!parsed) {
@@ -444,13 +477,18 @@ export async function generateAssistantReply(
     try {
       const client = new GoogleGenerativeAI(apiKey);
       const model = client.getGenerativeModel({
-        model: GEMINI_MODEL,
+        model: GEMINI_CHAT_MODEL,
         systemInstruction: FULL_SYSTEM_PROMPT,
+        generationConfig: {
+          maxOutputTokens: GEMINI_CHAT_MAX_OUTPUT_TOKENS,
+          temperature: GEMINI_CHAT_TEMPERATURE,
+        },
       });
 
       const result = await model.generateContent({
         contents: buildContents(history, offerContext, memoryContext),
       });
+      logGeminiUsage("conversation", GEMINI_CHAT_MODEL, result.response?.usageMetadata);
 
       const response = result.response.text().trim();
 
