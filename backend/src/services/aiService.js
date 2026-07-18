@@ -11,9 +11,21 @@ import {
   GEMINI_MEMORY_MAX_OUTPUT_TOKENS,
   GEMINI_MEMORY_MODEL,
   GEMINI_MEMORY_TEMPERATURE,
+  GEMINI_MEMORY_CONTEXT_MESSAGE_LIMIT,
+  GEMINI_MEMORY_CONTEXT_MAX_CHARS,
+  GEMINI_MEMORY_USER_MESSAGE_MAX_CHARS,
+  GEMINI_MEMORY_ASSISTANT_MESSAGE_MAX_CHARS,
+  GEMINI_MEMORY_CURRENT_CHAT_SUMMARY_MAX_CHARS,
+  GEMINI_MEMORY_USER_MEMORY_MAX_CHARS,
+  GEMINI_MEMORY_TARGET_CHAT_SUMMARY_CHARS,
+  GEMINI_MEMORY_TARGET_USER_MEMORY_CHARS,
 } from "../config/env.js";
 import { ApiError } from "../utils/ApiError.js";
 import { buildAssistantRequestContext } from "./aiContextService.js";
+import {
+  buildMemoryRequestContext,
+  buildMemorySummarySystemInstruction,
+} from "./memoryContextService.js";
 
 const SYSTEM_PROMPT = `
 Habla siempre en espanol natural, cercano y humano.
@@ -81,13 +93,19 @@ export const FULL_SYSTEM_PROMPT = `${BASE_SYSTEM_INSTRUCTION}
 
 ${EDUCATIVE_OFFER_RULES}`;
 
-const MEMORY_SUMMARY_PROMPT = `
-Resume informacion persistente util del usuario para continuidad vocacional.
-Guarda solo datos utiles y relativamente estables: nivel educativo, ciudad o municipio, intereses, gustos, fortalezas, areas, carreras y preferencias.
-No guardes datos triviales, sensibles innecesarios ni texto enorme.
-Responde solo JSON valido con esta forma:
-{"chatSummary":"maximo 700 caracteres","userMemorySummary":"maximo 1000 caracteres"}
-`;
+const MEMORY_SUMMARY_PROMPT = buildMemorySummarySystemInstruction({
+  targetChatSummaryChars: GEMINI_MEMORY_TARGET_CHAT_SUMMARY_CHARS,
+  targetUserMemoryChars: GEMINI_MEMORY_TARGET_USER_MEMORY_CHARS,
+});
+
+const MEMORY_CONTEXT_LIMITS = Object.freeze({
+  messageLimit: GEMINI_MEMORY_CONTEXT_MESSAGE_LIMIT,
+  characterBudget: GEMINI_MEMORY_CONTEXT_MAX_CHARS,
+  userMessageMaxChars: GEMINI_MEMORY_USER_MESSAGE_MAX_CHARS,
+  assistantMessageMaxChars: GEMINI_MEMORY_ASSISTANT_MESSAGE_MAX_CHARS,
+  currentChatSummaryMaxChars: GEMINI_MEMORY_CURRENT_CHAT_SUMMARY_MAX_CHARS,
+  userMemoryMaxChars: GEMINI_MEMORY_USER_MEMORY_MAX_CHARS,
+});
 
 const OFFER_DETAIL_ID_PATTERN = /\/oferta-educativa\/detalle\/(\d+)/gi;
 
@@ -539,6 +557,7 @@ export function createMemorySummaryGenerator({
   maxOutputTokens = GEMINI_MEMORY_MAX_OUTPUT_TOKENS,
   temperature = GEMINI_MEMORY_TEMPERATURE,
   writeUsage,
+  writeContextUsage = (entry) => console.info(entry),
   writeResult = (entry) => console.info(entry),
   writeAttempt = (entry) => console.warn(entry),
 } = {}) {
@@ -556,9 +575,21 @@ export function createMemorySummaryGenerator({
     currentChatSummary = "",
     userMemorySummary = "",
   } = {}) {
-    const recentMessages = Array.isArray(messages) ? messages.slice(-12) : [];
+    const memoryContext = buildMemoryRequestContext({
+      messages,
+      currentChatSummary,
+      userMemorySummary,
+      model: modelName,
+      limits: MEMORY_CONTEXT_LIMITS,
+    });
 
-    if (!recentMessages.length) {
+    try {
+      writeContextUsage(memoryContext.metrics);
+    } catch {
+      // Context metrics must not change memory generation behavior.
+    }
+
+    if (!memoryContext.messages.length) {
       return publishResult(
         withMemoryMetadata(
           createMemorySummaryFailure(
@@ -569,23 +600,7 @@ export function createMemorySummaryGenerator({
       );
     }
 
-    const transcript = recentMessages
-      .map((message) => {
-        const role = message.role === "assistant" ? "Blue" : "Usuario";
-        return `${role}: ${toSafeString(message.content).slice(0, 900)}`;
-      })
-      .join("\n");
-
-    const prompt = `
-Resumen actual del chat:
-${toSafeString(currentChatSummary) || "Sin resumen previo."}
-
-Memoria global actual:
-${toSafeString(userMemorySummary) || "Sin memoria previa."}
-
-Mensajes recientes:
-${transcript}
-`;
+    const prompt = memoryContext.prompt;
 
     for (let index = 0; index < apiKeys.length; index += 1) {
       const apiKey = apiKeys[index];

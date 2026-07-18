@@ -63,6 +63,14 @@ GEMINI_MEMORY_MAX_OUTPUT_TOKENS=600
 GEMINI_CHAT_TEMPERATURE=0.6
 GEMINI_MEMORY_TEMPERATURE=0.1
 GEMINI_MEMORY_EVERY_USER_MESSAGES=4
+GEMINI_MEMORY_CONTEXT_MESSAGE_LIMIT=8
+GEMINI_MEMORY_CONTEXT_MAX_CHARS=3600
+GEMINI_MEMORY_USER_MESSAGE_MAX_CHARS=600
+GEMINI_MEMORY_ASSISTANT_MESSAGE_MAX_CHARS=350
+GEMINI_MEMORY_CURRENT_CHAT_SUMMARY_MAX_CHARS=500
+GEMINI_MEMORY_USER_MEMORY_MAX_CHARS=700
+GEMINI_MEMORY_TARGET_CHAT_SUMMARY_CHARS=450
+GEMINI_MEMORY_TARGET_USER_MEMORY_CHARS=650
 GEMINI_CHAT_HISTORY_LIMIT_WITH_SUMMARY=6
 GEMINI_CHAT_HISTORY_LIMIT_WITHOUT_SUMMARY=8
 GEMINI_CHAT_HISTORY_MAX_CHARS_WITH_SUMMARY=3200
@@ -162,9 +170,18 @@ npm run dev -w frontend
 - `GEMINI_CHAT_MODEL` y `GEMINI_MEMORY_MODEL` tienen prioridad y permiten configurar por separado conversacion y memoria.
 - Los limites de salida y temperaturas de cada uso se configuran con las variables `GEMINI_*_MAX_OUTPUT_TOKENS` y `GEMINI_*_TEMPERATURE`.
 - `GEMINI_MEMORY_EVERY_USER_MESSAGES` limita cada cuantas respuestas conversacionales elegibles se regeneran los resumenes de memoria; no cambia la cantidad de mensajes recientes enviada a la conversacion principal.
+- Las ocho variables nuevas de memoria son opcionales; si se omiten o no contienen enteros positivos, se usan los valores predeterminados definidos en `backend/src/config/env.js`.
+- `GEMINI_MEMORY_CONTEXT_MESSAGE_LIMIT` (8) limita los mensajes seleccionados para memoria.
+- `GEMINI_MEMORY_CONTEXT_MAX_CHARS` (3600) limita el transcript completo, incluidas etiquetas y separadores.
+- `GEMINI_MEMORY_USER_MESSAGE_MAX_CHARS` (600) limita la copia de cada mensaje del usuario.
+- `GEMINI_MEMORY_ASSISTANT_MESSAGE_MAX_CHARS` (350) limita la copia de cada respuesta normal de Blue.
+- `GEMINI_MEMORY_CURRENT_CHAT_SUMMARY_MAX_CHARS` (500) limita la copia del resumen previo del chat.
+- `GEMINI_MEMORY_USER_MEMORY_MAX_CHARS` (700) limita la copia de la memoria global previa.
+- `GEMINI_MEMORY_TARGET_CHAT_SUMMARY_CHARS` (450) define el objetivo del nuevo resumen del chat.
+- `GEMINI_MEMORY_TARGET_USER_MEMORY_CHARS` (650) define el objetivo de la memoria estable; el parser conserva limites de seguridad 700/1000.
 - Con resumen actual, la llamada conversacional usa un historial mas pequeno mediante `GEMINI_CHAT_HISTORY_LIMIT_WITH_SUMMARY` y `GEMINI_CHAT_HISTORY_MAX_CHARS_WITH_SUMMARY`.
 - Sin resumen actual, conserva un poco mas de historial mediante `GEMINI_CHAT_HISTORY_LIMIT_WITHOUT_SUMMARY` y `GEMINI_CHAT_HISTORY_MAX_CHARS_WITHOUT_SUMMARY`.
-- Estos limites solo afectan la copia enviada a la conversacion principal de Gemini. El mensaje actual siempre se conserva y la generacion de memoria mantiene su ventana existente.
+- Los limites conversacionales solo afectan la copia enviada a la conversacion principal de Gemini. La generacion de memoria usa su configuracion independiente y preserva el mensaje de usuario mas reciente.
 - El frontend nunca recibe las API keys; toda la integracion vive en el backend.
 - No subas archivos `.env`, dumps locales ni bases `.db` al repositorio.
 

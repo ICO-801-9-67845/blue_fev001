@@ -21,7 +21,10 @@ const {
   createMemoryRefreshService,
   createMemorySummaryPersistence,
 } = await import("../src/services/memoryRefreshService.js");
-const { GEMINI_MEMORY_EVERY_USER_MESSAGES } = await import("../src/config/env.js");
+const {
+  GEMINI_MEMORY_CONTEXT_MESSAGE_LIMIT,
+  GEMINI_MEMORY_EVERY_USER_MESSAGES,
+} = await import("../src/config/env.js");
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const reportPath = resolve(__dirname, "../../tmp/ai-memory-summary-resilience/test-results.json");
@@ -157,7 +160,7 @@ function createFakePrisma({ failChat = false, failUserMemory = false } = {}) {
 
 function createGeneratorHarness(steps) {
   let callIndex = 0;
-  const calls = { keys: [], usage: [], results: [], attempts: [], order: [] };
+  const calls = { keys: [], usage: [], contexts: [], results: [], attempts: [], order: [] };
   const apiKeys = steps.map((_, index) => `fake-key-${index}`);
   const generator = createMemorySummaryGenerator({
     apiKeys,
@@ -186,6 +189,10 @@ function createGeneratorHarness(steps) {
           };
         },
       };
+    },
+    writeContextUsage(entry) {
+      calls.order.push("context");
+      calls.contexts.push(entry);
     },
     writeUsage(...args) {
       calls.order.push("usage");
@@ -407,8 +414,9 @@ await test("32. Cadencia sigue siendo 4", () => {
   assert.equal(GEMINI_MEMORY_EVERY_USER_MESSAGES, 4);
 });
 
-await test("33. Ventana de memoria sigue siendo 12", () => {
-  assert.match(aiSource, /messages\.slice\(-12\)/);
+await test("33. Ventana optimizada de memoria es 8", () => {
+  assert.equal(GEMINI_MEMORY_CONTEXT_MESSAGE_LIMIT, 8);
+  assert.match(aiSource, /GEMINI_MEMORY_CONTEXT_MESSAGE_LIMIT/);
 });
 
 await test("34. Rotacion de claves continua", () => {
@@ -703,10 +711,10 @@ for (const [number, name, text, reason] of [
   });
 }
 
-await test("75. Orden de eventos es usage antes de result", async () => {
+await test("75. Orden de eventos es context usage y result", async () => {
   const harness = createGeneratorHarness([{ text: '{"chatSummary":"Chat"}' }]);
   await harness.generator({ messages: [{ role: "user", content: "x" }] });
-  assert.deepEqual(harness.calls.order, ["usage", "result"]);
+  assert.deepEqual(harness.calls.order, ["context", "usage", "result"]);
 });
 
 await test("76. MAX_TOKENS con JSON truncado es invalid_json", async () => {
@@ -893,6 +901,7 @@ await test("89. Orden integrado es usage result y defer", async () => {
     chatId: "chat", userId: "user", messages: [{ role: "user", content: "x" }],
   });
   const order = generatorHarness.calls.order;
+  assert.ok(order.indexOf("context") < order.indexOf("usage"));
   assert.ok(order.indexOf("usage") < order.indexOf("result"));
   assert.ok(order.indexOf("result") < order.indexOf("refresh:defer:invalid_json"));
 });
