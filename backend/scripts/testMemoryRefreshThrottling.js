@@ -43,15 +43,22 @@ function createBarrier(parties) {
   };
 }
 
+function summarySuccess(chatSummary, userMemorySummary) {
+  return {
+    ok: true,
+    summaries: { chatSummary, userMemorySummary },
+    reason: "valid_summary",
+    metadata: { finishReason: "STOP", responseCharacterCount: 10 },
+  };
+}
+
 function createHarness({
   cadence = 4,
   eligible = 0,
   summarized = 0,
   waitAfterIncrement = async () => {},
-  generate = async () => ({
-    chatSummary: "Resumen del chat",
-    userMemorySummary: "Memoria del usuario",
-  }),
+  generate = async () =>
+    summarySuccess("Resumen del chat", "Memoria del usuario"),
   saveChat = async () => {},
   saveUserMemory = async () => {},
 } = {}) {
@@ -248,7 +255,7 @@ await test("Concurrencia de 20 solicitudes concede una sola reclamacion", async 
   assert.equal(harness.state.summarized, 24);
 });
 
-await test("Null revierte y el siguiente turno reintenta con exito", async () => {
+await test("Null consume el intervalo y reintenta en la siguiente cadencia", async () => {
   let attempt = 0;
   const harness = createHarness({
     eligible: 3,
@@ -256,29 +263,30 @@ await test("Null revierte y el siguiente turno reintenta con exito", async () =>
       attempt += 1;
       return attempt === 1
         ? null
-        : {
-            chatSummary: "Resumen recuperado",
-            userMemorySummary: "Memoria recuperada",
-          };
+        : summarySuccess("Resumen recuperado", "Memoria recuperada");
     },
   });
 
   const failedAttempt = await harness.run();
-  assert.equal(failedAttempt.action, "rollback");
+  assert.equal(failedAttempt.action, "defer");
+  assert.equal(failedAttempt.reason, "invalid_schema");
   assert.equal(harness.state.eligible, 4);
-  assert.equal(harness.state.summarized, 0);
-  assert.equal(harness.calls.rollbacks, 1);
+  assert.equal(harness.state.summarized, 4);
+  assert.equal(harness.calls.rollbacks, 0);
 
+  assert.equal((await harness.run()).action, "skip");
+  assert.equal((await harness.run()).action, "skip");
+  assert.equal((await harness.run()).action, "skip");
   const successfulAttempt = await harness.run();
   assert.equal(successfulAttempt.action, "run");
   assert.equal(harness.calls.memory, 2);
   assert.equal(harness.calls.chatSaves, 1);
   assert.equal(harness.calls.userMemorySaves, 1);
-  assert.equal(harness.state.eligible, 5);
-  assert.equal(harness.state.summarized, 5);
+  assert.equal(harness.state.eligible, 8);
+  assert.equal(harness.state.summarized, 8);
 });
 
-await test("Error de memoria revierte sin fallar la respuesta principal", async () => {
+await test("Error de memoria difiere sin fallar la respuesta principal", async () => {
   const harness = createHarness({
     eligible: 3,
     generate: async () => {
@@ -286,11 +294,14 @@ await test("Error de memoria revierte sin fallar la respuesta principal", async 
     },
   });
   const outcome = await harness.run();
-  assert.equal(outcome.action, "rollback");
-  assert.equal(harness.state.summarized, 0);
+  assert.equal(outcome.action, "defer");
+  assert.equal(outcome.reason, "generation_error");
+  assert.equal(harness.state.summarized, 4);
+  assert.equal((await harness.run()).action, "skip");
+  assert.equal(harness.calls.memory, 1);
 });
 
-await test("Rollback no sobrescribe una reclamacion mas nueva", async () => {
+await test("Fallo clasificado no sobrescribe una reclamacion mas nueva", async () => {
   const harness = createHarness({ eligible: 3 });
   harness.setGenerate(async () => {
     harness.state.eligible = 8;
@@ -299,10 +310,10 @@ await test("Rollback no sobrescribe una reclamacion mas nueva", async () => {
   });
   await harness.run();
   assert.equal(harness.state.summarized, 8);
-  assert.equal(harness.calls.rollbacks, 1);
+  assert.equal(harness.calls.rollbacks, 0);
 });
 
-await test("Persistencia completa, parcial y vacia conserva reintentos", async () => {
+await test("Persistencia completa, parcial y vacia conserva watermark", async () => {
   const both = createHarness({ eligible: 3 });
   assert.equal((await both.run()).action, "run");
   assert.equal(both.calls.chatSaves, 1);
@@ -311,10 +322,7 @@ await test("Persistencia completa, parcial y vacia conserva reintentos", async (
 
   const chatOnly = createHarness({
     eligible: 3,
-    generate: async () => ({
-      chatSummary: "Solo chat",
-      userMemorySummary: "   ",
-    }),
+    generate: async () => summarySuccess("Solo chat", "   "),
   });
   assert.equal((await chatOnly.run()).action, "run");
   assert.equal(chatOnly.calls.chatSaves, 1);
@@ -322,10 +330,7 @@ await test("Persistencia completa, parcial y vacia conserva reintentos", async (
 
   const userOnly = createHarness({
     eligible: 3,
-    generate: async () => ({
-      chatSummary: "",
-      userMemorySummary: "Solo usuario",
-    }),
+    generate: async () => summarySuccess("", "Solo usuario"),
   });
   assert.equal((await userOnly.run()).action, "run");
   assert.equal(userOnly.calls.chatSaves, 0);
@@ -333,15 +338,12 @@ await test("Persistencia completa, parcial y vacia conserva reintentos", async (
 
   const empty = createHarness({
     eligible: 3,
-    generate: async () => ({
-      chatSummary: " ",
-      userMemorySummary: "",
-    }),
+    generate: async () => summarySuccess(" ", ""),
   });
-  assert.equal((await empty.run()).action, "rollback");
+  assert.equal((await empty.run()).action, "defer");
   assert.equal(empty.calls.chatSaves, 0);
   assert.equal(empty.calls.userMemorySaves, 0);
-  assert.equal(empty.state.summarized, 0);
+  assert.equal(empty.state.summarized, 4);
 
   const chatFailure = createHarness({
     eligible: 3,
@@ -349,33 +351,14 @@ await test("Persistencia completa, parcial y vacia conserva reintentos", async (
       throw new Error("simulated chat persistence failure");
     },
   });
-  assert.equal((await chatFailure.run()).action, "rollback");
+  const persistenceFailure = await chatFailure.run();
+  assert.equal(persistenceFailure.action, "defer");
+  assert.equal(persistenceFailure.reason, "persistence_failed");
   assert.equal(chatFailure.calls.chatSaves, 1);
   assert.equal(chatFailure.calls.userMemorySaves, 0);
-  assert.equal(chatFailure.state.summarized, 0);
-
-  let savedChatSummary = "";
-  let userSaveAttempts = 0;
-  const partialThenRetry = createHarness({
-    eligible: 3,
-    saveChat: async (_chatId, summary) => {
-      savedChatSummary = summary;
-    },
-    saveUserMemory: async () => {
-      userSaveAttempts += 1;
-      if (userSaveAttempts === 1) {
-        throw new Error("simulated user memory persistence failure");
-      }
-    },
-  });
-  assert.equal((await partialThenRetry.run()).action, "rollback");
-  assert.equal(savedChatSummary, "Resumen del chat");
-  assert.equal(partialThenRetry.state.summarized, 0);
-  assert.equal((await partialThenRetry.run()).action, "run");
-  assert.equal(partialThenRetry.calls.memory, 2);
-  assert.equal(partialThenRetry.calls.chatSaves, 2);
-  assert.equal(partialThenRetry.calls.userMemorySaves, 2);
-  assert.equal(partialThenRetry.state.summarized, 5);
+  assert.equal(chatFailure.state.summarized, 4);
+  assert.equal((await chatFailure.run()).action, "skip");
+  assert.equal(chatFailure.calls.memory, 1);
 });
 
 await test("Solo los dos flujos conversacionales son elegibles", async () => {

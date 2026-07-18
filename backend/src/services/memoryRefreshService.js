@@ -1,8 +1,10 @@
 import prisma from "../config/prisma.js";
 import { GEMINI_MEMORY_EVERY_USER_MESSAGES } from "../config/env.js";
-import { updateChat } from "../repositories/chatRepository.js";
-import { upsertUserMemory } from "../repositories/userMemoryRepository.js";
-import { generateMemorySummaries } from "./aiService.js";
+import {
+  MEMORY_SUMMARY_FAILURE_REASONS,
+  MEMORY_SUMMARY_SUCCESS_REASON,
+  generateMemorySummaries,
+} from "./aiService.js";
 
 export const MEMORY_REFRESH_FLOWS = Object.freeze({
   CONVERSATION: "conversation",
@@ -10,28 +12,117 @@ export const MEMORY_REFRESH_FLOWS = Object.freeze({
 });
 
 const ELIGIBLE_FLOWS = new Set(Object.values(MEMORY_REFRESH_FLOWS));
+const GENERATION_FAILURE_REASONS = new Set(
+  Object.values(MEMORY_SUMMARY_FAILURE_REASONS),
+);
 
 export function isEligibleMemoryRefreshFlow(flow) {
   return ELIGIBLE_FLOWS.has(flow);
 }
 
-function hasUsefulSummary(summaries) {
-  return Boolean(
-    summaries &&
-      (String(summaries.chatSummary || "").trim() ||
-        String(summaries.userMemorySummary || "").trim()),
-  );
+function getUsefulSummaries(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  const chatSummary =
+    typeof value.chatSummary === "string" ? value.chatSummary.trim() : "";
+  const userMemorySummary =
+    typeof value.userMemorySummary === "string"
+      ? value.userMemorySummary.trim()
+      : "";
+
+  if (!chatSummary && !userMemorySummary) {
+    return null;
+  }
+
+  return { chatSummary, userMemorySummary };
+}
+
+function normalizeGenerationResult(result) {
+  if (result?.ok === false) {
+    return {
+      ok: false,
+      reason:
+        result.summaries === null && GENERATION_FAILURE_REASONS.has(result.reason)
+          ? result.reason
+          : MEMORY_SUMMARY_FAILURE_REASONS.INVALID_SCHEMA,
+    };
+  }
+
+  if (result?.ok !== true || result.reason !== MEMORY_SUMMARY_SUCCESS_REASON) {
+    return {
+      ok: false,
+      reason: MEMORY_SUMMARY_FAILURE_REASONS.INVALID_SCHEMA,
+    };
+  }
+
+  const summaries = getUsefulSummaries(result.summaries);
+  if (!summaries) {
+    return {
+      ok: false,
+      reason: MEMORY_SUMMARY_FAILURE_REASONS.EMPTY_SUMMARY,
+    };
+  }
+
+  return { ok: true, summaries };
 }
 
 function createDecisionLogger(writeLog) {
   return (action, reason, counts, cadence) => {
-    writeLog({
-      event: "gemini_memory_refresh_decision",
-      action,
-      reason,
-      eligibleTurnCount: counts.memoryEligibleTurnCount,
-      summarizedTurnCount: counts.memorySummarizedTurnCount,
-      cadence,
+    try {
+      writeLog({
+        event: "gemini_memory_refresh_decision",
+        action,
+        reason,
+        eligibleTurnCount: counts.memoryEligibleTurnCount,
+        summarizedTurnCount: counts.memorySummarizedTurnCount,
+        cadence,
+      });
+    } catch {
+      // Logging must not change memory refresh behavior.
+    }
+  };
+}
+
+export function createMemorySummaryPersistence(prismaClient) {
+  return async function persistMemorySummaries({
+    chatId,
+    userId,
+    summaries,
+  }) {
+    const chatSummary = summaries?.chatSummary || "";
+    const userMemorySummary = summaries?.userMemorySummary || "";
+
+    if (!chatSummary && !userMemorySummary) {
+      return { written: false };
+    }
+
+    if (chatSummary && userMemorySummary) {
+      return prismaClient.$transaction(async (transaction) => {
+        await transaction.chat.update({
+          where: { id: chatId },
+          data: { summary: chatSummary },
+        });
+        await transaction.userMemory.upsert({
+          where: { userId },
+          update: { summary: userMemorySummary },
+          create: { userId, summary: userMemorySummary },
+        });
+      });
+    }
+
+    if (chatSummary) {
+      return prismaClient.chat.update({
+        where: { id: chatId },
+        data: { summary: chatSummary },
+      });
+    }
+
+    return prismaClient.userMemory.upsert({
+      where: { userId },
+      update: { summary: userMemorySummary },
+      create: { userId, summary: userMemorySummary },
     });
   };
 }
@@ -42,11 +133,22 @@ export function createMemoryRefreshService({
   claimRefresh,
   rollbackRefresh,
   generateSummaries,
+  persistSummaries,
   saveChatSummary,
   saveUserMemorySummary,
   writeLog = (entry) => console.info(JSON.stringify(entry)),
 }) {
   const logDecision = createDecisionLogger(writeLog);
+  const persist =
+    persistSummaries ||
+    (async ({ chatId, userId, summaries }) => {
+      if (summaries.chatSummary) {
+        await saveChatSummary(chatId, summaries.chatSummary);
+      }
+      if (summaries.userMemorySummary) {
+        await saveUserMemorySummary(userId, summaries.userMemorySummary);
+      }
+    });
 
   return async function refreshMemoryAfterEligibleTurn({
     flow,
@@ -63,6 +165,7 @@ export function createMemoryRefreshService({
     let counts;
     let previousSummarizedTurnCount;
     let claimedSummarizedTurnCount;
+    let claimSucceeded = false;
 
     try {
       counts = await incrementEligibleTurn(chatId);
@@ -87,28 +190,58 @@ export function createMemoryRefreshService({
         return { action: "lost_claim", reason: "already_claimed", counts };
       }
 
-      logDecision("run", "cadence_due", counts, cadence);
-      const summaries = await generateSummaries({
-        messages,
-        currentChatSummary,
-        userMemorySummary,
-      });
+      claimSucceeded = true;
+      const claimedCounts = {
+        ...counts,
+        memorySummarizedTurnCount: claimedSummarizedTurnCount,
+      };
 
-      if (!hasUsefulSummary(summaries)) {
-        throw new Error("Memory summary was empty");
+      // The claimed count is a durable watermark for this processed interval.
+      logDecision("run", "cadence_due", claimedCounts, cadence);
+
+      let generationResult;
+      try {
+        generationResult = normalizeGenerationResult(
+          await generateSummaries({
+            messages,
+            currentChatSummary,
+            userMemorySummary,
+          }),
+        );
+      } catch {
+        generationResult = {
+          ok: false,
+          reason: MEMORY_SUMMARY_FAILURE_REASONS.GENERATION_ERROR,
+        };
       }
 
-      if (String(summaries.chatSummary || "").trim()) {
-        await saveChatSummary(chatId, summaries.chatSummary);
+      if (!generationResult.ok) {
+        logDecision("defer", generationResult.reason, claimedCounts, cadence);
+        return {
+          action: "defer",
+          reason: generationResult.reason,
+          counts: claimedCounts,
+        };
       }
 
-      if (String(summaries.userMemorySummary || "").trim()) {
-        await saveUserMemorySummary(userId, summaries.userMemorySummary);
+      try {
+        await persist({
+          chatId,
+          userId,
+          summaries: generationResult.summaries,
+        });
+      } catch {
+        logDecision("defer", "persistence_failed", claimedCounts, cadence);
+        return {
+          action: "defer",
+          reason: "persistence_failed",
+          counts: claimedCounts,
+        };
       }
 
-      return { action: "run", reason: "cadence_due", counts };
+      return { action: "run", reason: "cadence_due", counts: claimedCounts };
     } catch {
-      if (claimedSummarizedTurnCount !== undefined) {
+      if (claimSucceeded) {
         const rolledBack = await rollbackRefresh(
           chatId,
           claimedSummarizedTurnCount,
@@ -116,19 +249,20 @@ export function createMemoryRefreshService({
         ).catch(() => false);
 
         if (rolledBack) {
-          logDecision(
-            "rollback",
-            "summary_failed",
-            {
-              memoryEligibleTurnCount: counts.memoryEligibleTurnCount,
-              memorySummarizedTurnCount: previousSummarizedTurnCount,
-            },
-            cadence,
-          );
+          const rolledBackCounts = {
+            memoryEligibleTurnCount: counts.memoryEligibleTurnCount,
+            memorySummarizedTurnCount: previousSummarizedTurnCount,
+          };
+          logDecision("rollback", "internal_failure", rolledBackCounts, cadence);
+          return {
+            action: "rollback",
+            reason: "internal_failure",
+            counts: rolledBackCounts,
+          };
         }
       }
 
-      return { action: "rollback", reason: "summary_failed", counts };
+      return { action: "rollback", reason: "internal_failure", counts };
     }
   };
 }
@@ -165,10 +299,7 @@ const refreshMemory = createMemoryRefreshService({
     return result.count === 1;
   },
   generateSummaries: generateMemorySummaries,
-  saveChatSummary(chatId, summary) {
-    return updateChat(chatId, { summary });
-  },
-  saveUserMemorySummary: upsertUserMemory,
+  persistSummaries: createMemorySummaryPersistence(prisma),
 });
 
 export async function refreshMemoryAfterEligibleTurn(params) {

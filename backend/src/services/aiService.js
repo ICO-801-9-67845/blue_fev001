@@ -291,23 +291,212 @@ ${lines.join("\n")}
 `;
 }
 
-function extractJsonFromText(text) {
-  const cleanText = toSafeString(text)
-    .replace(/^```json\s*/i, "")
-    .replace(/^```\s*/i, "")
-    .replace(/```$/i, "")
-    .trim();
-  const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+export const MEMORY_SUMMARY_SUCCESS_REASON = "valid_summary";
 
-  if (!jsonMatch) {
-    return null;
+export const MEMORY_SUMMARY_FAILURE_REASONS = Object.freeze({
+  INVALID_JSON: "invalid_json",
+  INVALID_SCHEMA: "invalid_schema",
+  EMPTY_SUMMARY: "empty_summary",
+  GENERATION_ERROR: "generation_error",
+  EMPTY_RESPONSE: "empty_response",
+});
+
+function createMemorySummaryFailure(reason) {
+  return { ok: false, summaries: null, reason };
+}
+
+function isPlainObject(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
   }
 
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function truncateUnicode(value, maxCharacters) {
+  return Array.from(value.trim()).slice(0, maxCharacters).join("");
+}
+
+function extractFirstJsonObject(text) {
+  let startIndex = -1;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+
+    if (startIndex < 0) {
+      if (character === "{") {
+        startIndex = index;
+        depth = 1;
+      }
+      continue;
+    }
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (character === "\\") {
+        escaped = true;
+      } else if (character === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (character === '"') {
+      inString = true;
+    } else if (character === "{") {
+      depth += 1;
+    } else if (character === "}") {
+      depth -= 1;
+      if (depth === 0) {
+        return text.slice(startIndex, index + 1);
+      }
+    }
+  }
+
+  return "";
+}
+
+function parseJsonCandidate(text) {
   try {
-    return JSON.parse(jsonMatch[0]);
+    return JSON.parse(text);
   } catch {
-    return null;
+    return undefined;
   }
+}
+
+export function validateMemorySummaryPayload(payload) {
+  if (!isPlainObject(payload)) {
+    return createMemorySummaryFailure(
+      MEMORY_SUMMARY_FAILURE_REASONS.INVALID_SCHEMA,
+    );
+  }
+
+  const allowedFields = new Set(["chatSummary", "userMemorySummary"]);
+  const fields = Reflect.ownKeys(payload);
+  if (
+    fields.some(
+      (field) => typeof field !== "string" || !allowedFields.has(field),
+    )
+  ) {
+    return createMemorySummaryFailure(
+      MEMORY_SUMMARY_FAILURE_REASONS.INVALID_SCHEMA,
+    );
+  }
+
+  const descriptors = Object.getOwnPropertyDescriptors(payload);
+  for (const field of allowedFields) {
+    const descriptor = descriptors[field];
+    if (!descriptor) {
+      continue;
+    }
+    if ("get" in descriptor || "set" in descriptor) {
+      return createMemorySummaryFailure(
+        MEMORY_SUMMARY_FAILURE_REASONS.INVALID_SCHEMA,
+      );
+    }
+    if (typeof descriptor.value !== "string") {
+      return createMemorySummaryFailure(
+        MEMORY_SUMMARY_FAILURE_REASONS.INVALID_SCHEMA,
+      );
+    }
+  }
+
+  const chatSummary = truncateUnicode(descriptors.chatSummary?.value || "", 700);
+  const userMemorySummary = truncateUnicode(
+    descriptors.userMemorySummary?.value || "",
+    1000,
+  );
+
+  if (!chatSummary && !userMemorySummary) {
+    return createMemorySummaryFailure(
+      MEMORY_SUMMARY_FAILURE_REASONS.EMPTY_SUMMARY,
+    );
+  }
+
+  return {
+    ok: true,
+    summaries: { chatSummary, userMemorySummary },
+    reason: MEMORY_SUMMARY_SUCCESS_REASON,
+  };
+}
+
+export function parseMemorySummaryResponse(responseText) {
+  const text = typeof responseText === "string" ? responseText.trim() : "";
+
+  if (!text) {
+    return createMemorySummaryFailure(
+      MEMORY_SUMMARY_FAILURE_REASONS.EMPTY_RESPONSE,
+    );
+  }
+
+  let parsed = parseJsonCandidate(text);
+
+  if (parsed === undefined) {
+    const fencedMatch = text.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+    if (fencedMatch) {
+      parsed = parseJsonCandidate(fencedMatch[1].trim());
+    } else if (text.startsWith("```")) {
+      return createMemorySummaryFailure(
+        MEMORY_SUMMARY_FAILURE_REASONS.INVALID_JSON,
+      );
+    }
+  }
+
+  if (parsed === undefined) {
+    const objectText = extractFirstJsonObject(text);
+    if (objectText) {
+      parsed = parseJsonCandidate(objectText);
+    }
+  }
+
+  if (parsed === undefined) {
+    return createMemorySummaryFailure(
+      MEMORY_SUMMARY_FAILURE_REASONS.INVALID_JSON,
+    );
+  }
+
+  return validateMemorySummaryPayload(parsed);
+}
+
+export function normalizeMemoryFinishReason(finishReason) {
+  if (typeof finishReason !== "string") {
+    return "UNKNOWN";
+  }
+
+  return finishReason.replace(/[^a-z0-9_-]/gi, "").slice(0, 40) || "UNKNOWN";
+}
+
+export function createMemorySummaryResultLog(
+  result,
+  model = GEMINI_MEMORY_MODEL,
+) {
+  return {
+    event: "gemini_memory_summary_result",
+    outcome: result.ok ? "success" : "failure",
+    reason: result.reason,
+    model,
+    finishReason: result.metadata.finishReason,
+    responseCharacterCount: result.metadata.responseCharacterCount,
+    hasChatSummary: Boolean(result.ok && result.summaries.chatSummary),
+    hasUserMemorySummary: Boolean(result.ok && result.summaries.userMemorySummary),
+  };
+}
+
+function withMemoryMetadata(result, metadata) {
+  return { ...result, metadata };
+}
+
+export function buildMemorySummaryResult(responseText, finishReason) {
+  return withMemoryMetadata(parseMemorySummaryResponse(responseText), {
+    finishReason: normalizeMemoryFinishReason(finishReason),
+    responseCharacterCount:
+      typeof responseText === "string" ? responseText.length : 0,
+  });
 }
 
 function getAllowedOfferLinkIds(offerContext = []) {
@@ -343,25 +532,51 @@ function hasInvalidOfferLinks(response, offerContext = []) {
   return linkedIds.some((id) => !allowedOfferLinkIds.has(id));
 }
 
-export async function generateMemorySummaries({
-  messages,
-  currentChatSummary = "",
-  userMemorySummary = "",
+export function createMemorySummaryGenerator({
+  apiKeys = GEMINI_API_KEYS,
+  createClient = (apiKey) => new GoogleGenerativeAI(apiKey),
+  modelName = GEMINI_MEMORY_MODEL,
+  maxOutputTokens = GEMINI_MEMORY_MAX_OUTPUT_TOKENS,
+  temperature = GEMINI_MEMORY_TEMPERATURE,
+  writeUsage,
+  writeResult = (entry) => console.info(entry),
+  writeAttempt = (entry) => console.warn(entry),
 } = {}) {
-  const recentMessages = Array.isArray(messages) ? messages.slice(-12) : [];
+  const publishUsage =
+    writeUsage ||
+    ((_requestType, _model, usageMetadata) =>
+      logGeminiUsage("memory", GEMINI_MEMORY_MODEL, usageMetadata));
+  const publishResult = (result) => {
+    writeResult(createMemorySummaryResultLog(result, modelName));
+    return result;
+  };
 
-  if (!recentMessages.length) {
-    return null;
-  }
+  return async function generateStructuredMemorySummaries({
+    messages,
+    currentChatSummary = "",
+    userMemorySummary = "",
+  } = {}) {
+    const recentMessages = Array.isArray(messages) ? messages.slice(-12) : [];
 
-  const transcript = recentMessages
-    .map((message) => {
-      const role = message.role === "assistant" ? "Blue" : "Usuario";
-      return `${role}: ${toSafeString(message.content).slice(0, 900)}`;
-    })
-    .join("\n");
+    if (!recentMessages.length) {
+      return publishResult(
+        withMemoryMetadata(
+          createMemorySummaryFailure(
+            MEMORY_SUMMARY_FAILURE_REASONS.EMPTY_SUMMARY,
+          ),
+          { finishReason: "NOT_RUN", responseCharacterCount: 0 },
+        ),
+      );
+    }
 
-  const prompt = `
+    const transcript = recentMessages
+      .map((message) => {
+        const role = message.role === "assistant" ? "Blue" : "Usuario";
+        return `${role}: ${toSafeString(message.content).slice(0, 900)}`;
+      })
+      .join("\n");
+
+    const prompt = `
 Resumen actual del chat:
 ${toSafeString(currentChatSummary) || "Sin resumen previo."}
 
@@ -372,49 +587,86 @@ Mensajes recientes:
 ${transcript}
 `;
 
-  for (let index = 0; index < GEMINI_API_KEYS.length; index += 1) {
-    const apiKey = GEMINI_API_KEYS[index];
+    for (let index = 0; index < apiKeys.length; index += 1) {
+      const apiKey = apiKeys[index];
 
-    try {
-      const client = new GoogleGenerativeAI(apiKey);
-      const model = client.getGenerativeModel({
-        model: GEMINI_MEMORY_MODEL,
-        systemInstruction: MEMORY_SUMMARY_PROMPT,
-        generationConfig: {
-          maxOutputTokens: GEMINI_MEMORY_MAX_OUTPUT_TOKENS,
-          temperature: GEMINI_MEMORY_TEMPERATURE,
-          responseMimeType: "application/json",
-        },
-      });
-      const result = await model.generateContent({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: prompt }],
+      try {
+        const client = createClient(apiKey);
+        const model = client.getGenerativeModel({
+          model: modelName,
+          systemInstruction: MEMORY_SUMMARY_PROMPT,
+          generationConfig: {
+            maxOutputTokens,
+            temperature,
+            responseMimeType: "application/json",
           },
-        ],
-      });
-      logGeminiUsage("memory", GEMINI_MEMORY_MODEL, result.response?.usageMetadata);
-      const parsed = extractJsonFromText(result.response.text());
+        });
+        const result = await model.generateContent({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: prompt }],
+            },
+          ],
+        });
+        publishUsage("memory", modelName, result.response?.usageMetadata);
+        const finishReason = normalizeMemoryFinishReason(
+          result.response?.candidates?.[0]?.finishReason,
+        );
+        let responseText;
 
-      if (!parsed) {
-        return null;
-      }
+        try {
+          responseText = result.response.text();
+        } catch {
+          return publishResult(
+            withMemoryMetadata(
+              createMemorySummaryFailure(
+                MEMORY_SUMMARY_FAILURE_REASONS.GENERATION_ERROR,
+              ),
+              { finishReason, responseCharacterCount: 0 },
+            ),
+          );
+        }
 
-      return {
-        chatSummary: toSafeString(parsed.chatSummary).slice(0, 700),
-        userMemorySummary: toSafeString(parsed.userMemorySummary).slice(0, 1000),
-      };
-    } catch (error) {
-      console.error(`Memory summary failed with key index ${index}: ${error.message}`);
+        return publishResult(
+          buildMemorySummaryResult(responseText, finishReason),
+        );
+      } catch (error) {
+        const recoverable = isRecoverableGeminiError(error);
+        writeAttempt({
+          event: "gemini_memory_generation_attempt_failed",
+          keyIndex: index,
+          recoverable,
+        });
 
-      if (!isRecoverableGeminiError(error)) {
-        return null;
+        if (!recoverable) {
+          return publishResult(
+            withMemoryMetadata(
+              createMemorySummaryFailure(
+                MEMORY_SUMMARY_FAILURE_REASONS.GENERATION_ERROR,
+              ),
+              { finishReason: "ERROR", responseCharacterCount: 0 },
+            ),
+          );
+        }
       }
     }
-  }
 
-  return null;
+    return publishResult(
+      withMemoryMetadata(
+        createMemorySummaryFailure(
+          MEMORY_SUMMARY_FAILURE_REASONS.GENERATION_ERROR,
+        ),
+        { finishReason: "ERROR", responseCharacterCount: 0 },
+      ),
+    );
+  };
+}
+
+const defaultMemorySummaryGenerator = createMemorySummaryGenerator();
+
+export async function generateMemorySummaries(params) {
+  return defaultMemorySummaryGenerator(params);
 }
 
 export async function generateAssistantReply(
