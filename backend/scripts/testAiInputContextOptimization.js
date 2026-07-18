@@ -464,9 +464,10 @@ test("46. Log contiene unicamente metricas permitidas", () => {
   ]);
   assert.ok(Object.keys(makePlan().metrics).every((key) => allowed.has(key)));
 });
-test("47. La ventana de memoria sigue siendo 12", () => {
+test("47. Chat entrega 12 y memoria selecciona 8", () => {
   assert.match(chatServiceSource, /MEMORY_SUMMARY_MESSAGE_LIMIT = 12/);
-  assert.match(aiServiceSource, /messages\.slice\(-12\)/);
+  assert.match(aiServiceSource, /GEMINI_MEMORY_CONTEXT_MESSAGE_LIMIT/);
+  assert.match(aiServiceSource, /buildMemoryRequestContext\(\{/);
 });
 test("48. Conversacion normal usa contexto optimizado", () => {
   assert.match(aiServiceSource, /buildAssistantRequestContext\(\{/);
