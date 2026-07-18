@@ -1,6 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import {
   GEMINI_API_KEYS,
+  GEMINI_CHAT_HISTORY_LIMIT_WITH_SUMMARY,
+  GEMINI_CHAT_HISTORY_LIMIT_WITHOUT_SUMMARY,
+  GEMINI_CHAT_HISTORY_MAX_CHARS_WITH_SUMMARY,
+  GEMINI_CHAT_HISTORY_MAX_CHARS_WITHOUT_SUMMARY,
   GEMINI_CHAT_MAX_OUTPUT_TOKENS,
   GEMINI_CHAT_MODEL,
   GEMINI_CHAT_TEMPERATURE,
@@ -9,6 +13,7 @@ import {
   GEMINI_MEMORY_TEMPERATURE,
 } from "../config/env.js";
 import { ApiError } from "../utils/ApiError.js";
+import { buildAssistantRequestContext } from "./aiContextService.js";
 
 const SYSTEM_PROMPT = `
 Habla siempre en espanol natural, cercano y humano.
@@ -61,9 +66,18 @@ Reglas adicionales para recomendaciones educativas:
 - Prioriza precision sobre cantidad.
 `;
 
-const FULL_SYSTEM_PROMPT = `${SYSTEM_PROMPT}
+const EDUCATIVE_SAFETY_RULE = `
+Regla permanente de seguridad educativa:
+- No inventes ni menciones nombres concretos de escuelas, universidades o enlaces cuando no existan opciones educativas validadas en el contexto.
+`;
+
+export const BASE_SYSTEM_INSTRUCTION = `${SYSTEM_PROMPT}
 
 ${RESPONSE_STYLE_RULES}
+
+${EDUCATIVE_SAFETY_RULE}`;
+
+export const FULL_SYSTEM_PROMPT = `${BASE_SYSTEM_INSTRUCTION}
 
 ${EDUCATIVE_OFFER_RULES}`;
 
@@ -236,6 +250,9 @@ Usa solamente estas opciones educativas si vas a recomendar escuelas. No invente
 function buildMemoryContextText(memoryContext = {}) {
   const userMemorySummary = toSafeString(memoryContext?.userMemorySummary).slice(0, 1000);
   const currentChatSummary = toSafeString(memoryContext?.currentChatSummary).slice(0, 700);
+  const educativeContinuitySummary = toSafeString(
+    memoryContext?.educativeContinuitySummary,
+  ).slice(0, 220);
   const previousChatSummaries = Array.isArray(memoryContext?.previousChatSummaries)
     ? memoryContext.previousChatSummaries
     : [];
@@ -259,6 +276,9 @@ function buildMemoryContextText(memoryContext = {}) {
     userMemorySummary ? `Memoria global del usuario: ${userMemorySummary}` : "",
     currentChatSummary ? `Resumen breve de este chat: ${currentChatSummary}` : "",
     previousSummariesText ? `Resumenes breves de chats anteriores:\n${previousSummariesText}` : "",
+    educativeContinuitySummary
+      ? `Continuidad educativa validada: ${educativeContinuitySummary}`
+      : "",
   ].filter(Boolean);
 
   if (!lines.length) {
@@ -269,64 +289,6 @@ function buildMemoryContextText(memoryContext = {}) {
 Contexto resumido para continuidad, sin asumir datos no mencionados:
 ${lines.join("\n")}
 `;
-}
-
-function buildContents(history, offerContext = [], memoryContext = {}) {
-  const safeHistory = Array.isArray(history) ? history : [];
-
-  const contents = safeHistory
-    .filter(Boolean)
-    .map((message) => ({
-      role: message.role === "assistant" ? "model" : "user",
-      parts: [{ text: toSafeString(message.content) }],
-    }));
-
-  const contextBlocks = [
-    buildMemoryContextText(memoryContext),
-    buildOfferContextText(offerContext),
-  ].filter(Boolean);
-  const contextualText = contextBlocks.join("\n");
-
-  if (!contextualText) {
-    return contents;
-  }
-
-  let lastUserIndex = -1;
-
-  for (let index = contents.length - 1; index >= 0; index -= 1) {
-    if (contents[index].role === "user") {
-      lastUserIndex = index;
-      break;
-    }
-  }
-
-  if (lastUserIndex === -1) {
-    return [
-      {
-        role: "user",
-        parts: [{ text: contextualText }],
-      },
-      ...contents,
-    ];
-  }
-
-  const originalUserText = contents[lastUserIndex].parts
-    .map((part) => part.text)
-    .join("\n");
-
-  contents[lastUserIndex] = {
-    role: "user",
-    parts: [
-      {
-        text: `${contextualText}
-
-Mensaje actual del usuario:
-${originalUserText}`,
-      },
-    ],
-  };
-
-  return contents;
 }
 
 function extractJsonFromText(text) {
@@ -469,6 +431,24 @@ export async function generateAssistantReply(
     return "No encontre opciones exactas en la base con esos datos. Me dices municipio, nivel o carrera para buscar mejor?";
   }
 
+  const requestContext = buildAssistantRequestContext({
+    history,
+    offerContext,
+    memoryContext,
+    memoryContextText: buildMemoryContextText(memoryContext),
+    offerContextText: buildOfferContextText(offerContext),
+    baseSystemInstruction: BASE_SYSTEM_INSTRUCTION,
+    educativeOfferRules: EDUCATIVE_OFFER_RULES,
+    model: GEMINI_CHAT_MODEL,
+    limits: {
+      limitWithSummary: GEMINI_CHAT_HISTORY_LIMIT_WITH_SUMMARY,
+      limitWithoutSummary: GEMINI_CHAT_HISTORY_LIMIT_WITHOUT_SUMMARY,
+      maxCharsWithSummary: GEMINI_CHAT_HISTORY_MAX_CHARS_WITH_SUMMARY,
+      maxCharsWithoutSummary: GEMINI_CHAT_HISTORY_MAX_CHARS_WITHOUT_SUMMARY,
+    },
+  });
+
+  console.log(requestContext.metrics);
   let lastError;
 
   for (let index = 0; index < GEMINI_API_KEYS.length; index += 1) {
@@ -478,7 +458,7 @@ export async function generateAssistantReply(
       const client = new GoogleGenerativeAI(apiKey);
       const model = client.getGenerativeModel({
         model: GEMINI_CHAT_MODEL,
-        systemInstruction: FULL_SYSTEM_PROMPT,
+        systemInstruction: requestContext.systemInstruction,
         generationConfig: {
           maxOutputTokens: GEMINI_CHAT_MAX_OUTPUT_TOKENS,
           temperature: GEMINI_CHAT_TEMPERATURE,
@@ -486,7 +466,7 @@ export async function generateAssistantReply(
       });
 
       const result = await model.generateContent({
-        contents: buildContents(history, offerContext, memoryContext),
+        contents: requestContext.contents,
       });
       logGeminiUsage("conversation", GEMINI_CHAT_MODEL, result.response?.usageMetadata);
 

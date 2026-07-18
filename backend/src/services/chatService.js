@@ -18,6 +18,10 @@ import {
 import { ApiError } from "../utils/ApiError.js";
 import { generateAssistantReply } from "./aiService.js";
 import {
+  buildEducativeContinuitySummary,
+  shouldIncludePreviousChatSummaries,
+} from "./aiContextService.js";
+import {
   MEMORY_REFRESH_FLOWS,
   refreshMemoryAfterEligibleTurn,
 } from "./memoryRefreshService.js";
@@ -39,7 +43,7 @@ import {
   toCanonicalCareerCandidate,
 } from "./educativeProgramRelationsService.js";
 
-const MEMORY_MESSAGE_LIMIT = 12;
+const MEMORY_SUMMARY_MESSAGE_LIMIT = 12;
 
 const EDUCATIVE_INTENT_PATTERN =
   /\b(escuela|escuelas|universidad|universidades|prepa|prepas|preparatoria|preparatorias|bachillerato|carrera|carreras|licenciatura|licenciaturas|ingenieria|ingenierias|opcion|opciones|estudiar|donde estudiar)\b/i;
@@ -428,16 +432,29 @@ async function buildEducativeOfferContext(content, options = {}) {
   });
 }
 
-async function buildMemoryContext(userId, chat) {
+async function buildMemoryContext(
+  userId,
+  chat,
+  history,
+  currentMessage,
+  educativeState,
+) {
+  const includePreviousChatSummaries = shouldIncludePreviousChatSummaries({
+    history,
+    currentMessage,
+  });
   const [userMemory, previousChatSummaries] = await Promise.all([
     findUserMemoryByUserId(userId),
-    listRecentChatSummariesByUserId(userId, chat.id, 2),
+    includePreviousChatSummaries
+      ? listRecentChatSummariesByUserId(userId, chat.id, 2)
+      : Promise.resolve([]),
   ]);
 
   return {
     userMemorySummary: userMemory?.summary || "",
     currentChatSummary: chat.summary || "",
     previousChatSummaries,
+    educativeContinuitySummary: buildEducativeContinuitySummary(educativeState),
   };
 }
 
@@ -1083,10 +1100,16 @@ async function continueConversationAfterAction(chat, userId, content, state, cli
     },
   );
   const history = await listMessagesByChatId(chat.id);
-  const recentHistory = history.slice(-MEMORY_MESSAGE_LIMIT);
-  const memoryContext = await buildMemoryContext(userId, chat);
+  const memoryHistory = history.slice(-MEMORY_SUMMARY_MESSAGE_LIMIT);
+  const memoryContext = await buildMemoryContext(
+    userId,
+    chat,
+    history,
+    content,
+    consumedState,
+  );
   const assistantReply = await generateAssistantReply(
-    recentHistory,
+    history,
     [],
     memoryContext,
     { isEducativeRequest: false },
@@ -1100,7 +1123,7 @@ async function continueConversationAfterAction(chat, userId, content, state, cli
   await refreshMemoryAfterEligibleTurn({
     flow: MEMORY_REFRESH_FLOWS.CONTINUE_AFTER_ACTION,
     chatId: chat.id,
-    messages: [...recentHistory, assistantMessage],
+    messages: [...memoryHistory, assistantMessage],
     currentChatSummary: memoryContext.currentChatSummary,
     userMemorySummary: memoryContext.userMemorySummary,
     userId,
@@ -1286,7 +1309,7 @@ export async function sendMessage(chatId, userId, content, action = null) {
     content: content.trim(),
   });
   const history = await listMessagesByChatId(chatId);
-  const recentHistory = history.slice(-MEMORY_MESSAGE_LIMIT);
+  const memoryHistory = history.slice(-MEMORY_SUMMARY_MESSAGE_LIMIT);
   const directCareers = await filterEligibleCanonicalCareers(detectCareerOptions(content));
   const normalizedContent = normalizeEducativeText(content);
   const isStandaloneCareer = directCareers.some(
@@ -1345,9 +1368,15 @@ export async function sendMessage(chatId, userId, content, action = null) {
     };
   }
 
-  const memoryContext = await buildMemoryContext(userId, chat);
+  const memoryContext = await buildMemoryContext(
+    userId,
+    chat,
+    history,
+    content,
+    workingState,
+  );
   const assistantReply = await generateAssistantReply(
-    recentHistory,
+    history,
     [],
     memoryContext,
     { isEducativeRequest: false },
@@ -1399,7 +1428,7 @@ export async function sendMessage(chatId, userId, content, action = null) {
   await refreshMemoryAfterEligibleTurn({
     flow: MEMORY_REFRESH_FLOWS.CONVERSATION,
     chatId,
-    messages: [...recentHistory, assistantMessage],
+    messages: [...memoryHistory, assistantMessage],
     currentChatSummary: memoryContext.currentChatSummary,
     userMemorySummary: memoryContext.userMemorySummary,
     userId,

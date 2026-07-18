@@ -63,6 +63,10 @@ GEMINI_MEMORY_MAX_OUTPUT_TOKENS=600
 GEMINI_CHAT_TEMPERATURE=0.6
 GEMINI_MEMORY_TEMPERATURE=0.1
 GEMINI_MEMORY_EVERY_USER_MESSAGES=4
+GEMINI_CHAT_HISTORY_LIMIT_WITH_SUMMARY=6
+GEMINI_CHAT_HISTORY_LIMIT_WITHOUT_SUMMARY=8
+GEMINI_CHAT_HISTORY_MAX_CHARS_WITH_SUMMARY=3200
+GEMINI_CHAT_HISTORY_MAX_CHARS_WITHOUT_SUMMARY=4800
 
 SEED_USER_NAME=Demo User
 SEED_USER_EMAIL=demo@bluefev.dev
@@ -158,6 +162,9 @@ npm run dev -w frontend
 - `GEMINI_CHAT_MODEL` y `GEMINI_MEMORY_MODEL` tienen prioridad y permiten configurar por separado conversacion y memoria.
 - Los limites de salida y temperaturas de cada uso se configuran con las variables `GEMINI_*_MAX_OUTPUT_TOKENS` y `GEMINI_*_TEMPERATURE`.
 - `GEMINI_MEMORY_EVERY_USER_MESSAGES` limita cada cuantas respuestas conversacionales elegibles se regeneran los resumenes de memoria; no cambia la cantidad de mensajes recientes enviada a la conversacion principal.
+- Con resumen actual, la llamada conversacional usa un historial mas pequeno mediante `GEMINI_CHAT_HISTORY_LIMIT_WITH_SUMMARY` y `GEMINI_CHAT_HISTORY_MAX_CHARS_WITH_SUMMARY`.
+- Sin resumen actual, conserva un poco mas de historial mediante `GEMINI_CHAT_HISTORY_LIMIT_WITHOUT_SUMMARY` y `GEMINI_CHAT_HISTORY_MAX_CHARS_WITHOUT_SUMMARY`.
+- Estos limites solo afectan la copia enviada a la conversacion principal de Gemini. El mensaje actual siempre se conserva y la generacion de memoria mantiene su ventana existente.
 - El frontend nunca recibe las API keys; toda la integracion vive en el backend.
 - No subas archivos `.env`, dumps locales ni bases `.db` al repositorio.
 
