@@ -4,6 +4,10 @@ import {
   getFamilyCandidateIds,
   toCanonicalCareerCandidate,
 } from "./educativeProgramRelationsService.js";
+import {
+  getDefaultVocationalProfile,
+  normalizeVocationalProfile,
+} from "./vocationalPreferenceService.js";
 
 const DIRECT_SEARCH_PATTERN = /\b(quiero estudiar|me interesa estudiar|me interesan|busco estudiar|escuelas?|universidades?|instituciones?|opciones de|donde estudiar|que estudiar|carrera|licenciatura|ingenieria|prepa|bachillerato|tsu|maestria|doctorado|posgrado|especialidad)\b/;
 const CONFIRM_PATTERN = /^(?:si|claro|adelante|esta bien|quiero|acepto|por favor|muestrame|muestrame(?: las)? opciones|mostrar opciones|quiero ver escuelas|quiero ver instituciones|ver instituciones|si quiero verlas|quiero conocer las universidades|ensename .+|quiero ver .+)$/;
@@ -57,7 +61,7 @@ export function getDefaultEducativeState() {
     activeConfirmedLevel: null, activeSearchQuery: null, currentCanonicalProgramId: null,
     currentLevel: null, currentFamilyId: null, exploredProgramIds: [],
     shownFamilyProgramIds: [], shownNearbyProgramIds: [], relatedStage: "family",
-    relatedHasMore: false,
+    relatedHasMore: false, vocationalProfile: getDefaultVocationalProfile(),
   };
 }
 function normalizeIdArray(value) {
@@ -66,17 +70,23 @@ function normalizeIdArray(value) {
 export function normalizeEducativeState(value) {
   const defaults = getDefaultEducativeState();
   if (!value || typeof value !== "object" || Array.isArray(value)) return defaults;
+  const safeValue = Object.fromEntries(
+    Object.entries(Object.getOwnPropertyDescriptors(value))
+      .filter(([, descriptor]) => Object.hasOwn(descriptor, "value"))
+      .map(([key, descriptor]) => [key, descriptor.value]),
+  );
   return {
-    ...defaults, ...value,
-    pendingCareers: Array.isArray(value.pendingCareers) ? value.pendingCareers : [],
-    lastPromptedCareers: Array.isArray(value.lastPromptedCareers) ? value.lastPromptedCareers : [],
-    excludedOfferIds: normalizeIdArray(value.excludedOfferIds),
-    exploredProgramIds: normalizeIdArray(value.exploredProgramIds),
-    shownFamilyProgramIds: normalizeIdArray(value.shownFamilyProgramIds),
-    shownNearbyProgramIds: normalizeIdArray(value.shownNearbyProgramIds),
-    messagesSinceDeferral: Math.max(Number(value.messagesSinceDeferral) || 0, 0),
-    relatedStage: ["family", "nearby", "exhausted"].includes(value.relatedStage) ? value.relatedStage : "family",
-    relatedHasMore: Boolean(value.relatedHasMore),
+    ...defaults, ...safeValue,
+    pendingCareers: Array.isArray(safeValue.pendingCareers) ? safeValue.pendingCareers : [],
+    lastPromptedCareers: Array.isArray(safeValue.lastPromptedCareers) ? safeValue.lastPromptedCareers : [],
+    excludedOfferIds: normalizeIdArray(safeValue.excludedOfferIds),
+    exploredProgramIds: normalizeIdArray(safeValue.exploredProgramIds),
+    shownFamilyProgramIds: normalizeIdArray(safeValue.shownFamilyProgramIds),
+    shownNearbyProgramIds: normalizeIdArray(safeValue.shownNearbyProgramIds),
+    messagesSinceDeferral: Math.max(Number(safeValue.messagesSinceDeferral) || 0, 0),
+    relatedStage: ["family", "nearby", "exhausted"].includes(safeValue.relatedStage) ? safeValue.relatedStage : "family",
+    relatedHasMore: Boolean(safeValue.relatedHasMore),
+    vocationalProfile: normalizeVocationalProfile(safeValue.vocationalProfile),
   };
 }
 export function createUiAction(type, payload = {}) {

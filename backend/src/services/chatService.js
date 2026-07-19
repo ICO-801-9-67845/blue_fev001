@@ -42,6 +42,11 @@ import {
   getNearbyCandidateIds,
   toCanonicalCareerCandidate,
 } from "./educativeProgramRelationsService.js";
+import {
+  applyVocationalUpdates,
+  extractExplicitVocationalUpdates,
+  normalizeVocationalProfile,
+} from "./vocationalPreferenceService.js";
 
 const MEMORY_SUMMARY_MESSAGE_LIMIT = 12;
 
@@ -544,6 +549,64 @@ async function updateEducativeState(chat, state) {
   chat.educativeState = state;
   chat.educativeStateVersion = expectedVersion + 1;
   return state;
+}
+
+function hasVocationalOperations(extraction) {
+  return [
+    extraction.updates,
+    extraction.exclusionsToAdd,
+    extraction.exclusionsToLift,
+    extraction.removeSignals,
+  ].some((items) => Array.isArray(items) && items.length > 0);
+}
+
+async function createUserMessageWithVocationalProfile(
+  chat,
+  content,
+  currentState,
+  detectedCareerMentions,
+) {
+  const extraction = extractExplicitVocationalUpdates({
+    text: content,
+    currentProfile: normalizeVocationalProfile(currentState.vocationalProfile),
+    canonicalMentions: detectedCareerMentions,
+  });
+  if (!hasVocationalOperations(extraction)) {
+    const userMessage = await createMessage({
+      chatId: chat.id,
+      role: "user",
+      content: content.trim(),
+    });
+    return { userMessage, state: currentState, profilePersisted: false };
+  }
+
+  const expectedVersion = Number(chat.educativeStateVersion) || 0;
+  const result = await prisma.$transaction(async (transaction) => {
+    const userMessage = await transaction.message.create({
+      data: { chatId: chat.id, role: "user", content: content.trim() },
+    });
+    const applied = applyVocationalUpdates(currentState.vocationalProfile, extraction, {
+      nextRevision: currentState.vocationalProfile.revision + 1,
+      observedAt: userMessage.createdAt.toISOString(),
+    });
+    if (!applied.changed) return { userMessage, state: currentState, profilePersisted: false };
+
+    const nextState = { ...currentState, vocationalProfile: applied.profile };
+    const updated = await transaction.chat.updateMany({
+      where: { id: chat.id, userId: chat.userId, educativeStateVersion: expectedVersion },
+      data: { educativeState: nextState, educativeStateVersion: { increment: 1 } },
+    });
+    if (updated.count !== 1) {
+      throw new ApiError(409, "La conversacion cambio mientras procesabamos la accion");
+    }
+    return { userMessage, state: nextState, profilePersisted: true };
+  });
+
+  if (result.profilePersisted) {
+    chat.educativeState = result.state;
+    chat.educativeStateVersion = expectedVersion + 1;
+  }
+  return result;
 }
 
 async function setUiActionStatus(chatId, messageId, status) {
@@ -1264,7 +1327,7 @@ export async function getChatMessages(chatId, userId) {
 export async function sendMessage(chatId, userId, content, action = null) {
   ensureContent(content);
   const chat = await getOwnedChat(chatId, userId);
-  const currentState = getChatEducativeState(chat);
+  let currentState = getChatEducativeState(chat);
   const typedAction = action ? null : classifyTypedAction(content, currentState);
   const requestedAction = action || (
     typedAction
@@ -1303,14 +1366,18 @@ export async function sendMessage(chatId, userId, content, action = null) {
     };
   }
 
-  const userMessage = await createMessage({
-    chatId,
-    role: "user",
-    content: content.trim(),
-  });
+  const detectedCareerMentions = detectCareerOptions(content);
+  const vocationalResult = await createUserMessageWithVocationalProfile(
+    chat,
+    content,
+    currentState,
+    detectedCareerMentions,
+  );
+  const userMessage = vocationalResult.userMessage;
+  currentState = vocationalResult.state;
   const history = await listMessagesByChatId(chatId);
   const memoryHistory = history.slice(-MEMORY_SUMMARY_MESSAGE_LIMIT);
-  const directCareers = await filterEligibleCanonicalCareers(detectCareerOptions(content));
+  const directCareers = await filterEligibleCanonicalCareers(detectedCareerMentions);
   const normalizedContent = normalizeEducativeText(content);
   const isStandaloneCareer = directCareers.some(
     (career) =>
