@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import {
   loadValidationInputs,
   parseJson,
   validateCatalog,
+  validateOptionalReviewMatrixHash,
 } from "./validateVocationalCareerTraits.js";
 
 const inputs = loadValidationInputs();
@@ -11,6 +13,10 @@ const catalog = inputs.catalog;
 const results = [];
 const clone = (value) => structuredClone(value);
 const configured = (id) => Object.hasOwn(catalog.programs, id);
+const syntheticReviewMatrixRaw = Buffer.from('{"programs":[]}\n', "utf8");
+const syntheticReviewMatrixSha256 = createHash("sha256")
+  .update(syntheticReviewMatrixRaw)
+  .digest("hex");
 const validateMutation = (mutate, inputOverrides = {}) => {
   const candidate = clone(catalog);
   mutate(candidate);
@@ -241,15 +247,138 @@ await test("87 BOM is rejected before parsing", () => {
   assert.throws(() => parseJson(Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), inputs.catalogRaw]), "catalog"), /BOM/u);
 });
 await test("88 invalid JSON is rejected", () => assert.throws(() => parseJson(Buffer.from("{"), "catalog"), /invalid JSON/u));
-await test("89 modified review matrix bytes are rejected", () => {
-  const modified = Buffer.concat([inputs.reviewMatrixRaw, Buffer.from(" ")]);
-  const result = validateCatalog(clone(catalog), { ...inputs, reviewMatrixRaw: modified });
-  assert.equal(result.valid, false);
-  assert.ok(result.errors.some((error) => error.includes("review matrix SHA-256")));
+await test("89 synthetic modified review matrix bytes are rejected", () => {
+  const changedByte = Buffer.from(syntheticReviewMatrixRaw);
+  changedByte[0] ^= 0x01;
+  const mutations = [
+    Buffer.concat([syntheticReviewMatrixRaw, Buffer.from(" ")]),
+    Buffer.concat([syntheticReviewMatrixRaw, Buffer.from("\n")]),
+    syntheticReviewMatrixRaw.subarray(0, -1),
+    changedByte,
+    Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), syntheticReviewMatrixRaw]),
+    Buffer.from('{"programs":[]}\r\n', "utf8"),
+  ];
+  for (const modified of mutations) {
+    const result = validateOptionalReviewMatrixHash(modified, syntheticReviewMatrixSha256);
+    assert.equal(result.valid, false);
+    assert.deepEqual(result.errors, ["review matrix SHA-256 mismatch"]);
+  }
 });
 await test("90 absent optional review matrix passes", () => {
   const result = validateCatalog(clone(catalog), { ...inputs, reviewMatrix: null, reviewMatrixRaw: null });
   assert.equal(result.valid, true, result.errors.join("; "));
+});
+await test("90a null review matrix raw input does not throw", () => {
+  assert.deepEqual(validateOptionalReviewMatrixHash(null, syntheticReviewMatrixSha256), {
+    valid: true,
+    errors: [],
+  });
+});
+await test("90b undefined optional review matrix passes", () => {
+  assert.deepEqual(validateOptionalReviewMatrixHash(undefined, syntheticReviewMatrixSha256), {
+    valid: true,
+    errors: [],
+  });
+});
+await test("90c synthetic review matrix bytes with matching hash pass", () => {
+  const result = validateOptionalReviewMatrixHash(
+    syntheticReviewMatrixRaw,
+    syntheticReviewMatrixSha256,
+  );
+  assert.equal(result.valid, true, result.errors.join("; "));
+  const largeBuffer = Buffer.alloc(1024 * 1024, 0x61);
+  const largeBufferSha256 = createHash("sha256").update(largeBuffer).digest("hex");
+  const largeResult = validateOptionalReviewMatrixHash(largeBuffer, largeBufferSha256);
+  assert.equal(largeResult.valid, true, largeResult.errors.join("; "));
+});
+await test("90d manipulated expected review matrix SHA is rejected", () => {
+  const manipulatedSha = `${syntheticReviewMatrixSha256.slice(0, -1)}${syntheticReviewMatrixSha256.endsWith("0") ? "1" : "0"}`;
+  const result = validateOptionalReviewMatrixHash(syntheticReviewMatrixRaw, manipulatedSha);
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.includes("review matrix SHA-256")));
+  const candidate = clone(catalog);
+  candidate.sourceIntegrity.reviewMatrixSha256 = manipulatedSha;
+  const catalogResult = validateCatalog(candidate, { ...inputs, reviewMatrix: null, reviewMatrixRaw: null });
+  assert.equal(catalogResult.valid, false);
+  assert.ok(catalogResult.errors.some((error) => error.includes("sourceIntegrity.reviewMatrixSha256")));
+  assert.equal(candidate.sourceIntegrity.reviewMatrixSha256, manipulatedSha);
+});
+await test("90e malformed review matrix inputs fail closed", () => {
+  let getterCalls = 0;
+  const throwingGetter = {};
+  Object.defineProperty(throwingGetter, "length", { get() { getterCalls += 1; throw new Error("must not run"); } });
+  const customPrototype = Object.create({ custom: true });
+  const customBufferPrototype = Buffer.from("bytes", "utf8");
+  Object.setPrototypeOf(customBufferPrototype, { custom: true });
+  const forbiddenKeyObjects = [
+    JSON.parse('{"__proto__":{}}'),
+    { constructor: null },
+    { prototype: null },
+  ];
+  for (const raw of ["bytes", 1, NaN, false, [], new Uint8Array([1]), {}, throwingGetter, customPrototype, customBufferPrototype, ...forbiddenKeyObjects]) {
+    const result = validateOptionalReviewMatrixHash(raw, syntheticReviewMatrixSha256);
+    assert.equal(result.valid, false);
+    assert.ok(result.errors.some((error) => error.includes("must be a Buffer")));
+  }
+  assert.equal(getterCalls, 0);
+});
+await test("90f malformed expected review matrix SHA values are rejected", () => {
+  for (const expected of ["", "0".repeat(63), "0".repeat(65), `${"0".repeat(63)} `, "g".repeat(64), "A".repeat(64), null, undefined, NaN, {}]) {
+    const result = validateOptionalReviewMatrixHash(syntheticReviewMatrixRaw, expected);
+    assert.equal(result.valid, false);
+    assert.ok(result.errors.some((error) => error.includes("expected SHA-256")));
+  }
+});
+await test("90g empty review matrix buffer is hashed as real bytes", () => {
+  const empty = Buffer.alloc(0);
+  const emptySha256 = createHash("sha256").update(empty).digest("hex");
+  assert.equal(validateOptionalReviewMatrixHash(empty, emptySha256).valid, true);
+  assert.equal(validateOptionalReviewMatrixHash(empty, syntheticReviewMatrixSha256).valid, false);
+});
+await test("90h review matrix hash validation does not mutate the original buffer", () => {
+  const before = Buffer.from(syntheticReviewMatrixRaw);
+  const modified = Buffer.concat([syntheticReviewMatrixRaw, Buffer.from(" ")]);
+  const modifiedBefore = Buffer.from(modified);
+  const expectedBefore = syntheticReviewMatrixSha256;
+  const inputsBefore = {
+    catalogRaw: Buffer.from(inputs.catalogRaw),
+    relationsRaw: Buffer.from(inputs.relationsRaw),
+    lexiconRaw: Buffer.from(inputs.lexiconRaw),
+    reviewMatrixRaw: inputs.reviewMatrixRaw,
+  };
+  const catalogBefore = JSON.stringify(catalog);
+  assert.equal(Object.isFrozen(syntheticReviewMatrixRaw), false);
+  validateOptionalReviewMatrixHash(syntheticReviewMatrixRaw, syntheticReviewMatrixSha256);
+  validateOptionalReviewMatrixHash(modified, syntheticReviewMatrixSha256);
+  assert.deepEqual(syntheticReviewMatrixRaw, before);
+  assert.deepEqual(modified, modifiedBefore);
+  assert.equal(syntheticReviewMatrixSha256, expectedBefore);
+  assert.deepEqual(inputs.catalogRaw, inputsBefore.catalogRaw);
+  assert.deepEqual(inputs.relationsRaw, inputsBefore.relationsRaw);
+  assert.deepEqual(inputs.lexiconRaw, inputsBefore.lexiconRaw);
+  assert.equal(inputs.reviewMatrixRaw, inputsBefore.reviewMatrixRaw);
+  assert.equal(JSON.stringify(catalog), catalogBefore);
+  assert.equal(Object.isFrozen(syntheticReviewMatrixRaw), false);
+});
+await test("90i synthetic review matrix hash validation is deterministic", () => {
+  const first = validateOptionalReviewMatrixHash(syntheticReviewMatrixRaw, syntheticReviewMatrixSha256);
+  const second = validateOptionalReviewMatrixHash(syntheticReviewMatrixRaw, syntheticReviewMatrixSha256);
+  assert.deepEqual(first, second);
+  assert.notStrictEqual(first, second);
+  assert.notStrictEqual(first.errors, second.errors);
+});
+await test("90j synthetic review matrix hash validation has no filesystem dependency", () => {
+  const result = validateOptionalReviewMatrixHash(syntheticReviewMatrixRaw, syntheticReviewMatrixSha256);
+  assert.equal(result.valid, true, result.errors.join("; "));
+  const source = validateOptionalReviewMatrixHash.toString();
+  assert.doesNotMatch(source, /readFile|existsSync|process\.cwd|tmp[\\/]/u);
+});
+await test("90k review matrix hash errors do not expose bytes or personal paths", () => {
+  const secretBytes = Buffer.from("private-fixture-content", "utf8");
+  const result = validateOptionalReviewMatrixHash(secretBytes, syntheticReviewMatrixSha256);
+  const message = result.errors.join("; ");
+  assert.equal(result.valid, false);
+  assert.doesNotMatch(message, /private-fixture-content|C:\\Users\\/u);
 });
 await test("91 equivalent reordered policies pass", () => {
   const candidate = clone(catalog);

@@ -227,6 +227,25 @@ function bufferHashMatches(raw, expected, label, errors) {
   return true;
 }
 
+export function validateOptionalReviewMatrixHash(raw, expectedSha256) {
+  const errors = [];
+  if (raw === null || raw === undefined) return { valid: true, errors };
+
+  try {
+    if (!Buffer.isBuffer(raw) || Object.getPrototypeOf(raw) !== Buffer.prototype) {
+      errors.push("review matrix raw input must be a Buffer");
+    } else if (typeof expectedSha256 !== "string" || !/^[a-f0-9]{64}$/u.test(expectedSha256)) {
+      errors.push("review matrix expected SHA-256 must be 64 lowercase hexadecimal characters");
+    } else if (sha256(raw) !== expectedSha256) {
+      errors.push("review matrix SHA-256 mismatch");
+    }
+  } catch {
+    errors.push("review matrix hash validation failed closed");
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
 export function parseJson(raw, label) {
   const buffer = Buffer.isBuffer(raw)
     ? raw
@@ -303,9 +322,11 @@ export function validateCatalog(catalog, inputs) {
       summary.coveragePercent = sourceIntegrity.get("approvedCoveragePercent");
       bufferHashMatches(relationsRaw, sourceIntegrity.get("relationsSha256"), "relations", errors);
       bufferHashMatches(lexiconRaw, sourceIntegrity.get("lexiconSha256"), "lexicon", errors);
-      if (reviewMatrixRaw !== null && reviewMatrixRaw !== undefined) {
-        bufferHashMatches(reviewMatrixRaw, sourceIntegrity.get("reviewMatrixSha256"), "review matrix", errors);
-      }
+      const reviewMatrixHash = validateOptionalReviewMatrixHash(
+        reviewMatrixRaw,
+        sourceIntegrity.get("reviewMatrixSha256"),
+      );
+      errors.push(...reviewMatrixHash.errors);
     }
 
     const policies = inspectRecord(root.get("policies"), "policies", errors, 11);
