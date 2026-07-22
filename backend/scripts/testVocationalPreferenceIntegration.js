@@ -253,11 +253,13 @@ await test("03 real no-signal message keeps one call", async () => {
   await sendMessage(h.chat.id, h.chat.userId, "Cuéntame más");
   assert.equal(h.calls.gemini, 1);
 });
-await test("04 neutral mention does not update state", async () => {
+await test("04 neutral canonical mention confirms without presearch", async () => {
   const h = createHarness();
-  await sendMessage(h.chat.id, h.chat.userId, "matemáticas");
-  assert.equal(h.calls.stateUpdates, 0);
-  assert.equal(h.chat.educativeStateVersion, 0);
+  const result = await sendMessage(h.chat.id, h.chat.userId, "matemáticas");
+  assert.equal(result.assistantMessage.uiAction.type, "career_confirmation");
+  assert.equal(h.calls.stateUpdates, 1);
+  assert.equal(h.chat.educativeStateVersion, 1);
+  assert.equal(h.calls.search, 0);
 });
 await test("05 message and profile use the same real transaction", async () => {
   const h = createHarness();

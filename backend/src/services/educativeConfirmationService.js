@@ -15,6 +15,9 @@ const DEFER_PATTERN = /\b(sigamos hablando|todavia no|conversar primero|hazme ma
 const MORE_PATTERN = /\b(dame mas opciones|muestrame otras|que otras escuelas hay|mas resultados|otras instituciones|quiero ver mas|mas opciones)\b/;
 const RELATED_PATTERN = /\b(explorar carreras relacionadas|quiero ver carreras relacionadas|que otras carreras existen|que otras carreras hay|carreras similares|opciones relacionadas|opciones parecidas|otras carreras|explorar otras carreras|quiero explorar algo relacionado)\b/;
 const MORE_RELATED_PATTERN = /\b(mostrar mas carreras relacionadas|muestrame mas carreras relacionadas|mas carreras relacionadas|siguientes carreras relacionadas)\b/;
+const MORE_VOCATIONAL_CAREERS = new Set([
+  "mostrar mas carreras", "ver mas carreras", "mas carreras", "otras carreras",
+]);
 const ORDINALS = new Map([
   ["la primera", 0], ["el primero", 0], ["primera", 0], ["primero", 0], ["opcion 1", 0],
   ["la segunda", 1], ["el segundo", 1], ["segunda", 1], ["segundo", 1], ["opcion 2", 1],
@@ -62,6 +65,7 @@ export function getDefaultEducativeState() {
     currentLevel: null, currentFamilyId: null, exploredProgramIds: [],
     shownFamilyProgramIds: [], shownNearbyProgramIds: [], relatedStage: "family",
     relatedHasMore: false, vocationalProfile: getDefaultVocationalProfile(),
+    vocationalCareerPagination: null,
   };
 }
 function normalizeIdArray(value) {
@@ -86,6 +90,11 @@ export function normalizeEducativeState(value) {
     messagesSinceDeferral: Math.max(Number(safeValue.messagesSinceDeferral) || 0, 0),
     relatedStage: ["family", "nearby", "exhausted"].includes(safeValue.relatedStage) ? safeValue.relatedStage : "family",
     relatedHasMore: Boolean(safeValue.relatedHasMore),
+    vocationalCareerPagination: safeValue.vocationalCareerPagination &&
+      typeof safeValue.vocationalCareerPagination === "object" &&
+      !Array.isArray(safeValue.vocationalCareerPagination)
+      ? safeValue.vocationalCareerPagination
+      : null,
     vocationalProfile: normalizeVocationalProfile(safeValue.vocationalProfile),
   };
 }
@@ -102,10 +111,19 @@ export function classifyTypedAction(text, state) {
   const normalizedText = normalizeEducativeText(text);
   if (!normalizedText || !state?.pendingConfirmationActionId) return null;
   if (state.status === "awaiting_confirmation") {
+    if (MORE_VOCATIONAL_CAREERS.has(normalizedText) &&
+        state.vocationalCareerPagination?.hasMore === true) {
+      return { type: "more_vocational_careers" };
+    }
     if (MORE_RELATED_PATTERN.test(normalizedText) && state.relatedHasMore) return { type: "more_related_programs" };
     if (DEFER_PATTERN.test(normalizedText)) return { type: "defer_educative_search" };
     for (const [phrase, index] of ORDINALS) {
       if (containsPhrase(normalizedText, phrase) && state.pendingCareers[index]) return confirmationForCareer(state.pendingCareers[index]);
+    }
+    const numericSelection = /^(\d+)$/.exec(normalizedText);
+    if (numericSelection) {
+      const selected = state.pendingCareers[Number(numericSelection[1]) - 1];
+      if (selected) return confirmationForCareer(selected);
     }
     const namedCareer = (state.pendingCareers || []).find((career) =>
       containsPhrase(normalizedText, normalizeEducativeText(career.normalizedName || career.name)));

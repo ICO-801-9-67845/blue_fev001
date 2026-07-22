@@ -344,7 +344,9 @@ const stubSources = {
     export function detectCareerOptions(text, options) {
       const h = globalThis.__rankingChatHarness;
       h.detectorOptions.push(options || {});
-      return actual.detectCareerOptions(text, options);
+      return h.detectedCareers
+        ? structuredClone(h.detectedCareers)
+        : actual.detectCareerOptions(text, options);
     }
   `,
   vocationalPreferenceService: `export * from ${JSON.stringify(vocationalUrl)};`,
@@ -355,6 +357,7 @@ const stubSources = {
       const h = globalThis.__rankingChatHarness;
       h.calls.ranking += 1; h.rankingInputs.push(structuredClone(input)); h.events.push("ranking");
       if (h.forceRankingError) return { status: "ranking_error", code: "VOCATIONAL_RANKING_INPUT_REJECTED", candidateCount: input.candidates.length, accepted: [], confirmation: [], rejected: [], ordered: [] };
+      if (h.rankingResult) return structuredClone(h.rankingResult);
       return actualRank(input);
     }
   `,
@@ -400,6 +403,8 @@ function createHarness(vocationalProfile = emptyProfile()) {
     events: [], rankingInputs: [], searchArgs: [], detectorOptions: [],
     assistantReply: "Respuesta conversacional stubbed",
     forceRankingError: false,
+    detectedCareers: null,
+    rankingResult: null,
     searchResult: {
       offerContext: [{ id: "91", redirect_url: "/oferta-educativa/detalle/91" }],
       remainingCount: 0, searchSignature: "stub-signature",
@@ -456,6 +461,23 @@ function addPendingAction(harness, type, state) {
   };
   return uiAction;
 }
+function paginationRanking(careers) {
+  const ordered = careers.map((candidate, index) => ({
+    career: candidate,
+    decision: {
+      classification: index === careers.length - 1
+        ? "rejected"
+        : index === careers.length - 2 ? "confirmation_required" : "accepted",
+    },
+  }));
+  return {
+    status: "ok", code: "VOCATIONAL_RANKING_COMPLETED", candidateCount: careers.length,
+    accepted: ordered.filter((item) => item.decision.classification === "accepted"),
+    confirmation: ordered.filter((item) => item.decision.classification === "confirmation_required"),
+    rejected: ordered.filter((item) => item.decision.classification === "rejected"),
+    ordered,
+  };
+}
 
 await test("mensaje no vocacional no ejecuta ranking", async () => {
   const h = createHarness();
@@ -467,7 +489,7 @@ await test("solicitud directa rankea antes de elegibilidad", async () => {
   const h = createHarness();
   const response = await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar Arquitectura");
   assert.equal(h.rankingInputs[0].candidates[0].source, "explicit_user_request");
-  assert.ok(h.events.indexOf("ranking") < h.events.indexOf("search"));
+  assert.equal(h.calls.search, 0);
   assert.equal(response.assistantMessage.uiAction.type, "career_confirmation");
   assert.equal(h.calls.gemini, 0);
 });
@@ -566,10 +588,145 @@ await test("limite visual se aplica despues del ranking", async () => {
     "Quiero estudiar Arquitectura, Psicologia, Odontologia o Diseno Grafico",
   );
   assert.ok(h.rankingInputs[0].candidates.length >= 4);
-  assert.equal(response.assistantMessage.uiAction.careers.length, 3);
+  assert.equal(response.assistantMessage.uiAction.careers.length,
+    Math.min(h.rankingInputs[0].candidates.length, 5));
   assert.equal(h.detectorOptions[0].limit, 128);
 });
 await test("redirect_url permanece intacto y no se rankea", async () => {
+await test("ocho rankeadas retienen siete validas y muestran cinco", async () => {
+  const h = createHarness();
+  h.detectedCareers = [
+    "licenciatura_arquitectura",
+    "licenciatura_matematicas",
+    "tecnico_bachillerato_construccion",
+    "especialidad_especialidad_en_diseno_digital",
+    "licenciatura_psicologia",
+    "licenciatura_derecho",
+    "licenciatura_odontologia",
+    "licenciatura_diseno_grafico",
+  ].map(career);
+  h.rankingResult = paginationRanking(h.detectedCareers);
+  const response = await sendMessage(h.chat.id, h.chat.userId, "Orientacion vocacional");
+  assert.equal(response.assistantMessage.uiAction.careers.length, 5);
+  assert.equal(response.assistantMessage.uiAction.hasMoreCareers, true);
+  assert.equal(h.chat.educativeState.vocationalCareerPagination.total, 7);
+  assert.equal(h.chat.educativeState.vocationalCareerPagination.options.some((item) => item.bucket === "rejected"), false);
+  assert.equal(h.calls.search, 0);
+});
+
+await test("mostrar mas carreras usa segunda pagina sin ranking Gemini ni base", async () => {
+  const h = createHarness();
+  h.detectedCareers = [
+    IDS.architecture, IDS.mathematics, IDS.construction, IDS.design,
+    "licenciatura_psicologia", "licenciatura_derecho",
+    "licenciatura_odontologia", "licenciatura_diseno_grafico",
+  ].map(career);
+  h.rankingResult = paginationRanking(h.detectedCareers);
+  const first = await sendMessage(h.chat.id, h.chat.userId, "Orientacion vocacional");
+  const before = structuredClone(h.calls);
+  const second = await sendMessage(h.chat.id, h.chat.userId, "Mostrar mas carreras", {
+    type: "more_vocational_careers",
+    actionId: first.assistantMessage.uiAction.id,
+  });
+  assert.equal(second.assistantMessage.uiAction.careers.length, 2);
+  assert.equal(second.assistantMessage.uiAction.hasMoreCareers, false);
+  assert.equal(h.calls.ranking, before.ranking);
+  assert.equal(h.calls.gemini, before.gemini);
+  assert.equal(h.calls.search, before.search);
+  const firstNames = new Set(first.assistantMessage.uiAction.careers.map((item) => item.name));
+  assert.equal(second.assistantMessage.uiAction.careers.some((item) => firstNames.has(item.name)), false);
+});
+
+await test("seleccion de pagina dos busca solo la carrera visible", async () => {
+  const h = createHarness();
+  h.detectedCareers = [
+    IDS.architecture, IDS.mathematics, IDS.construction, IDS.design,
+    "licenciatura_psicologia", "licenciatura_derecho",
+    "licenciatura_odontologia", "licenciatura_diseno_grafico",
+  ].map(career);
+  h.rankingResult = paginationRanking(h.detectedCareers);
+  const first = await sendMessage(h.chat.id, h.chat.userId, "Orientacion vocacional");
+  const second = await sendMessage(h.chat.id, h.chat.userId, "Mostrar mas carreras", {
+    type: "more_vocational_careers", actionId: first.assistantMessage.uiAction.id,
+  });
+  h.rankingResult = null;
+  const selected = second.assistantMessage.uiAction.careers[0];
+  await sendMessage(h.chat.id, h.chat.userId, "Mostrar opciones de " + selected.name, {
+    type: "confirm_educative_search",
+    actionId: second.assistantMessage.uiAction.id,
+    career: selected.normalizedName,
+  });
+  assert.equal(h.calls.search, 1);
+  assert.equal(h.searchArgs[0].canonicalProgramId,
+    h.rankingInputs.at(-1).candidates[0].career.canonicalProgramId);
+  assert.equal(h.chat.educativeState.vocationalCareerPagination, null);
+});
+
+await test("doble clic no salta dos paginas", async () => {
+  const h = createHarness();
+  h.detectedCareers = [
+    IDS.architecture, IDS.mathematics, IDS.construction, IDS.design,
+    "licenciatura_psicologia", "licenciatura_derecho",
+    "licenciatura_odontologia", "licenciatura_diseno_grafico",
+  ].map(career);
+  h.rankingResult = paginationRanking(h.detectedCareers);
+  const first = await sendMessage(h.chat.id, h.chat.userId, "Orientacion vocacional");
+  const action = { type: "more_vocational_careers", actionId: first.assistantMessage.uiAction.id };
+  const settled = await Promise.allSettled([
+    sendMessage(h.chat.id, h.chat.userId, "Mostrar mas carreras", action),
+    sendMessage(h.chat.id, h.chat.userId, "Mostrar mas carreras", action),
+  ]);
+  assert.equal(settled.filter((item) => item.status === "fulfilled").length, 1);
+  assert.equal(h.chat.educativeState.vocationalCareerPagination.cursor, 5);
+});
+await test("seguir conversando limpia paginacion de carreras", async () => {
+  const h = createHarness();
+  h.detectedCareers = [
+    IDS.architecture, IDS.mathematics, IDS.construction, IDS.design,
+    "licenciatura_psicologia", "licenciatura_derecho",
+  ].map(career);
+  h.rankingResult = paginationRanking(h.detectedCareers);
+  const first = await sendMessage(h.chat.id, h.chat.userId, "Orientacion vocacional");
+  await sendMessage(h.chat.id, h.chat.userId, "Seguir conversando", {
+    type: "defer_educative_search",
+    actionId: first.assistantMessage.uiAction.id,
+  });
+  assert.equal(h.chat.educativeState.vocationalCareerPagination, null);
+  assert.deepEqual(h.chat.educativeState.pendingCareers, []);
+});
+
+await test("tema vocacional nuevo reemplaza lista anterior", async () => {
+  const h = createHarness();
+  h.detectedCareers = [
+    IDS.architecture, IDS.mathematics, IDS.construction, IDS.design,
+    "licenciatura_derecho", "licenciatura_odontologia",
+  ].map(career);
+  h.rankingResult = paginationRanking(h.detectedCareers);
+  const first = await sendMessage(h.chat.id, h.chat.userId, "Orientacion vocacional");
+  h.detectedCareers = null;
+  h.rankingResult = null;
+  const next = await sendMessage(h.chat.id, h.chat.userId, "Ahora quiero estudiar Psicologia");
+  assert.equal(next.assistantMessage.uiAction.careers.length, 1);
+  assert.match(next.assistantMessage.uiAction.careers[0].name, /Psicolog/i);
+  assert.equal(h.chat.educativeState.vocationalCareerPagination.cursor, 0);
+  assert.equal(h.chat.educativeState.vocationalCareerPagination.total, 1);
+  const oldMessage = h.messages.find((message) => message.id === first.assistantMessage.id);
+  assert.equal(oldMessage.uiAction.status, "expired");
+});
+
+await test("mas escuelas no avanza cursor de carreras", async () => {
+  const h = createHarness();
+  h.detectedCareers = [
+    IDS.architecture, IDS.mathematics, IDS.construction, IDS.design,
+    "licenciatura_derecho", "licenciatura_odontologia",
+  ].map(career);
+  h.rankingResult = paginationRanking(h.detectedCareers);
+  await sendMessage(h.chat.id, h.chat.userId, "Orientacion vocacional");
+  h.detectedCareers = null;
+  h.rankingResult = null;
+  await sendMessage(h.chat.id, h.chat.userId, "Mas escuelas");
+  assert.equal(h.chat.educativeState.vocationalCareerPagination, null);
+});
   const h = createHarness();
   await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar Arquitectura");
   const response = await sendMessage(h.chat.id, h.chat.userId, "la primera");
