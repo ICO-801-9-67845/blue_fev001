@@ -776,6 +776,166 @@ await test("repeticion de flujo produce decision identica", async () => {
   assert.deepEqual(secondResponse.assistantMessage.uiAction.careers, firstCareers);
 });
 
+await test("fuzzy seguro crea confirmacion sin ranking busqueda ni Gemini", async () => {
+  const h = createHarness();
+  const beforeProfile = structuredClone(h.chat.educativeState.vocationalProfile);
+  const response = await sendMessage(h.chat.id, h.chat.userId, "psiclogía");
+  assert.equal(response.assistantMessage.uiAction.type, "career_confirmation");
+  assert.match(response.assistantMessage.content, /Te refieres a/i);
+  assert.equal(h.calls.ranking, 0);
+  assert.equal(h.calls.search, 0);
+  assert.equal(h.calls.gemini, 0);
+  assert.deepEqual(h.chat.educativeState.vocationalProfile, beforeProfile);
+});
+await test("confirmacion fuzzy positiva rankea y busca programa canonico", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "psiclogía");
+  await sendMessage(h.chat.id, h.chat.userId, "si");
+  assert.equal(h.calls.ranking, 1);
+  assert.equal(h.rankingInputs[0].candidates[0].source, "explicit_user_selection");
+  assert.equal(h.calls.search, 1);
+  assert.equal(h.searchArgs[0].canonicalProgramId, "licenciatura_psicologia");
+  assert.equal(h.calls.gemini, 0);
+});
+await test("confirmacion fuzzy negativa no busca ni llama Gemini", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "psiclogía");
+  const response = await sendMessage(h.chat.id, h.chat.userId, "no");
+  assert.equal(h.calls.ranking, 0);
+  assert.equal(h.calls.search, 0);
+  assert.equal(h.calls.gemini, 0);
+  assert.match(response.assistantMessage.content, /No usare esa opcion/i);
+});
+await test("exclusion exacta prevalece tras confirmar fuzzy", async () => {
+  const h = createHarness(profile([], [exclusion("licenciatura_psicologia")]));
+  await sendMessage(h.chat.id, h.chat.userId, "psiclogía");
+  await sendMessage(h.chat.id, h.chat.userId, "si");
+  assert.equal(h.calls.ranking, 1);
+  assert.equal(h.calls.search, 0);
+  assert.equal(h.calls.gemini, 0);
+});
+await test("fuzzy ambiguo no elige programa", async () => {
+  const h = createHarness();
+  const response = await sendMessage(h.chat.id, h.chat.userId, "mecatroncia");
+  assert.equal(response.assistantMessage.uiAction, null);
+  assert.match(response.assistantMessage.content, /nivel educativo/i);
+  assert.equal(h.calls.ranking, 0);
+  assert.equal(h.calls.search, 0);
+  assert.equal(h.calls.gemini, 0);
+});
+await test("solicitud vocacional sin match aclara sin Gemini", async () => {
+  const h = createHarness();
+  const response = await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar programa inexistente");
+  assert.match(response.assistantMessage.content, /No pude identificar/i);
+  assert.equal(h.calls.ranking, 0);
+  assert.equal(h.calls.search, 0);
+  assert.equal(h.calls.gemini, 0);
+});
+await test("fuzzy de pagina visible conserva cursor y snapshot", async () => {
+  const h = createHarness();
+  h.detectedCareers = [
+    "licenciatura_psicologia", IDS.architecture, IDS.mathematics,
+    IDS.construction, IDS.design, "licenciatura_derecho",
+  ].map(career);
+  h.rankingResult = paginationRanking(h.detectedCareers);
+  await sendMessage(h.chat.id, h.chat.userId, "Orientacion vocacional");
+  const before = structuredClone(h.chat.educativeState.vocationalCareerPagination);
+  h.detectedCareers = null;
+  h.rankingResult = null;
+  const response = await sendMessage(h.chat.id, h.chat.userId, "psiclogía");
+  assert.equal(response.assistantMessage.uiAction.careers.length, 1);
+  assert.equal(h.chat.educativeState.vocationalCareerPagination.cursor, before.cursor);
+  assert.deepEqual(h.chat.educativeState.vocationalCareerPagination.options, before.options);
+  assert.equal(h.calls.search, 0);
+});
+await test("seleccion visible exacta conserva prioridad sobre fuzzy", async () => {
+  const h = createHarness();
+  h.detectedCareers = [IDS.architecture, "licenciatura_psicologia"].map(career);
+  h.rankingResult = paginationRanking(h.detectedCareers);
+  await sendMessage(h.chat.id, h.chat.userId, "Orientacion vocacional");
+  h.detectedCareers = null;
+  h.rankingResult = null;
+  await sendMessage(h.chat.id, h.chat.userId, "la primera");
+  assert.equal(h.calls.search, 1);
+  assert.equal(h.searchArgs[0].canonicalProgramId, IDS.architecture);
+});
+await test("doble confirmacion fuzzy ejecuta como maximo una busqueda", async () => {
+  const h = createHarness();
+  const first = await sendMessage(h.chat.id, h.chat.userId, "psiclogía");
+  const action = {
+    type: "confirm_educative_search",
+    actionId: first.assistantMessage.uiAction.id,
+    career: first.assistantMessage.uiAction.careers[0].normalizedName,
+  };
+  const settled = await Promise.allSettled([
+    sendMessage(h.chat.id, h.chat.userId, "si", action),
+    sendMessage(h.chat.id, h.chat.userId, "si", action),
+  ]);
+  assert.equal(settled.filter((item) => item.status === "fulfilled").length, 1);
+  assert.equal(h.calls.search, 1);
+});
+await test("carreras concurrentes cierran una sola operacion", async () => {
+  for (const competingText of ["no", "Quiero conversar", "Mostrar mas carreras", "Mas escuelas"]) {
+    const h = createHarness();
+    const first = await sendMessage(h.chat.id, h.chat.userId, "psiclogia");
+    const action = {
+      type: "confirm_educative_search",
+      actionId: first.assistantMessage.uiAction.id,
+      career: first.assistantMessage.uiAction.careers[0].normalizedName,
+    };
+    const settled = await Promise.allSettled([
+      sendMessage(h.chat.id, h.chat.userId, "si", action),
+      sendMessage(h.chat.id, h.chat.userId, competingText),
+    ]);
+    assert.equal(settled.filter((item) => item.status === "fulfilled").length, 1, competingText);
+    assert.ok(h.calls.search <= 1, competingText);
+    assert.ok(h.calls.ranking <= 1, competingText);
+  }
+});
+await test("estado fuzzy obsoleto falla cerrado", async () => {
+  const h = createHarness();
+  const first = await sendMessage(h.chat.id, h.chat.userId, "psiclogía");
+  const action = {
+    type: "confirm_educative_search",
+    actionId: first.assistantMessage.uiAction.id,
+    career: first.assistantMessage.uiAction.careers[0].normalizedName,
+  };
+  await sendMessage(h.chat.id, h.chat.userId, "si", action);
+  await assert.rejects(sendMessage(h.chat.id, h.chat.userId, "si", action), /disponible|utilizada|expiro/);
+  assert.equal(h.calls.search, 1);
+});
+await test("acciones cerradas no activan fuzzy", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Mostrar mas carreras");
+  assert.equal(h.calls.search, 0);
+  assert.equal(h.calls.ranking, 0);
+});
+await test("menciones lexicas no vocacionales conservan la conversacion normal", async () => {
+  const phrases = [
+    "La arquitectura de este sistema es complicada", "Tengo derecho a entrar",
+    "La psicologia del personaje es interesante", "La red civil esta caida",
+    "Diseno paginas web", "La ingenieria del puente fue buena",
+  ];
+  for (const phrase of phrases) {
+    const h = createHarness();
+    const response = await sendMessage(h.chat.id, h.chat.userId, phrase);
+    assert.equal(response.assistantMessage.uiAction, null, phrase);
+    assert.equal(h.calls.ranking, 0, phrase);
+    assert.equal(h.calls.search, 0, phrase);
+    assert.equal(h.calls.gemini, 1, phrase);
+  }
+});
+await test("cancelaciones fuzzy cerradas no rankean buscan ni llaman Gemini", async () => {
+  for (const cancellation of ["no era esa", "cancelar", "volver", "otra carrera", "no se"]) {
+    const h = createHarness();
+    await sendMessage(h.chat.id, h.chat.userId, "psiclogia");
+    const response = await sendMessage(h.chat.id, h.chat.userId, cancellation);
+    assert.equal(h.calls.ranking, 0, cancellation);
+    assert.equal(h.calls.search, 0, cancellation);
+    assert.equal(h.calls.gemini, 0, cancellation);
+    assert.match(response.assistantMessage.content, /No usare esa opcion/i, cancellation);
+  }
+});
 const passed = results.filter((item) => item.status === "PASS").length;
 const failed = results.length - passed;
 console.log(`TOTAL: ${results.length} | PASS: ${passed} | FAIL: ${failed}`);
