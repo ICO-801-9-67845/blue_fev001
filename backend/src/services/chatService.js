@@ -31,7 +31,6 @@ import {
   classifyTypedAction,
   createUiAction,
   detectCareerOptions,
-  isDirectEducativeRequest,
   isDirectInstitutionRequest,
   isStrongCareerReinforcement,
   normalizeEducativeState,
@@ -47,8 +46,16 @@ import {
   extractExplicitVocationalUpdates,
   normalizeVocationalProfile,
 } from "./vocationalPreferenceService.js";
+import { rankVocationalFlowCandidates } from "./vocationalRankingIntegrationService.js";
 
 const MEMORY_SUMMARY_MESSAGE_LIMIT = 12;
+const VOCATIONAL_CANDIDATE_LIMIT = 128;
+const SAFE_VOCATIONAL_FALLBACK =
+  "Necesito un poco mas de informacion sobre tus intereses antes de sugerir una carrera. Podemos seguir conversando.";
+const EXPLICIT_CAREER_REQUEST_PATTERN =
+  /\b(?:quiero|quisiera|deseo|busco|necesito|planeo)\s+(?:estudiar|cursar|explorar|conocer)\b|\b(?:donde|como)\s+(?:puedo\s+)?(?:estudiar|cursar)\b|\b(?:cuentame|dime|informame)\s+(?:algo\s+)?(?:sobre|de)\b|\b(?:quiero\s+ver|muestrame|dame|busco)\s+(?:escuelas|universidades|instituciones|opciones)\b|\bque\s+opciones\b/;
+const NEGATED_CAREER_REQUEST_PATTERN =
+  /\b(?:no|nunca|jamas)\s+(?:quiero|quisiera|deseo|busco|necesito|planeo)\s+(?:estudiar|cursar|explorar|conocer)\b/;
 
 const EDUCATIVE_INTENT_PATTERN =
   /\b(escuela|escuelas|universidad|universidades|prepa|prepas|preparatoria|preparatorias|bachillerato|carrera|carreras|licenciatura|licenciaturas|ingenieria|ingenierias|opcion|opciones|estudiar|donde estudiar)\b/i;
@@ -524,6 +531,62 @@ function hasDifferentCareer(careers, previousCareers) {
   return (careers || []).some(
     (career) => !(previousCareers || []).some((previous) => hasSameCareer(career, previous)),
   );
+}
+
+function isExplicitCareerRequest(content, career) {
+  const normalizedContent = normalizeEducativeText(content);
+  const aliases = [career?.matchedAlias, career?.name, career?.normalizedName]
+    .map(normalizeEducativeText)
+    .filter(Boolean);
+  if (aliases.some((alias) => normalizedContent === alias)) return true;
+  const requestText = normalizedContent.replace(NEGATED_CAREER_REQUEST_PATTERN, "");
+  return aliases.some((alias) => {
+    const aliasIndex = requestText.indexOf(alias);
+    if (aliasIndex < 0) return false;
+    const prefix = requestText.slice(0, aliasIndex);
+    const clauseStart = Math.max(
+      prefix.lastIndexOf(","),
+      prefix.lastIndexOf(";"),
+      prefix.lastIndexOf("."),
+      prefix.lastIndexOf(" pero "),
+      prefix.lastIndexOf(" aunque "),
+    );
+    return EXPLICIT_CAREER_REQUEST_PATTERN.test(prefix.slice(clauseStart + 1));
+  });
+}
+
+function isExplicitCareerRejection(content) {
+  return NEGATED_CAREER_REQUEST_PATTERN.test(normalizeEducativeText(content));
+}
+
+function evaluateCareerCandidates(state, careers, source) {
+  if (!careers?.length) return null;
+  const result = rankVocationalFlowCandidates({
+    vocationalProfile: state.vocationalProfile,
+    currentRevision: state.vocationalProfile.revision,
+    candidates: careers.map((career) => ({
+      career,
+      source: typeof source === "function" ? source(career) : source,
+    })),
+  });
+  if (result.status === "ranking_error") {
+    console.warn({
+      event: "vocational_ranking_failure",
+      code: result.code,
+      candidateCount: result.candidateCount,
+    });
+  }
+  return result;
+}
+
+function getAllowedRankedCareers(result) {
+  if (!result || result.status !== "ok") return [];
+  return [...result.accepted, ...result.confirmation].map((item) => item.career);
+}
+
+function rankingRejectedAll(result) {
+  return result?.status === "ok" && result.candidateCount > 0 &&
+    result.rejected.length === result.ordered.length;
 }
 
 async function updateEducativeState(chat, state) {
@@ -1017,13 +1080,20 @@ async function isEligibleCanonicalCareer(candidate) {
   return (result.offerContext || []).length > 0;
 }
 
-async function filterEligibleCanonicalCareers(careers) {
-  const eligible = [];
-  for (const career of careers || []) {
-    if (await isEligibleCanonicalCareer(career)) eligible.push(career);
-    if (eligible.length === 3) break;
+async function filterRankedCareersForPrompt(result, limit = 3) {
+  if (!result || result.status !== "ok") return [];
+  const careers = [];
+  for (const item of result.ordered) {
+    if (item.decision.classification === "rejected") continue;
+    if (
+      item.decision.classification === "confirmation_required" ||
+      await isEligibleCanonicalCareer(item.career)
+    ) {
+      careers.push(item.career);
+    }
+    if (careers.length === limit) break;
   }
-  return eligible;
+  return careers;
 }
 
 async function getRelatedPage(state) {
@@ -1035,37 +1105,39 @@ async function getRelatedPage(state) {
     ...(state.shownNearbyProgramIds || []),
   ].filter(Boolean));
 
-  const collectEligible = async (ids, relationType) => {
-    const candidates = [];
-    for (const id of ids) {
-      if (excluded.has(id)) continue;
-      const candidate = toCanonicalCareerCandidate(id);
-      if (
-        !candidate ||
-        candidate.academicLevel !== state.currentLevel ||
-        !(await isEligibleCanonicalCareer(candidate))
-      ) continue;
-      candidates.push({ ...candidate, fromRelated: true, relationType });
-    }
-    return candidates;
+  const collectCanonical = (ids, relationType) => {
+    return ids
+      .filter((id) => !excluded.has(id))
+      .map(toCanonicalCareerCandidate)
+      .filter((candidate) => candidate && candidate.academicLevel === state.currentLevel)
+      .map((candidate) => ({ ...candidate, fromRelated: true, relationType }));
   };
 
-  if (state.relatedStage !== "nearby" && state.relatedStage !== "exhausted") {
-    const family = await collectEligible(getFamilyCandidateIds(currentId), "family");
-    if (family.length) {
-      const nearbyAfterFamily = await collectEligible(
-        getNearbyCandidateIds(currentId),
-        "nearby",
-      );
-      return {
-        careers: family.slice(0, 3),
-        hasMore: family.length > 3 || nearbyAfterFamily.length > 0,
-        stage: "family",
-      };
-    }
+  const includeFamily = state.relatedStage !== "nearby" && state.relatedStage !== "exhausted";
+  const familyCandidates = includeFamily
+    ? collectCanonical(getFamilyCandidateIds(currentId), "family")
+    : [];
+  const nearbyCandidates = collectCanonical(getNearbyCandidateIds(currentId), "nearby");
+  const candidates = [...familyCandidates, ...nearbyCandidates];
+  const ranking = evaluateCareerCandidates(
+    state,
+    candidates,
+    (career) => career.relationType === "family" ? "same_family" : "documented_nearby",
+  );
+  if (ranking?.status === "ranking_error") {
+    return { careers: [], hasMore: false, stage: state.relatedStage, rankingError: true };
   }
 
-  const nearby = await collectEligible(getNearbyCandidateIds(currentId), "nearby");
+  const eligible = await filterRankedCareersForPrompt(ranking, Number.POSITIVE_INFINITY);
+  const family = eligible.filter((career) => career.relationType === "family");
+  const nearby = eligible.filter((career) => career.relationType === "nearby");
+  if (family.length) {
+    return {
+      careers: family.slice(0, 3),
+      hasMore: family.length > 3 || nearby.length > 0,
+      stage: "family",
+    };
+  }
   if (nearby.length) {
     return { careers: nearby.slice(0, 3), hasMore: nearby.length > 3, stage: "nearby" };
   }
@@ -1113,6 +1185,14 @@ async function showRelatedCareers(chat, content, state, clientAction) {
     { status: "processing", hasMoreResults: false },
   );
   const page = await getRelatedPage(consumed.state);
+  if (page.rankingError) {
+    const assistantMessage = await createMessage({
+      chatId: chat.id,
+      role: "assistant",
+      content: SAFE_VOCATIONAL_FALLBACK,
+    });
+    return { userMessage: consumed.userMessage, assistantMessage };
+  }
   const displayedIds = page.careers.map((career) => career.canonicalProgramId);
   const nextState = {
     ...consumed.state,
@@ -1234,6 +1314,33 @@ async function handleEducativeAction(chat, userId, content, rawAction, currentSt
   if (clientAction.type === "confirm_educative_search") {
     await validatePendingAction(chat, currentState, clientAction);
     const career = getCareerFromAction(currentState, clientAction);
+    const ranking = evaluateCareerCandidates(
+      currentState,
+      [career],
+      "explicit_user_selection",
+    );
+    if (ranking?.status === "ranking_error" || rankingRejectedAll(ranking)) {
+      const consumed = await consumePendingAction(
+        chat,
+        currentState,
+        clientAction,
+        content,
+        {
+          status: "idle",
+          pendingCareers: [],
+          pendingLevel: null,
+          searchConfirmed: false,
+          hasMoreResults: false,
+        },
+      );
+      const assistantMessage = await createMessage({
+        chatId: chat.id,
+        role: "assistant",
+        content: SAFE_VOCATIONAL_FALLBACK,
+      });
+      return { userMessage: consumed.userMessage, assistantMessage };
+    }
+    const continuingSearch = Boolean(career.searchContinuation);
     const { userMessage, state } = await consumePendingAction(
       chat,
       currentState,
@@ -1243,7 +1350,9 @@ async function handleEducativeAction(chat, userId, content, rawAction, currentSt
         status: "processing",
         searchConfirmed: true,
         deferredSearch: false,
-        excludedOfferIds: [],
+        excludedOfferIds: continuingSearch
+          ? currentState.excludedOfferIds
+          : [],
         activeConfirmedCareer: career,
         activeConfirmedLevel: career.level,
         activeSearchQuery: career.searchQuery,
@@ -1263,7 +1372,7 @@ async function handleEducativeAction(chat, userId, content, rawAction, currentSt
         relatedHasMore: false,
       },
     );
-    const result = await runConfirmedEducativeSearch(chat, state, career, false);
+    const result = await runConfirmedEducativeSearch(chat, state, career, continuingSearch);
     return { userMessage, assistantMessage: result.assistantMessage };
   }
 
@@ -1278,6 +1387,7 @@ async function handleEducativeAction(chat, userId, content, rawAction, currentSt
       searchQuery: currentState.activeSearchQuery,
       level: currentState.activeConfirmedLevel || career.level,
     };
+    const continuationCareer = { ...activeCareer, searchContinuation: true };
     const { userMessage, state } = await consumePendingAction(
       chat,
       currentState,
@@ -1285,6 +1395,30 @@ async function handleEducativeAction(chat, userId, content, rawAction, currentSt
       content,
       { status: "processing" },
     );
+    const continuationRanking = evaluateCareerCandidates(
+      state,
+      [continuationCareer],
+      "search_continuation",
+    );
+    if (continuationRanking?.status === "ranking_error" ||
+        rankingRejectedAll(continuationRanking)) {
+      const assistantMessage = await createMessage({
+        chatId: chat.id,
+        role: "assistant",
+        content: SAFE_VOCATIONAL_FALLBACK,
+      });
+      return { userMessage, assistantMessage };
+    }
+    if (continuationRanking.confirmation.length > 0) {
+      const confirmation = await createCareerConfirmation(
+        chat,
+        "",
+        [continuationCareer],
+        false,
+        state,
+      );
+      return { userMessage, assistantMessage: confirmation.assistantMessage };
+    }
     const result = await runConfirmedEducativeSearch(chat, state, activeCareer, true);
     return { userMessage, assistantMessage: result.assistantMessage };
   }
@@ -1366,7 +1500,10 @@ export async function sendMessage(chatId, userId, content, action = null) {
     };
   }
 
-  const detectedCareerMentions = detectCareerOptions(content);
+  const detectedCareerMentions = detectCareerOptions(
+    content,
+    { limit: VOCATIONAL_CANDIDATE_LIMIT },
+  );
   const vocationalResult = await createUserMessageWithVocationalProfile(
     chat,
     content,
@@ -1377,16 +1514,30 @@ export async function sendMessage(chatId, userId, content, action = null) {
   currentState = vocationalResult.state;
   const history = await listMessagesByChatId(chatId);
   const memoryHistory = history.slice(-MEMORY_SUMMARY_MESSAGE_LIMIT);
-  const directCareers = await filterEligibleCanonicalCareers(detectedCareerMentions);
-  const normalizedContent = normalizeEducativeText(content);
-  const isStandaloneCareer = directCareers.some(
-    (career) =>
-      normalizedContent === normalizeEducativeText(career.name) ||
-      normalizedContent === normalizeEducativeText(career.normalizedName),
+  const directRequest = detectedCareerMentions.some(
+    (career) => isExplicitCareerRequest(content, career),
   );
-  const directRequest = directCareers.length > 0 && (
-    isDirectEducativeRequest(content) || isStandaloneCareer
+  const directRanking = evaluateCareerCandidates(
+    currentState,
+    detectedCareerMentions,
+    (career) => isExplicitCareerRequest(content, career)
+      ? "explicit_user_request"
+      : "direct_canonical_mention",
   );
+  if (directRanking?.status === "ranking_error" ||
+      (
+        (directRequest || isExplicitCareerRejection(content)) &&
+        rankingRejectedAll(directRanking)
+      )) {
+    const assistantMessage = await createMessage({
+      chatId,
+      role: "assistant",
+      content: SAFE_VOCATIONAL_FALLBACK,
+    });
+    await updateTitleAfterMessage(chat, content);
+    return { userMessage, assistantMessage };
+  }
+  const directCareers = await filterRankedCareersForPrompt(directRanking);
   const messagesSinceDeferral = currentState.deferredSearch
     ? currentState.messagesSinceDeferral + 1
     : currentState.messagesSinceDeferral;
@@ -1411,14 +1562,7 @@ export async function sendMessage(chatId, userId, content, action = null) {
 
   const shouldShowDirectConfirmation =
     directCareers.length > 0 &&
-    canPromptAfterDeferral &&
-    (
-      directRequest ||
-      (
-        currentState.deferredSearch &&
-        (hasStrongReinforcement || hasNewCareer)
-      )
-    );
+    canPromptAfterDeferral;
 
   if (shouldShowDirectConfirmation) {
     const result = await createCareerConfirmation(
@@ -1448,16 +1592,34 @@ export async function sendMessage(chatId, userId, content, action = null) {
     memoryContext,
     { isEducativeRequest: false },
   );
-  const inferredCareers = await filterEligibleCanonicalCareers(detectCareerOptions(assistantReply));
+  const geminiCandidates = detectCareerOptions(
+    assistantReply,
+    { limit: VOCATIONAL_CANDIDATE_LIMIT },
+  );
+  const geminiRanking = evaluateCareerCandidates(
+    workingState,
+    geminiCandidates,
+    "gemini_response",
+  );
+  const inferredCareers = await filterRankedCareersForPrompt(geminiRanking);
   const inferredHasNewCareer = hasDifferentCareer(
     inferredCareers,
     currentState.lastPromptedCareers,
   );
-  const careersToPrompt = inferredCareers.length > 0
-    ? inferredCareers
-    : currentState.deferredSearch && messagesSinceDeferral >= 3
-      ? currentState.lastPromptedCareers
-      : [];
+  let careersToPrompt = inferredCareers;
+  let fallbackRanking = null;
+  if (!careersToPrompt.length && !geminiCandidates.length &&
+      currentState.deferredSearch && messagesSinceDeferral >= 3) {
+    fallbackRanking = evaluateCareerCandidates(
+      workingState,
+      currentState.lastPromptedCareers,
+      "search_continuation",
+    );
+    careersToPrompt = getAllowedRankedCareers(fallbackRanking).slice(0, 3);
+  }
+  const rankingFailed = geminiRanking?.status === "ranking_error" ||
+    fallbackRanking?.status === "ranking_error";
+  const hasRejectedGeminiCandidates = (geminiRanking?.rejected.length || 0) > 0;
   const canShowInferredConfirmation =
     careersToPrompt.length > 0 &&
     (
@@ -1469,9 +1631,10 @@ export async function sendMessage(chatId, userId, content, action = null) {
 
   let assistantMessage;
   if (canShowInferredConfirmation) {
+    const safeReply = hasRejectedGeminiCandidates || rankingFailed ? "" : assistantReply;
     const result = await createCareerConfirmation(
       chat,
-      assistantReply,
+      safeReply,
       careersToPrompt,
       false,
       workingState,
@@ -1481,7 +1644,9 @@ export async function sendMessage(chatId, userId, content, action = null) {
     assistantMessage = await createMessage({
       chatId,
       role: "assistant",
-      content: assistantReply,
+      content: hasRejectedGeminiCandidates || rankingFailed
+        ? SAFE_VOCATIONAL_FALLBACK
+        : assistantReply,
     });
 
     if (

@@ -33,10 +33,10 @@ export function getRelatedCareerCandidates(career, level) {
   return getFamilyCandidateIds(career.canonicalProgramId)
     .map(toCanonicalCareerCandidate).filter((candidate) => candidate && candidate.level === level);
 }
-export function detectCareerOptions(text, { requireDirectIntent = false } = {}) {
+export function detectCareerOptions(text, { requireDirectIntent = false, limit = 3 } = {}) {
   const normalizedText = normalizeEducativeText(text);
   if (!normalizedText || (requireDirectIntent && !DIRECT_SEARCH_PATTERN.test(normalizedText))) return [];
-  return detectCanonicalProgramOptions(text, { limit: 3 });
+  return detectCanonicalProgramOptions(text, { limit });
 }
 export function isDirectEducativeRequest(text) {
   return DIRECT_SEARCH_PATTERN.test(normalizeEducativeText(text));
