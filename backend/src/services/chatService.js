@@ -41,6 +41,7 @@ import {
   getNearbyCandidateIds,
   toCanonicalCareerCandidate,
 } from "./educativeProgramRelationsService.js";
+import { matchVocationalCareer } from "./vocationalCareerMatchingService.js";
 import {
   applyVocationalUpdates,
   extractExplicitVocationalUpdates,
@@ -566,6 +567,43 @@ function isExplicitCareerRejection(content) {
   return NEGATED_CAREER_REQUEST_PATTERN.test(normalizeEducativeText(content));
 }
 
+function isControlledVocationalRequest(content) {
+  const normalized = normalizeEducativeText(content);
+  return EXPLICIT_CAREER_REQUEST_PATTERN.test(normalized) ||
+    /\b(?:carrera|licenciatura|ingenieria|tsu|maestria|doctorado|especialidad)\b/u.test(normalized);
+}
+
+function isNegativeConfirmationText(content) {
+  return /^(?:no|no gracias|ninguna|ninguna gracias|ninguna de esas|no es esa|no era esa|no me refiero a esa|cancelar|volver|otra carrera|no se|no estoy seguro)$/.test(
+    normalizeEducativeText(content),
+  );
+}
+
+function hasControlledVocationalContext(content, careers = []) {
+  const normalized = normalizeEducativeText(content);
+  if (!normalized) return false;
+  if (EXPLICIT_CAREER_REQUEST_PATTERN.test(normalized)) return true;
+  const aliases = (careers || []).flatMap((career) =>
+    [career?.matchedAlias, career?.name, career?.normalizedName, ...(career?.exactAliases || [])]
+      .map(normalizeEducativeText)
+      .filter(Boolean)
+  );
+  if (aliases.includes(normalized)) return true;
+  if (aliases.length &&
+      /\b(?:pense|pienso|pensando|considero|me interesa|me gusta|prefiero|opcion|carrera|vocacion|estudiar)\b/u.test(normalized)) {
+    return true;
+  }
+  const tokenCount = normalized.split(" ").length;
+  if (tokenCount <= 2) return true;
+  return tokenCount <= 5 &&
+    /^(?:licenciatura|ingenieria|tsu|maestria|doctorado|especialidad)(?:\s+(?:en|de))?\b/u.test(normalized);
+}
+
+function getMatchingCareer(match) {
+  if (match?.status !== "fuzzy_confirmation_required" || !match.programId) return null;
+  return toCanonicalCareerCandidate(match.programId);
+}
+
 function evaluateCareerCandidates(state, careers, source) {
   if (!careers?.length) return null;
   const result = rankVocationalFlowCandidates({
@@ -791,9 +829,11 @@ async function createCareerConfirmation(
       })), {
         stateVersion: (Number(chat.educativeStateVersion) || 0) + 1,
       });
-  const visibleCareers = paginationState
-    ? getCurrentVocationalCareerPage(paginationState).careers
-    : careers;
+  const visibleCareers = paginationOverride
+    ? careers
+    : paginationState
+      ? getCurrentVocationalCareerPage(paginationState).careers
+      : careers;
   const uiAction = createUiAction("career_confirmation", {
     careers: visibleCareers.map(({
       name,
@@ -870,7 +910,10 @@ async function consumePendingAction(chat, state, clientAction, content, stateCha
     pendingConfirmationActionId: null,
     pendingActionMessageId: null,
   };
-  const expectedVersion = Number(chat.educativeStateVersion) || 0;
+  const paginationVersion = state.vocationalCareerPagination?.stateVersion;
+  const expectedVersion = Number.isSafeInteger(paginationVersion)
+    ? paginationVersion
+    : Number(chat.educativeStateVersion) || 0;
 
   const userMessage = await prisma.$transaction(async (transaction) => {
     const updated = await transaction.chat.updateMany({
@@ -1394,6 +1437,35 @@ async function handleEducativeAction(chat, userId, content, rawAction, currentSt
   }
 
   if (
+    clientAction.type === "defer_educative_search" &&
+    isNegativeConfirmationText(content)
+  ) {
+    const consumed = await consumePendingAction(
+      chat,
+      currentState,
+      clientAction,
+      content,
+      {
+        status: "idle",
+        pendingCareers: [],
+        pendingLevel: null,
+        searchConfirmed: false,
+        deferredSearch: false,
+        hasMoreResults: false,
+        vocationalCareerPagination: currentState.vocationalCareerPagination
+          ? closeVocationalCareerPaginationState(currentState.vocationalCareerPagination)
+          : null,
+      },
+    );
+    const assistantMessage = await createMessage({
+      chatId: chat.id,
+      role: "assistant",
+      content: "Entendido. No usare esa opcion. Puedes escribir otra carrera o seguir conversando.",
+    });
+    return { userMessage: consumed.userMessage, assistantMessage };
+  }
+
+  if (
     clientAction.type === "defer_educative_search" ||
     clientAction.type === "continue_conversation"
   ) {
@@ -1601,6 +1673,36 @@ export async function sendMessage(chatId, userId, content, action = null) {
     };
   }
 
+  if (currentState.vocationalCareerPagination && hasControlledVocationalContext(content)) {
+    const visiblePage = getCurrentVocationalCareerPage(currentState.vocationalCareerPagination);
+    const visibleMatch = matchVocationalCareer(content, {
+      allowedProgramIds: visiblePage.careers.map((career) => career.canonicalProgramId),
+    });
+    const visibleCareer = getMatchingCareer(visibleMatch);
+    if (visibleCareer) {
+      const vocationalResult = await createUserMessageWithVocationalProfile(
+        chat,
+        content,
+        currentState,
+        [],
+      );
+      const confirmation = await createCareerConfirmation(
+        chat,
+        `¿Te refieres a ${visibleCareer.name}?`,
+        [visibleCareer],
+        false,
+        vocationalResult.state,
+        null,
+        currentState.vocationalCareerPagination,
+      );
+      await updateTitleAfterMessage(chat, content);
+      return {
+        userMessage: vocationalResult.userMessage,
+        assistantMessage: confirmation.assistantMessage,
+      };
+    }
+  }
+
   if (currentState.vocationalCareerPagination) {
     await expirePendingAction(chat, currentState);
     currentState = await updateEducativeState(chat, {
@@ -1615,10 +1717,19 @@ export async function sendMessage(chatId, userId, content, action = null) {
       hasMoreResults: false,
     });
   }
-  const detectedCareerMentions = detectCareerOptions(
+  let detectedCareerMentions = detectCareerOptions(
     content,
     { limit: VOCATIONAL_CANDIDATE_LIMIT },
   );
+  const controlledContext = hasControlledVocationalContext(content, detectedCareerMentions);
+  if (!controlledContext) detectedCareerMentions = [];
+  const controlledMatch = controlledContext && detectedCareerMentions.length === 0
+    ? matchVocationalCareer(content)
+    : null;
+  if (["exact", "approved_alias", "normalized_exact"].includes(controlledMatch?.status)) {
+    const controlledCareer = toCanonicalCareerCandidate(controlledMatch.programId);
+    if (controlledCareer) detectedCareerMentions = [controlledCareer];
+  }
   const vocationalResult = await createUserMessageWithVocationalProfile(
     chat,
     content,
@@ -1627,6 +1738,36 @@ export async function sendMessage(chatId, userId, content, action = null) {
   );
   const userMessage = vocationalResult.userMessage;
   currentState = vocationalResult.state;
+  const matchingCareer = getMatchingCareer(controlledMatch);
+  if (matchingCareer) {
+    const confirmation = await createCareerConfirmation(
+      chat,
+      `¿Te refieres a ${matchingCareer.name}?`,
+      [matchingCareer],
+      false,
+      currentState,
+    );
+    await updateTitleAfterMessage(chat, content);
+    return { userMessage, assistantMessage: confirmation.assistantMessage };
+  }
+  if (controlledMatch?.status === "ambiguous") {
+    const assistantMessage = await createMessage({
+      chatId,
+      role: "assistant",
+      content: "Hay mas de una carrera posible con un nombre parecido. Indica el nombre completo y el nivel educativo para poder confirmarla.",
+    });
+    await updateTitleAfterMessage(chat, content);
+    return { userMessage, assistantMessage };
+  }
+  if (controlledMatch?.status === "no_match" && isControlledVocationalRequest(content)) {
+    const assistantMessage = await createMessage({
+      chatId,
+      role: "assistant",
+      content: "No pude identificar una carrera canonica con seguridad. Escribe el nombre completo y, si aplica, el nivel educativo.",
+    });
+    await updateTitleAfterMessage(chat, content);
+    return { userMessage, assistantMessage };
+  }
   const history = await listMessagesByChatId(chatId);
   const memoryHistory = history.slice(-MEMORY_SUMMARY_MESSAGE_LIMIT);
   const directRequest = detectedCareerMentions.some(

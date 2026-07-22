@@ -11,7 +11,7 @@ import {
 
 const DIRECT_SEARCH_PATTERN = /\b(quiero estudiar|me interesa estudiar|me interesan|busco estudiar|escuelas?|universidades?|instituciones?|opciones de|donde estudiar|que estudiar|carrera|licenciatura|ingenieria|prepa|bachillerato|tsu|maestria|doctorado|posgrado|especialidad)\b/;
 const CONFIRM_PATTERN = /^(?:si|claro|adelante|esta bien|quiero|acepto|por favor|muestrame|muestrame(?: las)? opciones|mostrar opciones|quiero ver escuelas|quiero ver instituciones|ver instituciones|si quiero verlas|quiero conocer las universidades|ensename .+|quiero ver .+)$/;
-const DEFER_PATTERN = /\b(sigamos hablando|todavia no|conversar primero|hazme mas preguntas|prefiero seguir|continuemos|no quiero ver escuelas|seguir conversando)\b/;
+const DEFER_PATTERN = /^(?:no|no gracias|ninguna|ninguna gracias|ninguna de esas|no es esa|no era esa|no me refiero a esa|cancelar|volver|otra carrera|no se|no estoy seguro)$|\b(sigamos hablando|todavia no|conversar primero|hazme mas preguntas|prefiero seguir|continuemos|no quiero ver escuelas|seguir conversando)\b/;
 const MORE_PATTERN = /\b(dame mas opciones|muestrame otras|que otras escuelas hay|mas resultados|otras instituciones|quiero ver mas|mas opciones)\b/;
 const RELATED_PATTERN = /\b(explorar carreras relacionadas|quiero ver carreras relacionadas|que otras carreras existen|que otras carreras hay|carreras similares|opciones relacionadas|opciones parecidas|otras carreras|explorar otras carreras|quiero explorar algo relacionado)\b/;
 const MORE_RELATED_PATTERN = /\b(mostrar mas carreras relacionadas|muestrame mas carreras relacionadas|mas carreras relacionadas|siguientes carreras relacionadas)\b/;
