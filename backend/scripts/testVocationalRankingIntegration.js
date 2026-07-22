@@ -1,0 +1,625 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { register } from "node:module";
+import {
+  VOCATIONAL_CANDIDATE_SOURCES,
+  rankVocationalFlowCandidates,
+} from "../src/services/vocationalRankingIntegrationService.js";
+import {
+  getDefaultEducativeState,
+} from "../src/services/educativeConfirmationService.js";
+import {
+  getDefaultVocationalProfile,
+} from "../src/services/vocationalPreferenceService.js";
+import { toCanonicalCareerCandidate } from "../src/services/educativeProgramRelationsService.js";
+
+const IDS = Object.freeze({
+  design: "especialidad_especialidad_en_diseno_digital",
+  architecture: "licenciatura_arquitectura",
+  mathematics: "licenciatura_matematicas",
+  construction: "tecnico_bachillerato_construccion",
+});
+const NOW = "2026-07-21T00:00:00.000Z";
+const emptyProfile = () => getDefaultVocationalProfile();
+const profile = (signals = [], exclusions = [], revision = 1) => ({
+  version: 1,
+  revision,
+  signals,
+  exclusions,
+});
+const signal = (
+  conceptId,
+  dimension = "interest",
+  polarity = "positive",
+  intensity = 3,
+  updatedRevision = 1,
+) => ({
+  conceptKind: ["mathematics", "health"].includes(conceptId) ? "subject" : "activity",
+  conceptId,
+  dimension,
+  polarity,
+  intensity,
+  source: "explicit_statement",
+  updatedRevision,
+  updatedAt: NOW,
+});
+const exclusion = (targetId, updatedRevision = 1) => ({
+  targetKind: "program",
+  targetId,
+  mode: "exact",
+  source: "explicit_statement",
+  updatedRevision,
+  updatedAt: NOW,
+});
+const career = (id) => toCanonicalCareerCandidate(id) || {
+  name: id,
+  normalizedName: id.toUpperCase(),
+  level: "undergraduate",
+  academicLevel: "licenciatura",
+  searchQuery: id,
+  canonicalProgramId: id,
+  familyId: null,
+  exactAliases: [id],
+  matchedAlias: id,
+};
+const entry = (id, source) => ({ career: career(id), source });
+const evaluate = (vocationalProfile, candidates, currentRevision) =>
+  rankVocationalFlowCandidates({
+    vocationalProfile,
+    candidates,
+    ...(currentRevision === undefined ? {} : { currentRevision }),
+  });
+const decision = (result) => result.ordered[0]?.decision;
+const allAllowed = (result) => [...result.accepted, ...result.confirmation];
+
+const results = [];
+let nextNumber = 1;
+async function test(name, callback) {
+  const label = `${String(nextNumber).padStart(3, "0")} ${name}`;
+  nextNumber += 1;
+  try {
+    await callback();
+    results.push({ name: label, status: "PASS" });
+    console.log(`PASS ${label}`);
+  } catch (error) {
+    results.push({ name: label, status: "FAIL", error: error.message });
+    console.error(`FAIL ${label}: ${error.stack || error.message}`);
+  }
+}
+
+await test("API productiva no exporta inyeccion de pruebas", async () => {
+  const api = await import("../src/services/vocationalRankingIntegrationService.js");
+  assert.deepEqual(Object.keys(api).sort(), [
+    "VOCATIONAL_CANDIDATE_SOURCES",
+    "rankVocationalFlowCandidates",
+  ]);
+});
+await test("origenes cerrados exactos", () => assert.deepEqual(VOCATIONAL_CANDIDATE_SOURCES, [
+  "explicit_user_request", "explicit_user_selection", "direct_canonical_mention",
+  "search_continuation", "gemini_response", "profile_inference", "same_family",
+  "documented_nearby",
+]));
+await test("solicitud explicita clasificada aceptada", () =>
+  assert.equal(evaluate(emptyProfile(), [entry(IDS.design, "explicit_user_request")]).accepted.length, 1));
+await test("solicitud explicita no clasificada aceptada", () =>
+  assert.equal(evaluate(emptyProfile(), [entry(IDS.architecture, "explicit_user_request")]).accepted.length, 1));
+await test("seleccion explicita aceptada", () =>
+  assert.equal(evaluate(emptyProfile(), [entry(IDS.architecture, "explicit_user_selection")]).accepted.length, 1));
+await test("seleccion con senales negativas permanece aceptada", () => {
+  const result = evaluate(profile([signal("design", "interest", "negative")]), [
+    entry(IDS.design, "explicit_user_selection"),
+  ]);
+  assert.equal(result.accepted.length, 1);
+});
+await test("exclusion exacta bloquea solicitud", () =>
+  assert.deepEqual(decision(evaluate(profile([], [exclusion(IDS.design)]), [
+    entry(IDS.design, "explicit_user_request"),
+  ])).reasonCodes, ["exact_exclusion"]));
+await test("exclusion exacta bloquea seleccion", () =>
+  assert.equal(evaluate(profile([], [exclusion(IDS.design)]), [
+    entry(IDS.design, "explicit_user_selection"),
+  ]).rejected.length, 1));
+await test("exclusion exacta bloquea Gemini", () =>
+  assert.equal(evaluate(profile([signal("design")], [exclusion(IDS.design)]), [
+    entry(IDS.design, "gemini_response"),
+  ]).rejected.length, 1));
+await test("exclusion exacta bloquea perfil", () =>
+  assert.equal(evaluate(profile([signal("design")], [exclusion(IDS.design)]), [
+    entry(IDS.design, "profile_inference"),
+  ]).rejected.length, 1));
+await test("exclusion exacta bloquea familia", () =>
+  assert.equal(evaluate(profile([signal("design")], [exclusion(IDS.design)]), [
+    entry(IDS.design, "same_family"),
+  ]).rejected.length, 1));
+await test("exclusion exacta bloquea cercania", () =>
+  assert.equal(evaluate(profile([signal("design")], [exclusion(IDS.design)]), [
+    entry(IDS.design, "documented_nearby"),
+  ]).rejected.length, 1));
+await test("mencion directa no clasificada requiere confirmacion", () =>
+  assert.equal(evaluate(emptyProfile(), [entry(IDS.architecture, "direct_canonical_mention")])
+    .confirmation.length, 1));
+await test("continuacion no clasificada requiere confirmacion", () =>
+  assert.equal(evaluate(emptyProfile(), [entry(IDS.architecture, "search_continuation")])
+    .confirmation.length, 1));
+await test("inferencia no clasificada rechazada", () =>
+  assert.equal(evaluate(emptyProfile(), [entry(IDS.architecture, "profile_inference")]).rejected.length, 1));
+await test("Gemini sin evidencia positiva rechazado", () =>
+  assert.deepEqual(decision(evaluate(emptyProfile(), [entry(IDS.design, "gemini_response")]))
+    .reasonCodes, ["gemini_only_candidate"]));
+await test("Gemini con evidencia real no recibe puntos de origen", () =>
+  assert.equal(decision(evaluate(profile([signal("design")]), [entry(IDS.design, "gemini_response")])).score, 12));
+await test("familia no agrega puntos", () =>
+  assert.equal(decision(evaluate(profile([signal("design")]), [entry(IDS.design, "same_family")])).score, 12));
+await test("cercania no agrega puntos", () =>
+  assert.equal(decision(evaluate(profile([signal("design")]), [entry(IDS.design, "documented_nearby")])).score, 12));
+await test("programa inexistente rechazado", () =>
+  assert.deepEqual(decision(evaluate(emptyProfile(), [entry("programa_inexistente", "explicit_user_request")]))
+    .reasonCodes, ["invalid_program"]));
+await test("texto no canonico no produce ID inventado", () =>
+  assert.equal(evaluate(emptyProfile(), [entry("programa$aproximado", "explicit_user_request")]).status,
+    "ranking_error"));
+await test("duplicados se consolidan", () => {
+  const result = evaluate(emptyProfile(), [
+    entry(IDS.design, "direct_canonical_mention"),
+    entry(IDS.design, "explicit_user_request"),
+  ]);
+  assert.equal(result.ordered.length, 1);
+});
+await test("prioridad de origen determinista", () => {
+  const result = evaluate(emptyProfile(), [
+    entry(IDS.design, "profile_inference"),
+    entry(IDS.design, "explicit_user_selection"),
+  ]);
+  assert.equal(decision(result).score, 45);
+});
+await test("orden de candidatos no cambia resultado", () => {
+  const candidates = [
+    entry(IDS.design, "explicit_user_request"),
+    entry(IDS.architecture, "direct_canonical_mention"),
+  ];
+  assert.deepEqual(evaluate(emptyProfile(), candidates), evaluate(emptyProfile(), [...candidates].reverse()));
+});
+await test("inputs no son mutados", () => {
+  const candidates = [entry(IDS.design, "explicit_user_request")];
+  const before = structuredClone(candidates);
+  evaluate(emptyProfile(), candidates);
+  assert.deepEqual(candidates, before);
+});
+await test("perfil no es mutado", () => {
+  const value = profile([signal("design")]);
+  const before = structuredClone(value);
+  evaluate(value, [entry(IDS.design, "gemini_response")]);
+  assert.deepEqual(value, before);
+});
+await test("catalogo no es mutado", () => {
+  const path = new URL("../src/config/vocationalCareerTraits.json", import.meta.url);
+  const before = readFileSync(path);
+  evaluate(emptyProfile(), [entry(IDS.design, "explicit_user_request")]);
+  assert.deepEqual(readFileSync(path), before);
+});
+await test("conjunto consolidado produce una evaluacion completa", () => {
+  const result = evaluate(profile([signal("design")]), [
+    entry(IDS.design, "profile_inference"),
+    entry(IDS.architecture, "direct_canonical_mention"),
+  ]);
+  assert.equal(result.candidateCount, 2);
+  assert.equal(result.ordered.length, 2);
+});
+await test("ranking vacio no requiere evaluacion", () => {
+  const result = evaluate(emptyProfile(), []);
+  assert.equal(result.status, "not_evaluated");
+  assert.equal(result.candidateCount, 0);
+});
+await test("ranking no importa ni llama Gemini", () => {
+  const source = readFileSync(new URL("../src/services/vocationalRankingIntegrationService.js", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /aiService|generateAssistantReply|GoogleGenerativeAI/);
+});
+await test("confirmacion se traduce al bucket existente", () => {
+  const result = evaluate(emptyProfile(), [entry(IDS.architecture, "direct_canonical_mention")]);
+  assert.equal(result.confirmation[0].decision.classification, "confirmation_required");
+});
+await test("rechazados no aparecen en buckets permitidos", () => {
+  const result = evaluate(emptyProfile(), [entry(IDS.design, "gemini_response")]);
+  assert.equal(allAllowed(result).length, 0);
+});
+await test("accepted conserva candidato normalizado", () => {
+  const result = evaluate(emptyProfile(), [entry(IDS.architecture, "explicit_user_request")]);
+  assert.equal(result.accepted[0].career.canonicalProgramId, IDS.architecture);
+});
+await test("perfil version 1 funciona", () =>
+  assert.equal(evaluate({ version: 1, revision: 0, signals: [], exclusions: [] }, [
+    entry(IDS.architecture, "explicit_user_request"),
+  ]).status, "ok"));
+await test("origen desconocido falla cerrado", () =>
+  assert.equal(evaluate(emptyProfile(), [entry(IDS.design, "origen_inventado")]).status, "ranking_error"));
+await test("origen solicitud activa el contrato explicito", () => {
+  const result = evaluate(emptyProfile(), [entry(IDS.design, "explicit_user_request")]);
+  assert.equal(result.accepted[0].decision.classification, "accepted");
+});
+await test("origen seleccion activa el contrato explicito", () => {
+  const result = evaluate(emptyProfile(), [entry(IDS.design, "explicit_user_selection")]);
+  assert.equal(result.accepted[0].decision.classification, "accepted");
+});
+await test("fallo estructural usa codigo cerrado", () => {
+  const result = evaluate({ version: 99 }, [entry(IDS.design, "profile_inference")]);
+  assert.deepEqual({ status: result.status, code: result.code }, {
+    status: "ranking_error", code: "VOCATIONAL_RANKING_INPUT_REJECTED",
+  });
+});
+await test("fallo no filtra datos personales", () => {
+  const secret = "persona@example.com mensaje privado";
+  const result = evaluate({ version: secret }, [entry(IDS.design, "profile_inference")]);
+  assert.doesNotMatch(JSON.stringify(result), /persona@example|mensaje privado/);
+});
+await test("salida repetida es identica", () => {
+  const input = [entry(IDS.design, "direct_canonical_mention")];
+  assert.deepEqual(evaluate(profile([signal("design")]), input), evaluate(profile([signal("design")]), input));
+});
+await test("limite de 128 candidatos es aceptado", () => {
+  const candidates = Array.from({ length: 128 }, () => entry(IDS.design, "explicit_user_request"));
+  assert.equal(evaluate(emptyProfile(), candidates).status, "ok");
+});
+await test("mas de 128 candidatos falla cerrado", () => {
+  const candidates = Array.from({ length: 129 }, () => entry(IDS.design, "explicit_user_request"));
+  assert.equal(evaluate(emptyProfile(), candidates).status, "ranking_error");
+});
+await test("instituciones y URLs no salen de la integracion", () => {
+  const result = evaluate(emptyProfile(), [{
+    ...entry(IDS.design, "explicit_user_request"),
+    career: { ...career(IDS.design), institution: "Escuela", redirect_url: "https://invalid" },
+  }]);
+  assert.doesNotMatch(JSON.stringify(result), /Escuela|https|redirect/);
+});
+await test("bucket accepted no comparte referencias", () => {
+  const result = evaluate(emptyProfile(), [entry(IDS.design, "explicit_user_request")]);
+  result.accepted[0].decision.reasonCodes.push("mutated");
+  assert.doesNotMatch(JSON.stringify(result.ordered), /mutated/);
+});
+await test("bucket confirmation no comparte referencias", () => {
+  const result = evaluate(emptyProfile(), [entry(IDS.architecture, "direct_canonical_mention")]);
+  result.confirmation[0].career.name = "mutated";
+  assert.doesNotMatch(JSON.stringify(result.ordered), /mutated/);
+});
+await test("evidencia matematica y diseno vigente llega completa", () => {
+  const value = profile([signal("mathematics"), signal("design")]);
+  const result = evaluate(value, [entry(IDS.design, "gemini_response")]);
+  assert.equal(result.confirmation[0].decision.positiveEvidenceCount, 1);
+  assert.equal(value.signals.length, 2);
+});
+await test("inferencia de perfil clasificada con evidencia se evalua", () =>
+  assert.equal(evaluate(profile([signal("design")]), [entry(IDS.design, "profile_inference")])
+    .confirmation.length, 1));
+
+const chatServiceUrl = new URL("../src/services/chatService.js", import.meta.url).href;
+const confirmationUrl = new URL("../src/services/educativeConfirmationService.js", import.meta.url).href;
+const vocationalUrl = new URL("../src/services/vocationalPreferenceService.js", import.meta.url).href;
+const integrationUrl = new URL("../src/services/vocationalRankingIntegrationService.js", import.meta.url).href;
+const stubSources = {
+  chatRepository: `
+    const h = () => globalThis.__rankingChatHarness;
+    export const findChatById = async (id) => h().chat.id === id ? h().chat : null;
+    export const listRecentChatSummariesByUserId = async () => [];
+    export const listChatsByUserId = async () => [];
+    export const createChat = async (data) => ({ id: "new-chat", ...data });
+    export const deleteChat = async () => null;
+    export const updateChat = async (_id, data) => Object.assign(h().chat, data);
+  `,
+  messageRepository: `
+    const h = () => globalThis.__rankingChatHarness;
+    export const createMessage = async (data) => h().createMessage(data);
+    export const listMessagesByChatId = async (id) => h().messages.filter((item) => item.chatId === id);
+    export const countMessagesByChatId = async (id) => h().messages.filter((item) => item.chatId === id).length;
+  `,
+  userMemoryRepository: `export const findUserMemoryByUserId = async () => null;`,
+  prisma: `export default new Proxy({}, { get(_target, key) { return globalThis.__rankingChatHarness.prisma[key]; } });`,
+  aiService: `
+    export async function generateAssistantReply() {
+      const h = globalThis.__rankingChatHarness;
+      h.calls.gemini += 1; h.events.push("gemini");
+      return h.assistantReply;
+    }
+  `,
+  aiContextService: `
+    export const shouldIncludePreviousChatSummaries = () => false;
+    export const buildEducativeContinuitySummary = () => "";
+  `,
+  memoryRefreshService: `
+    export const MEMORY_REFRESH_FLOWS = Object.freeze({ CONVERSATION: "conversation", CONTINUE_AFTER_ACTION: "continue" });
+    export async function refreshMemoryAfterEligibleTurn() { globalThis.__rankingChatHarness.calls.memory += 1; }
+  `,
+  educativeSearchService: `
+    export function buildEducativeSearchReply(result) {
+      return result.offerContext?.[0]?.redirect_url || "Resultados educativos stubbed";
+    }
+    export async function searchEducativeOffers(args) {
+      const h = globalThis.__rankingChatHarness;
+      const { prisma: _prisma, ...safeArgs } = args;
+      h.calls.search += 1; h.searchArgs.push(structuredClone(safeArgs)); h.events.push("search");
+      return structuredClone(h.searchResult);
+    }
+  `,
+  educativeConfirmationService: `
+    export * from ${JSON.stringify(confirmationUrl)};
+    import * as actual from ${JSON.stringify(confirmationUrl)};
+    export function detectCareerOptions(text, options) {
+      const h = globalThis.__rankingChatHarness;
+      h.detectorOptions.push(options || {});
+      return actual.detectCareerOptions(text, options);
+    }
+  `,
+  vocationalPreferenceService: `export * from ${JSON.stringify(vocationalUrl)};`,
+  vocationalRankingIntegrationService: `
+    export * from ${JSON.stringify(integrationUrl)};
+    import { rankVocationalFlowCandidates as actualRank } from ${JSON.stringify(integrationUrl)};
+    export function rankVocationalFlowCandidates(input) {
+      const h = globalThis.__rankingChatHarness;
+      h.calls.ranking += 1; h.rankingInputs.push(structuredClone(input)); h.events.push("ranking");
+      if (h.forceRankingError) return { status: "ranking_error", code: "VOCATIONAL_RANKING_INPUT_REJECTED", candidateCount: input.candidates.length, accepted: [], confirmation: [], rejected: [], ordered: [] };
+      return actualRank(input);
+    }
+  `,
+};
+const replacements = {
+  "../repositories/chatRepository.js": "chatRepository",
+  "../repositories/messageRepository.js": "messageRepository",
+  "../config/prisma.js": "prisma",
+  "../repositories/userMemoryRepository.js": "userMemoryRepository",
+  "./aiService.js": "aiService",
+  "./aiContextService.js": "aiContextService",
+  "./memoryRefreshService.js": "memoryRefreshService",
+  "./educativeSearchService.js": "educativeSearchService",
+  "./educativeConfirmationService.js": "educativeConfirmationService",
+  "./vocationalPreferenceService.js": "vocationalPreferenceService",
+  "./vocationalRankingIntegrationService.js": "vocationalRankingIntegrationService",
+};
+const hookSource = `
+  const parent = ${JSON.stringify(chatServiceUrl)};
+  const replacements = ${JSON.stringify(replacements)};
+  const sources = ${JSON.stringify(stubSources)};
+  export async function resolve(specifier, context, nextResolve) {
+    if (context.parentURL?.startsWith(parent) && replacements[specifier]) return { url: "ranking-stub:" + replacements[specifier], shortCircuit: true };
+    return nextResolve(specifier, context);
+  }
+  export async function load(url, context, nextLoad) {
+    if (url.startsWith("ranking-stub:")) return { format: "module", source: sources[url.slice("ranking-stub:".length)], shortCircuit: true };
+    return nextLoad(url, context);
+  }
+`;
+register(`data:text/javascript,${encodeURIComponent(hookSource)}`, import.meta.url);
+const { sendMessage } = await import(`${chatServiceUrl}?ranking-integration-suite`);
+
+function createHarness(vocationalProfile = emptyProfile()) {
+  const harness = {
+    chat: {
+      id: "chat-1", userId: "user-1", title: "Nueva conversacion", summary: null,
+      educativeStateVersion: 0,
+      educativeState: { ...getDefaultEducativeState(), vocationalProfile },
+    },
+    messages: [], nextMessageId: 1,
+    calls: { gemini: 0, ranking: 0, search: 0, memory: 0 },
+    events: [], rankingInputs: [], searchArgs: [], detectorOptions: [],
+    assistantReply: "Respuesta conversacional stubbed",
+    forceRankingError: false,
+    searchResult: {
+      offerContext: [{ id: "91", redirect_url: "/oferta-educativa/detalle/91" }],
+      remainingCount: 0, searchSignature: "stub-signature",
+    },
+  };
+  harness.createMessage = (data) => {
+    const message = { id: `message-${harness.nextMessageId++}`, createdAt: new Date(NOW), uiAction: null, ...structuredClone(data) };
+    harness.messages.push(message);
+    return message;
+  };
+  const messageApi = {
+    create: async ({ data }) => harness.createMessage(data),
+    findFirst: async ({ where }) => harness.messages.find((message) =>
+      (!where.id || message.id === where.id) && (!where.chatId || message.chatId === where.chatId) &&
+      (!where.role || message.role === where.role)) || null,
+    update: async ({ where, data }) => {
+      const message = harness.messages.find((item) => item.id === where.id);
+      Object.assign(message, structuredClone(data));
+      return message;
+    },
+  };
+  const updateMany = async ({ where, data }) => {
+    if (where.educativeStateVersion !== harness.chat.educativeStateVersion) return { count: 0 };
+    harness.chat.educativeState = structuredClone(data.educativeState);
+    harness.chat.educativeStateVersion += data.educativeStateVersion?.increment || 0;
+    return { count: 1 };
+  };
+  const transaction = { message: messageApi, chat: { updateMany } };
+  harness.prisma = {
+    message: messageApi,
+    chat: { updateMany },
+    $transaction: async (callback) => callback(transaction),
+  };
+  globalThis.__rankingChatHarness = harness;
+  return harness;
+}
+
+function addPendingAction(harness, type, state) {
+  const uiAction = {
+    id: `action-${harness.nextMessageId}`,
+    type,
+    status: "pending",
+    canonicalProgramId: state.currentCanonicalProgramId || null,
+    academicLevel: state.currentLevel || null,
+    familyId: state.currentFamilyId || null,
+    relatedStage: state.relatedStage || null,
+  };
+  const message = harness.createMessage({ chatId: harness.chat.id, role: "assistant", content: "Accion", uiAction });
+  harness.chat.educativeState = {
+    ...harness.chat.educativeState,
+    ...state,
+    pendingConfirmationActionId: uiAction.id,
+    pendingActionMessageId: message.id,
+  };
+  return uiAction;
+}
+
+await test("mensaje no vocacional no ejecuta ranking", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Quiero conversar");
+  assert.equal(h.calls.ranking, 0);
+  assert.equal(h.calls.gemini, 1);
+});
+await test("solicitud directa rankea antes de elegibilidad", async () => {
+  const h = createHarness();
+  const response = await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar Arquitectura");
+  assert.equal(h.rankingInputs[0].candidates[0].source, "explicit_user_request");
+  assert.ok(h.events.indexOf("ranking") < h.events.indexOf("search"));
+  assert.equal(response.assistantMessage.uiAction.type, "career_confirmation");
+  assert.equal(h.calls.gemini, 0);
+});
+await test("mencion neutral usa origen directo y confirmacion", async () => {
+  const h = createHarness();
+  const response = await sendMessage(h.chat.id, h.chat.userId, "Hoy pense en Arquitectura");
+  assert.equal(h.rankingInputs[0].candidates[0].source, "direct_canonical_mention");
+  assert.equal(response.assistantMessage.uiAction.type, "career_confirmation");
+});
+await test("mencion con palabra carrera no se eleva a solicitud explicita", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "La carrera de Arquitectura me parece interesante");
+  assert.equal(h.rankingInputs[0].candidates[0].source, "direct_canonical_mention");
+  assert.equal(h.calls.search, 0);
+});
+await test("exclusion directa bloquea busqueda y Gemini", async () => {
+  const h = createHarness();
+  const response = await sendMessage(h.chat.id, h.chat.userId, "No quiero estudiar Arquitectura");
+  assert.equal(h.calls.search, 0);
+  assert.equal(h.calls.gemini, 0);
+  assert.doesNotMatch(response.assistantMessage.content, /Arquitectura/i);
+});
+await test("Gemini no sustentado se rechaza sin buscar", async () => {
+  const h = createHarness();
+  h.assistantReply = "Podrias estudiar Especialidad en Diseno Digital";
+  const response = await sendMessage(h.chat.id, h.chat.userId, "Orientame por favor");
+  assert.equal(h.calls.gemini, 1);
+  assert.equal(h.calls.ranking, 1);
+  assert.equal(h.calls.search, 0);
+  assert.doesNotMatch(response.assistantMessage.content, /Diseno Digital/i);
+});
+await test("Gemini con evidencia positiva usa confirmacion existente", async () => {
+  const h = createHarness(profile([signal("design")]));
+  h.assistantReply = "Podrias estudiar Especialidad en Diseno Digital";
+  const response = await sendMessage(h.chat.id, h.chat.userId, "Orientame por favor");
+  assert.equal(h.rankingInputs[0].candidates[0].source, "gemini_response");
+  assert.equal(h.calls.gemini, 1);
+  assert.equal(response.assistantMessage.uiAction.type, "career_confirmation");
+});
+await test("matematicas construccion y diseno conservan todas las senales", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Me gustan las matematicas");
+  await sendMessage(h.chat.id, h.chat.userId, "Me interesan la construccion y el diseno");
+  const ids = h.chat.educativeState.vocationalProfile.signals.map((item) => item.conceptId);
+  assert.ok(ids.includes("mathematics") && ids.includes("construction") && ids.includes("design"));
+});
+await test("seleccion explicita se rankea antes de buscar instituciones", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar Arquitectura");
+  h.calls.ranking = 0; h.calls.search = 0; h.events = []; h.rankingInputs = [];
+  await sendMessage(h.chat.id, h.chat.userId, "la primera");
+  assert.equal(h.rankingInputs[0].candidates[0].source, "explicit_user_selection");
+  assert.ok(h.events.indexOf("ranking") < h.events.indexOf("search"));
+});
+await test("exclusion exacta bloquea seleccion previa", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar Arquitectura");
+  h.chat.educativeState.vocationalProfile = profile([], [exclusion(IDS.architecture)]);
+  h.calls.search = 0;
+  await sendMessage(h.chat.id, h.chat.userId, "la primera");
+  assert.equal(h.calls.search, 0);
+});
+await test("continuacion no clasificada vuelve a confirmar antes de buscar", async () => {
+  const h = createHarness();
+  const active = career(IDS.architecture);
+  addPendingAction(h, "search_followup", {
+    status: "showing_results", activeConfirmedCareer: active,
+    activeConfirmedLevel: active.level, activeSearchQuery: active.searchQuery,
+    currentCanonicalProgramId: active.canonicalProgramId, currentLevel: active.academicLevel,
+    excludedOfferIds: ["91"], hasMoreResults: true,
+  });
+  const response = await sendMessage(h.chat.id, h.chat.userId, "mas opciones");
+  assert.equal(h.rankingInputs[0].candidates[0].source, "search_continuation");
+  assert.equal(h.calls.search, 0);
+  assert.equal(response.assistantMessage.uiAction.type, "career_confirmation");
+});
+await test("familia y cercania pasan por hard gates antes de busqueda", async () => {
+  const h = createHarness();
+  const active = career(IDS.architecture);
+  addPendingAction(h, "search_exhausted", {
+    status: "exhausted", activeConfirmedCareer: active,
+    activeConfirmedLevel: active.level, activeSearchQuery: active.searchQuery,
+    currentCanonicalProgramId: active.canonicalProgramId, currentLevel: active.academicLevel,
+    currentFamilyId: active.familyId, relatedStage: "family",
+  });
+  await sendMessage(h.chat.id, h.chat.userId, "otras carreras");
+  const sources = h.rankingInputs[0].candidates.map((item) => item.source);
+  assert.ok(sources.includes("same_family") && sources.includes("documented_nearby"));
+  assert.equal(h.calls.search, 0);
+});
+await test("limite visual se aplica despues del ranking", async () => {
+  const h = createHarness();
+  const response = await sendMessage(
+    h.chat.id,
+    h.chat.userId,
+    "Quiero estudiar Arquitectura, Psicologia, Odontologia o Diseno Grafico",
+  );
+  assert.ok(h.rankingInputs[0].candidates.length >= 4);
+  assert.equal(response.assistantMessage.uiAction.careers.length, 3);
+  assert.equal(h.detectorOptions[0].limit, 128);
+});
+await test("redirect_url permanece intacto y no se rankea", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar Arquitectura");
+  const response = await sendMessage(h.chat.id, h.chat.userId, "la primera");
+  assert.equal(response.assistantMessage.content, "/oferta-educativa/detalle/91");
+  assert.doesNotMatch(JSON.stringify(h.rankingInputs), /redirect_url|detalle\/91/);
+});
+await test("fallo del ranking cierra flujo con log agregado", async () => {
+  const h = createHarness();
+  h.forceRankingError = true;
+  const logs = [];
+  const original = console.warn;
+  console.warn = (value) => logs.push(value);
+  try {
+    await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar Arquitectura");
+  } finally {
+    console.warn = original;
+  }
+  assert.deepEqual(Object.keys(logs[0]).sort(), ["candidateCount", "code", "event"]);
+  assert.equal(h.calls.search, 0);
+});
+await test("fallo del ranking no agrega llamada a Gemini", async () => {
+  const h = createHarness();
+  h.forceRankingError = true;
+  await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar Arquitectura");
+  assert.equal(h.calls.gemini, 0);
+});
+await test("Gemini y ranking no modifican perfil", async () => {
+  const value = profile([signal("design")]);
+  const h = createHarness(value);
+  h.assistantReply = "Podrias estudiar Especialidad en Diseno Digital";
+  await sendMessage(h.chat.id, h.chat.userId, "Orientame por favor");
+  assert.deepEqual(h.chat.educativeState.vocationalProfile, value);
+});
+await test("conversacion sin perfil conserva compatibilidad", async () => {
+  const h = createHarness();
+  h.chat.educativeState = { status: "idle" };
+  await sendMessage(h.chat.id, h.chat.userId, "Quiero conversar");
+  assert.equal(h.calls.gemini, 1);
+  assert.equal(h.calls.ranking, 0);
+});
+await test("repeticion de flujo produce decision identica", async () => {
+  const first = createHarness();
+  const firstResponse = await sendMessage(first.chat.id, first.chat.userId, "Quiero estudiar Arquitectura");
+  const firstCareers = firstResponse.assistantMessage.uiAction.careers;
+  const second = createHarness();
+  const secondResponse = await sendMessage(second.chat.id, second.chat.userId, "Quiero estudiar Arquitectura");
+  assert.deepEqual(secondResponse.assistantMessage.uiAction.careers, firstCareers);
+});
+
+const passed = results.filter((item) => item.status === "PASS").length;
+const failed = results.length - passed;
+console.log(`TOTAL: ${results.length} | PASS: ${passed} | FAIL: ${failed}`);
+if (failed) process.exitCode = 1;
