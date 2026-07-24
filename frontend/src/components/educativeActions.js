@@ -78,21 +78,23 @@ export function buildActions(uiAction) {
 
   if (uiAction.type === "search_exhausted") {
     return [
-      {
-        key: "related",
-        label: "Explorar carreras relacionadas",
-        content: "Quiero explorar carreras relacionadas",
-        action: {
-          type: "explore_related_careers",
-          actionId: uiAction.id,
-          career: uiAction.career,
-          level: uiAction.level,
-          canonicalProgramId: uiAction.canonicalProgramId,
-          academicLevel: uiAction.academicLevel,
-          familyId: uiAction.familyId,
-          relatedStage: "family",
-        },
-      },
+      ...(uiAction.hasEligibleRelatedPrograms
+        ? [{
+            key: "related",
+            label: "Explorar carreras relacionadas",
+            content: "Quiero explorar carreras relacionadas",
+            action: {
+              type: "explore_related_careers",
+              actionId: uiAction.id,
+              career: uiAction.career,
+              level: uiAction.level,
+              canonicalProgramId: uiAction.canonicalProgramId,
+              academicLevel: uiAction.academicLevel,
+              familyId: uiAction.familyId,
+              relatedStage: "family",
+            },
+          }]
+        : []),
       {
         key: "continue",
         label: "Seguir conversando",

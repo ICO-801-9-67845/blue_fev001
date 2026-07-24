@@ -335,7 +335,18 @@ const stubSources = {
       const h = globalThis.__rankingChatHarness;
       const { prisma: _prisma, ...safeArgs } = args;
       h.calls.search += 1; h.searchArgs.push(structuredClone(safeArgs)); h.events.push("search");
+      if (h.failSearch) {
+        h.failSearch = false;
+        throw new Error("stubbed search persistence failure");
+      }
       return structuredClone(h.searchResult);
+    }
+    export async function findEligibleEducativePrograms(args) {
+      const h = globalThis.__rankingChatHarness;
+      const { prisma: _prisma, ...safeArgs } = args;
+      h.calls.relatedEligibility += 1;
+      h.relatedEligibilityArgs.push(structuredClone(safeArgs));
+      return structuredClone(h.relatedEligibleCareers);
     }
   `,
   educativeConfirmationService: `
@@ -357,6 +368,9 @@ const stubSources = {
       const h = globalThis.__rankingChatHarness;
       h.calls.ranking += 1; h.rankingInputs.push(structuredClone(input)); h.events.push("ranking");
       if (h.forceRankingError) return { status: "ranking_error", code: "VOCATIONAL_RANKING_INPUT_REJECTED", candidateCount: input.candidates.length, accepted: [], confirmation: [], rejected: [], ordered: [] };
+      if (h.relatedRankingResult && input.candidates.some((candidate) => ["same_family", "documented_nearby"].includes(candidate.source))) {
+        return structuredClone(h.relatedRankingResult);
+      }
       if (h.rankingResult) return structuredClone(h.rankingResult);
       return actualRank(input);
     }
@@ -399,18 +413,31 @@ function createHarness(vocationalProfile = emptyProfile()) {
       educativeState: { ...getDefaultEducativeState(), vocationalProfile },
     },
     messages: [], nextMessageId: 1,
-    calls: { gemini: 0, ranking: 0, search: 0, memory: 0 },
-    events: [], rankingInputs: [], searchArgs: [], detectorOptions: [],
+    calls: { gemini: 0, ranking: 0, search: 0, relatedEligibility: 0, memory: 0 },
+    events: [], rankingInputs: [], searchArgs: [], relatedEligibilityArgs: [], detectorOptions: [],
     assistantReply: "Respuesta conversacional stubbed",
     forceRankingError: false,
+    failSearch: false,
+    failUserMessage: false,
+    failAssistantMessage: false,
     detectedCareers: null,
     rankingResult: null,
+    relatedRankingResult: null,
+    relatedEligibleCareers: [],
     searchResult: {
       offerContext: [{ id: "91", redirect_url: "/oferta-educativa/detalle/91" }],
       remainingCount: 0, searchSignature: "stub-signature",
     },
   };
   harness.createMessage = (data) => {
+    if (data.role === "user" && harness.failUserMessage) {
+      harness.failUserMessage = false;
+      throw new Error("stubbed user message failure");
+    }
+    if (data.role === "assistant" && harness.failAssistantMessage) {
+      harness.failAssistantMessage = false;
+      throw new Error("stubbed assistant message failure");
+    }
     const message = { id: `message-${harness.nextMessageId++}`, createdAt: new Date(NOW), uiAction: null, ...structuredClone(data) };
     harness.messages.push(message);
     return message;
@@ -433,10 +460,32 @@ function createHarness(vocationalProfile = emptyProfile()) {
     return { count: 1 };
   };
   const transaction = { message: messageApi, chat: { updateMany } };
+  let transactionTail = Promise.resolve();
+  const runTransaction = async (callback) => {
+    const previous = transactionTail;
+    let release;
+    transactionTail = new Promise((resolve) => { release = resolve; });
+    await previous;
+    const snapshot = {
+      chat: structuredClone(harness.chat),
+      messages: structuredClone(harness.messages),
+      nextMessageId: harness.nextMessageId,
+    };
+    try {
+      return await callback(transaction);
+    } catch (error) {
+      Object.assign(harness.chat, snapshot.chat);
+      harness.messages.splice(0, harness.messages.length, ...snapshot.messages);
+      harness.nextMessageId = snapshot.nextMessageId;
+      throw error;
+    } finally {
+      release();
+    }
+  };
   harness.prisma = {
     message: messageApi,
     chat: { updateMany },
-    $transaction: async (callback) => callback(transaction),
+    $transaction: runTransaction,
   };
   globalThis.__rankingChatHarness = harness;
   return harness;
@@ -552,7 +601,7 @@ await test("exclusion exacta bloquea seleccion previa", async () => {
   await sendMessage(h.chat.id, h.chat.userId, "la primera");
   assert.equal(h.calls.search, 0);
 });
-await test("continuacion no clasificada vuelve a confirmar antes de buscar", async () => {
+await test("continuacion institucional no vuelve a ranking", async () => {
   const h = createHarness();
   const active = career(IDS.architecture);
   addPendingAction(h, "search_followup", {
@@ -562,11 +611,11 @@ await test("continuacion no clasificada vuelve a confirmar antes de buscar", asy
     excludedOfferIds: ["91"], hasMoreResults: true,
   });
   const response = await sendMessage(h.chat.id, h.chat.userId, "mas opciones");
-  assert.equal(h.rankingInputs[0].candidates[0].source, "search_continuation");
-  assert.equal(h.calls.search, 0);
-  assert.equal(response.assistantMessage.uiAction.type, "career_confirmation");
+  assert.equal(h.calls.ranking, 0);
+  assert.equal(h.calls.search, 1);
+  assert.equal(response.assistantMessage.uiAction.type, "search_exhausted");
 });
-await test("familia y cercania pasan por hard gates antes de busqueda", async () => {
+await test("accion relacionada usa snapshot previamente elegible", async () => {
   const h = createHarness();
   const active = career(IDS.architecture);
   addPendingAction(h, "search_exhausted", {
@@ -574,11 +623,133 @@ await test("familia y cercania pasan por hard gates antes de busqueda", async ()
     activeConfirmedLevel: active.level, activeSearchQuery: active.searchQuery,
     currentCanonicalProgramId: active.canonicalProgramId, currentLevel: active.academicLevel,
     currentFamilyId: active.familyId, relatedStage: "family",
+    eligibleRelatedCareers: [
+      { ...career("licenciatura_psicologia"), fromRelated: true, relationType: "family" },
+      { ...career("licenciatura_derecho"), fromRelated: true, relationType: "nearby" },
+    ],
   });
-  await sendMessage(h.chat.id, h.chat.userId, "otras carreras");
-  const sources = h.rankingInputs[0].candidates.map((item) => item.source);
-  assert.ok(sources.includes("same_family") && sources.includes("documented_nearby"));
+  const response = await sendMessage(h.chat.id, h.chat.userId, "otras carreras");
+  assert.equal(response.assistantMessage.uiAction.careers.length, 1);
+  assert.equal(h.calls.ranking, 0);
   assert.equal(h.calls.search, 0);
+});
+await test("cero relaciones con oferta no muestra accion", async () => {
+  const h = createHarness();
+  const first = await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar Arquitectura");
+  const response = await sendMessage(h.chat.id, h.chat.userId, "la primera");
+  assert.equal(h.calls.relatedEligibility, 1);
+  assert.equal(response.assistantMessage.uiAction.hasEligibleRelatedPrograms, false);
+  assert.equal(first.assistantMessage.uiAction.type, "career_confirmation");
+});
+await test("relacion excluida no muestra accion", async () => {
+  const excludedId = "licenciatura_arquitecto";
+  const h = createHarness(profile([], [exclusion(excludedId)]));
+  h.relatedEligibleCareers = [career(excludedId)];
+  await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar Arquitectura");
+  const response = await sendMessage(h.chat.id, h.chat.userId, "la primera");
+  assert.equal(response.assistantMessage.uiAction.hasEligibleRelatedPrograms, false);
+});
+await test("relaciones de nivel invalido no llegan a elegibilidad", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar Arquitectura");
+  await sendMessage(h.chat.id, h.chat.userId, "la primera");
+  assert.ok(h.relatedEligibilityArgs[0].candidates.every((candidate) =>
+    candidate.academicLevel === "licenciatura"
+  ));
+});
+await test("relacion valida con oferta y ranking muestra accion", async () => {
+  const related = career("licenciatura_arquitecto");
+  const h = createHarness();
+  h.relatedEligibleCareers = [related];
+  h.relatedRankingResult = {
+    status: "ok",
+    code: "VOCATIONAL_RANKING_COMPLETED",
+    candidateCount: 1,
+    accepted: [{
+      career: related,
+      decision: { classification: "accepted" },
+    }],
+    confirmation: [],
+    rejected: [],
+    ordered: [{
+      career: related,
+      decision: { classification: "accepted" },
+    }],
+  };
+  await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar Arquitectura");
+  const response = await sendMessage(h.chat.id, h.chat.userId, "la primera");
+  assert.equal(response.assistantMessage.uiAction.hasEligibleRelatedPrograms, true);
+});
+await test("municipio explicito llega a la busqueda confirmada", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar Psicologia en Guanajuato");
+  await sendMessage(h.chat.id, h.chat.userId, "la primera");
+  assert.equal(h.searchArgs[0].requestedMunicipality, "Guanajuato");
+});
+await test("sin municipio explicito no se crea filtro de Leon", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar Psicologia");
+  await sendMessage(h.chat.id, h.chat.userId, "la primera");
+  assert.equal(h.searchArgs[0].requestedMunicipality, null);
+});
+for (const phrase of [
+  "Dame más opciones",
+  "Dame más escuelas",
+  "Muéstrame más escuelas",
+  "Más escuelas",
+  "Otras escuelas",
+  "Ver más escuelas",
+]) {
+  await test(phrase + " agotado no rankea busca ni llama Gemini", async () => {
+    const h = createHarness();
+    const active = career(IDS.architecture);
+    const action = addPendingAction(h, "search_exhausted", {
+      status: "exhausted",
+      activeConfirmedCareer: active,
+      activeConfirmedLevel: active.level,
+      activeSearchQuery: active.searchQuery,
+      currentCanonicalProgramId: active.canonicalProgramId,
+      currentLevel: active.academicLevel,
+      hasMoreResults: false,
+      eligibleRelatedCareers: [],
+    });
+    const before = structuredClone(h.calls);
+    const firstResponse = await sendMessage(h.chat.id, h.chat.userId, phrase);
+    const secondResponse = await sendMessage(h.chat.id, h.chat.userId, phrase);
+    assert.equal(h.calls.ranking, before.ranking);
+    assert.equal(h.calls.search, before.search);
+    assert.equal(h.calls.gemini, before.gemini);
+    assert.match(firstResponse.assistantMessage.content, /todas las instituciones elegibles/i);
+    assert.match(secondResponse.assistantMessage.content, /todas las instituciones elegibles/i);
+    assert.equal(
+      firstResponse.assistantMessage.content,
+      secondResponse.assistantMessage.content,
+    );
+    assert.equal(action.status, "pending");
+  });
+}
+await test("accion agotada obsoleta falla cerrado", async () => {
+  const h = createHarness();
+  const active = career(IDS.architecture);
+  const action = addPendingAction(h, "search_exhausted", {
+    status: "exhausted",
+    activeConfirmedCareer: active,
+    activeConfirmedLevel: active.level,
+    activeSearchQuery: active.searchQuery,
+    currentCanonicalProgramId: active.canonicalProgramId,
+    currentLevel: active.academicLevel,
+    hasMoreResults: false,
+    eligibleRelatedCareers: [],
+  });
+  const payload = {
+    type: "acknowledge_educative_results_exhausted",
+    actionId: action.id,
+  };
+  await sendMessage(h.chat.id, h.chat.userId, "Más escuelas", payload);
+  await assert.rejects(
+    sendMessage(h.chat.id, h.chat.userId, "Más escuelas", payload),
+    /disponible|utilizada|expiro/,
+  );
 });
 await test("limite visual se aplica despues del ranking", async () => {
   const h = createHarness();
@@ -903,6 +1074,89 @@ await test("estado fuzzy obsoleto falla cerrado", async () => {
   await sendMessage(h.chat.id, h.chat.userId, "si", action);
   await assert.rejects(sendMessage(h.chat.id, h.chat.userId, "si", action), /disponible|utilizada|expiro/);
   assert.equal(h.calls.search, 1);
+});
+await test("fallo al guardar mensaje revierte accion y permite reintento", async () => {
+  const h = createHarness();
+  const first = await sendMessage(h.chat.id, h.chat.userId, "psiclogía");
+  const action = {
+    type: "confirm_educative_search",
+    actionId: first.assistantMessage.uiAction.id,
+    career: first.assistantMessage.uiAction.careers[0].normalizedName,
+  };
+  const before = {
+    state: structuredClone(h.chat.educativeState),
+    version: h.chat.educativeStateVersion,
+    messages: structuredClone(h.messages),
+  };
+  h.failUserMessage = true;
+  await assert.rejects(sendMessage(h.chat.id, h.chat.userId, "si", action), /user message failure/);
+  assert.deepEqual(h.chat.educativeState, before.state);
+  assert.equal(h.chat.educativeStateVersion, before.version);
+  assert.deepEqual(h.messages, before.messages);
+  assert.equal(h.calls.search, 0);
+  await sendMessage(h.chat.id, h.chat.userId, "si", action);
+  assert.equal(h.calls.search, 1);
+});
+await test("fallo de busqueda revierte accion y permite reintento", async () => {
+  const h = createHarness();
+  const first = await sendMessage(h.chat.id, h.chat.userId, "psiclogía");
+  const action = {
+    type: "confirm_educative_search",
+    actionId: first.assistantMessage.uiAction.id,
+    career: first.assistantMessage.uiAction.careers[0].normalizedName,
+  };
+  const before = {
+    state: structuredClone(h.chat.educativeState),
+    version: h.chat.educativeStateVersion,
+    messages: structuredClone(h.messages),
+  };
+  h.failSearch = true;
+  await assert.rejects(sendMessage(h.chat.id, h.chat.userId, "si", action), /search persistence failure/);
+  assert.deepEqual(h.chat.educativeState, before.state);
+  assert.equal(h.chat.educativeStateVersion, before.version);
+  assert.deepEqual(h.messages, before.messages);
+  await sendMessage(h.chat.id, h.chat.userId, "si", action);
+  assert.equal(h.calls.search, 2);
+  assert.equal(h.messages.filter((message) => message.uiAction?.type === "search_exhausted").length, 1);
+});
+await test("fallo al guardar respuesta revierte accion y permite reintento", async () => {
+  const h = createHarness();
+  const first = await sendMessage(h.chat.id, h.chat.userId, "psiclogía");
+  const action = {
+    type: "confirm_educative_search",
+    actionId: first.assistantMessage.uiAction.id,
+    career: first.assistantMessage.uiAction.careers[0].normalizedName,
+  };
+  const before = {
+    state: structuredClone(h.chat.educativeState),
+    version: h.chat.educativeStateVersion,
+    messages: structuredClone(h.messages),
+  };
+  h.failAssistantMessage = true;
+  await assert.rejects(sendMessage(h.chat.id, h.chat.userId, "si", action), /assistant message failure/);
+  assert.deepEqual(h.chat.educativeState, before.state);
+  assert.equal(h.chat.educativeStateVersion, before.version);
+  assert.deepEqual(h.messages, before.messages);
+  await sendMessage(h.chat.id, h.chat.userId, "si", action);
+  assert.equal(h.messages.filter((message) => message.uiAction?.type === "search_exhausted").length, 1);
+});
+await test("cambio de municipio reemplaza el filtro anterior", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar Psicologia en Guanajuato");
+  await sendMessage(h.chat.id, h.chat.userId, "la primera");
+  await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar Psicologia en León");
+  await sendMessage(h.chat.id, h.chat.userId, "la primera");
+  assert.deepEqual(
+    h.searchArgs.map((args) => args.requestedMunicipality),
+    ["Guanajuato", "León"],
+  );
+});
+await test("frase institucional fuera de contexto no inventa busqueda", async () => {
+  const h = createHarness();
+  const response = await sendMessage(h.chat.id, h.chat.userId, "Más escuelas");
+  assert.equal(h.calls.search, 0);
+  assert.equal(h.calls.ranking, 0);
+  assert.equal(response.assistantMessage.uiAction, null);
 });
 await test("acciones cerradas no activan fuzzy", async () => {
   const h = createHarness();

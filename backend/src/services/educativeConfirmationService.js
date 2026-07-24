@@ -12,7 +12,7 @@ import {
 const DIRECT_SEARCH_PATTERN = /\b(quiero estudiar|me interesa estudiar|me interesan|busco estudiar|escuelas?|universidades?|instituciones?|opciones de|donde estudiar|que estudiar|carrera|licenciatura|ingenieria|prepa|bachillerato|tsu|maestria|doctorado|posgrado|especialidad)\b/;
 const CONFIRM_PATTERN = /^(?:si|claro|adelante|esta bien|quiero|acepto|por favor|muestrame|muestrame(?: las)? opciones|mostrar opciones|quiero ver escuelas|quiero ver instituciones|ver instituciones|si quiero verlas|quiero conocer las universidades|ensename .+|quiero ver .+)$/;
 const DEFER_PATTERN = /^(?:no|no gracias|ninguna|ninguna gracias|ninguna de esas|no es esa|no era esa|no me refiero a esa|cancelar|volver|otra carrera|no se|no estoy seguro)$|\b(sigamos hablando|todavia no|conversar primero|hazme mas preguntas|prefiero seguir|continuemos|no quiero ver escuelas|seguir conversando)\b/;
-const MORE_PATTERN = /\b(dame mas opciones|muestrame otras|que otras escuelas hay|mas resultados|otras instituciones|quiero ver mas|mas opciones)\b/;
+const MORE_PATTERN = /\b(dame mas opciones|dame mas escuelas|muestrame mas escuelas|ver mas escuelas|mas escuelas|otras escuelas|muestrame otras|que otras escuelas hay|mas resultados|otras instituciones|quiero ver mas|mas opciones)\b/;
 const RELATED_PATTERN = /\b(explorar carreras relacionadas|quiero ver carreras relacionadas|que otras carreras existen|que otras carreras hay|carreras similares|opciones relacionadas|opciones parecidas|otras carreras|explorar otras carreras|quiero explorar algo relacionado)\b/;
 const MORE_RELATED_PATTERN = /\b(mostrar mas carreras relacionadas|muestrame mas carreras relacionadas|mas carreras relacionadas|siguientes carreras relacionadas)\b/;
 const MORE_VOCATIONAL_CAREERS = new Set([
@@ -61,9 +61,11 @@ export function getDefaultEducativeState() {
     searchConfirmed: false, deferredSearch: false, messagesSinceDeferral: 0,
     lastPromptedCareers: [], lastPromptedAt: null, confirmedSearchSignature: null,
     excludedOfferIds: [], hasMoreResults: false, activeConfirmedCareer: null,
+    pendingRequestedMunicipality: null, activeRequestedMunicipality: null,
     activeConfirmedLevel: null, activeSearchQuery: null, currentCanonicalProgramId: null,
     currentLevel: null, currentFamilyId: null, exploredProgramIds: [],
     shownFamilyProgramIds: [], shownNearbyProgramIds: [], relatedStage: "family",
+    eligibleRelatedCareers: [],
     relatedHasMore: false, vocationalProfile: getDefaultVocationalProfile(),
     vocationalCareerPagination: null,
   };
@@ -87,6 +89,9 @@ export function normalizeEducativeState(value) {
     exploredProgramIds: normalizeIdArray(safeValue.exploredProgramIds),
     shownFamilyProgramIds: normalizeIdArray(safeValue.shownFamilyProgramIds),
     shownNearbyProgramIds: normalizeIdArray(safeValue.shownNearbyProgramIds),
+    eligibleRelatedCareers: Array.isArray(safeValue.eligibleRelatedCareers)
+      ? safeValue.eligibleRelatedCareers
+      : [],
     messagesSinceDeferral: Math.max(Number(safeValue.messagesSinceDeferral) || 0, 0),
     relatedStage: ["family", "nearby", "exhausted"].includes(safeValue.relatedStage) ? safeValue.relatedStage : "family",
     relatedHasMore: Boolean(safeValue.relatedHasMore),
@@ -109,7 +114,11 @@ function confirmationForCareer(career) {
 }
 export function classifyTypedAction(text, state) {
   const normalizedText = normalizeEducativeText(text);
-  if (!normalizedText || !state?.pendingConfirmationActionId) return null;
+  if (!normalizedText) return null;
+  if (state?.status === "exhausted" && MORE_PATTERN.test(normalizedText)) {
+    return { type: "acknowledge_educative_results_exhausted" };
+  }
+  if (!state?.pendingConfirmationActionId) return null;
   if (state.status === "awaiting_confirmation") {
     if (MORE_VOCATIONAL_CAREERS.has(normalizedText) &&
         state.vocationalCareerPagination?.hasMore === true) {
