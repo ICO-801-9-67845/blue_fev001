@@ -1,4 +1,4 @@
-﻿import { readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -1187,6 +1187,7 @@ function buildExactProgramSearchContext({
   exactAliases,
   academicLevel,
   excludeShownIds = [],
+  requestedMunicipality = null,
 }) {
   const program = getCanonicalProgram(canonicalProgramId);
   if (!program || (academicLevel && program.level !== academicLevel)) {
@@ -1247,6 +1248,7 @@ function buildExactProgramSearchContext({
     academicLevel: program.level,
     familyId: program.familyId || null,
     exactMatch: true,
+    requestedMunicipality: String(requestedMunicipality || "").trim() || null,
     stateLevel: getStateLevelForAcademicLevel(program.level),
   };
 }
@@ -1336,6 +1338,7 @@ export async function searchEducativeOffers({
   canonicalProgramId = null,
   exactAliases = [],
   academicLevel = null,
+  requestedMunicipality = null,
 } = {}) {
   if (!prisma?.$queryRawUnsafe) {
     throw new Error("A Prisma client with $queryRawUnsafe is required");
@@ -1347,6 +1350,7 @@ export async function searchEducativeOffers({
         exactAliases,
         academicLevel,
         excludeShownIds,
+        requestedMunicipality,
       })
     : buildEducativeSearchContext({
         message,
@@ -1361,19 +1365,6 @@ export async function searchEducativeOffers({
     searchContext.matchedCategories.length > 0;
 
   if (!shouldSearch || !searchContext.careerKeywords.length) {
-    console.log("EDUCATIVE INTENT", searchContext.isEducativeIntent);
-    console.log("EDUCATIVE FOLLOW UP", searchContext.isFollowUp);
-    console.log("EDUCATIVE PURE FOLLOW UP", searchContext.isPureFollowUp);
-    console.log("EDUCATIVE REFINEMENT", searchContext.isRefinement);
-    console.log("SAME SEARCH CONTINUATION", searchContext.sameSearchContinuation);
-    console.log("EDUCATIVE SEARCH RESET", searchContext.isExplicitSearchReset);
-    console.log("REQUESTED LEVEL", searchContext.requestedLevel);
-    console.log("REQUESTED STUDY TYPE", searchContext.requestedStudyType);
-    console.log("MATCHED EDUCATIVE CATEGORIES", searchContext.matchedCategories.map((category) => category.key));
-    console.log("SEARCH SIGNATURE", searchContext.searchSignature);
-    console.log("CAREER KEYWORDS USED", searchContext.careerKeywords);
-    console.log("EXCLUDED OFFER IDS", searchContext.excludedOfferIds);
-    console.log("OFFER CONTEXT", []);
     return {
       ...searchContext,
       shownOfferIds: searchContext.excludedOfferIds,
@@ -1387,6 +1378,7 @@ export async function searchEducativeOffers({
   const params = [];
   const whereParts = [
     "o.active = 1",
+    "campus.active = 1",
     "c.active = 1",
     "o.redirect_url IS NOT NULL",
     "TRIM(o.redirect_url) <> ''",
@@ -1404,6 +1396,13 @@ export async function searchEducativeOffers({
 
   addStudyTypeFilters(whereParts, searchContext.requestedStudyType);
 
+  if (searchContext.requestedMunicipality) {
+    whereParts.push(
+      "UPPER(TRIM(COALESCE(NULLIF(TRIM(o.municipality), ''), campus.municipality))) = UPPER(?)",
+    );
+    params.push(searchContext.requestedMunicipality);
+  }
+
   if (searchContext.exactMatch) {
     whereParts.push(
       `(${searchContext.careerKeywords
@@ -1418,13 +1417,15 @@ export async function searchEducativeOffers({
     params.push(...searchContext.careerKeywords.map((keyword) => `%${escapeSqlLike(keyword)}%`));
   }
 
+  const returnAllExactResults = searchContext.exactMatch && limit === null;
+  const sqlLimit = returnAllExactResults ? "" : "\n    LIMIT ?";
   const sql = `
     SELECT
       o.id,
       o.name,
       o.short_name,
       o.level,
-      o.municipality,
+      COALESCE(NULLIF(TRIM(o.municipality), ''), MIN(NULLIF(TRIM(campus.municipality), ''))) AS municipality,
       o.redirect_url,
       GROUP_CONCAT(DISTINCT c.name ORDER BY c.name SEPARATOR '|||') AS careers,
       COUNT(DISTINCT c.id) AS matchScore
@@ -1441,25 +1442,42 @@ export async function searchEducativeOffers({
       o.level,
       o.municipality,
       o.redirect_url
-    ORDER BY matchScore DESC, o.name ASC
-    LIMIT ?
+    ORDER BY matchScore DESC, o.name ASC, o.id ASC${sqlLimit}
   `;
-  params.push(MAX_CANDIDATE_RESULTS);
+  if (!returnAllExactResults) {
+    params.push(MAX_CANDIDATE_RESULTS);
+  }
 
   const rows = await prisma.$queryRawUnsafe(sql, ...params);
   const excludedOfferIdSet = new Set(searchContext.excludedOfferIds.map((offerId) => `${offerId}`));
-  const contextLimit = Math.min(Math.max(Number(limit) || MAX_CONTEXT_RESULTS, 1), MAX_CONTEXT_RESULTS);
-  const candidateOffers = rows
+  const contextLimit = returnAllExactResults
+    ? Number.POSITIVE_INFINITY
+    : Math.min(Math.max(Number(limit) || MAX_CONTEXT_RESULTS, 1), MAX_CONTEXT_RESULTS);
+  const sortedOffers = rows
     .map((row) => mapOfferRow(row, searchContext.matchedCategories, searchContext.requestedStudyType, searchContext))
-    .filter((offer) => offer.studyPriority > 0)
+    .filter((offer) => offer.studyPriority > 0 && String(offer.redirect_url || "").trim())
     .sort((a, b) =>
       b.studyPriority - a.studyPriority ||
       b.programRelevanceScore - a.programRelevanceScore ||
       b.queryRelevanceScore - a.queryRelevanceScore ||
       b.careerRelevanceScore - a.careerRelevanceScore ||
       b.matchScore - a.matchScore ||
-      a.name.localeCompare(b.name)
+      a.name.localeCompare(b.name) ||
+      a.municipality.localeCompare(b.municipality) ||
+      String(a.id).localeCompare(String(b.id), "en", { numeric: true })
     );
+  const seenInstitutions = new Set();
+  const candidateOffers = sortedOffers.filter((offer) => {
+    const identity = [
+      normalizeText(offer.name),
+      normalizeText(offer.municipality),
+    ].join("|");
+    if (seenInstitutions.has(identity)) {
+      return false;
+    }
+    seenInstitutions.add(identity);
+    return true;
+  });
   const allMatchedOfferIds = candidateOffers.map((offer) => `${offer.id}`);
   const shownOfferIds = searchContext.excludedOfferIds.filter((offerId) =>
     allMatchedOfferIds.includes(`${offerId}`)
@@ -1477,20 +1495,36 @@ export async function searchEducativeOffers({
     noMoreResults: offerContext.length === 0,
   };
 
-  console.log("EDUCATIVE INTENT", result.isEducativeIntent);
-  console.log("EDUCATIVE FOLLOW UP", result.isFollowUp);
-  console.log("EDUCATIVE PURE FOLLOW UP", result.isPureFollowUp);
-  console.log("EDUCATIVE REFINEMENT", result.isRefinement);
-  console.log("SAME SEARCH CONTINUATION", result.sameSearchContinuation);
-  console.log("EDUCATIVE SEARCH RESET", result.isExplicitSearchReset);
-  console.log("REQUESTED LEVEL", result.requestedLevel);
-  console.log("REQUESTED STUDY TYPE", result.requestedStudyType);
-  console.log("MATCHED EDUCATIVE CATEGORIES", result.matchedCategories.map((category) => category.key));
-  console.log("SEARCH SIGNATURE", result.searchSignature);
-  console.log("CAREER KEYWORDS USED", result.careerKeywords);
-  console.log("EXCLUDED OFFER IDS", result.excludedOfferIds);
-  console.log("OFFER CONTEXT", result.offerContext);
-
   return result;
+}
+
+export async function findEligibleEducativePrograms({
+  prisma,
+  candidates = [],
+  requestedMunicipality = null,
+} = {}) {
+  const eligible = [];
+  for (const candidate of candidates) {
+    if (!candidate?.canonicalProgramId) {
+      continue;
+    }
+    const result = await searchEducativeOffers({
+      prisma,
+      message: candidate.searchQuery,
+      canonicalProgramId: candidate.canonicalProgramId,
+      exactAliases: candidate.exactAliases,
+      academicLevel: candidate.academicLevel,
+      requestedMunicipality,
+      excludeShownIds: [],
+      limit: 1,
+    });
+    if (result.offerContext.length > 0) {
+      eligible.push({
+        ...candidate,
+        exactAliases: [...(candidate.exactAliases || [])],
+      });
+    }
+  }
+  return eligible;
 }
 

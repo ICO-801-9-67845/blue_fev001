@@ -61,6 +61,7 @@ const stubSources = {
       h.calls.search += 1;
       return h.searchResult;
     }
+    export async function findEligibleEducativePrograms() { return []; }
   `,
   educativeConfirmationService: `
     export * from ${JSON.stringify(confirmationUrl)};
