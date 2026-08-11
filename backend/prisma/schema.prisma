@@ -116,10 +116,36 @@ model User {
   chats             Chat[]
   memory            UserMemory?
   analyticsSessions AnalyticsSession[]
+  futureSimulations FutureSimulation[]
   createdAt    DateTime @default(now()) @db.DateTime(3)
   updatedAt    DateTime @updatedAt @db.DateTime(3)
 
   @@map("app_users")
+}
+
+model FutureSimulation {
+  id                String   @id @default(cuid()) @db.VarChar(191)
+  userId            String   @db.VarChar(191)
+  selectedProgramId String   @db.VarChar(255)
+  selectedOfferId   String   @db.VarChar(191)
+  selectedCampusId  String   @db.VarChar(191)
+  startingLevel     String   @db.VarChar(32)
+  scenarioTrack     String   @db.VarChar(64)
+  scenarioVersion   Int
+  setup             Json
+  state             Json
+  choices           Json
+  currentEventId    String?  @db.VarChar(96)
+  stage             String   @db.VarChar(64)
+  status            String   @db.VarChar(32)
+  revision          Int      @default(0)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now()) @db.DateTime(3)
+  updatedAt         DateTime @updatedAt @db.DateTime(3)
+
+  @@index([userId, updatedAt])
+  @@index([id, userId, revision])
+  @@map("app_future_simulations")
 }
 
 model AnalyticsSession {
