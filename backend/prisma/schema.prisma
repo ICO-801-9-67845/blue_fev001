@@ -117,10 +117,35 @@ model User {
   memory            UserMemory?
   analyticsSessions AnalyticsSession[]
   futureSimulations FutureSimulation[]
+  careerLabAttempts CareerLabAttempt[]
   createdAt    DateTime @default(now()) @db.DateTime(3)
   updatedAt    DateTime @updatedAt @db.DateTime(3)
 
   @@map("app_users")
+}
+
+model CareerLabAttempt {
+  id          String    @id @default(cuid()) @db.VarChar(191)
+  userId      String    @db.VarChar(191)
+  labKey      String    @db.VarChar(64)
+  labVersion  Int
+  areaKey     String    @db.VarChar(64)
+  state       Json
+  answers     Json
+  skillScores Json
+  reflection  String?   @db.VarChar(32)
+  status      String    @db.VarChar(32)
+  revision    Int       @default(0)
+  startedAt   DateTime  @default(now()) @db.DateTime(3)
+  completedAt DateTime? @db.DateTime(3)
+  createdAt   DateTime  @default(now()) @db.DateTime(3)
+  updatedAt   DateTime  @updatedAt @db.DateTime(3)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, updatedAt])
+  @@index([userId, labKey])
+  @@index([id, userId, revision])
+  @@map("app_career_lab_attempts")
 }
 
 model FutureSimulation {

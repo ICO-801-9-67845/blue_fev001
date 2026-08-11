@@ -3,7 +3,7 @@ export const AI_PROVIDER_OPERATIONS = Object.freeze({
   MEMORY: "memory",
 });
 
-const SUPPORTED_PROVIDERS = new Set(["gemini", "ollama"]);
+const SUPPORTED_PROVIDERS = new Set(["none", "gemini", "ollama"]);
 const SUPPORTED_OPERATIONS = new Set(Object.values(AI_PROVIDER_OPERATIONS));
 
 export function createAiProviderRouter({

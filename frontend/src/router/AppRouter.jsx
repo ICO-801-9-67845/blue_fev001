@@ -5,6 +5,7 @@ import RegisterPage from "../pages/RegisterPage";
 import ChatPage from "../pages/ChatPage";
 import AdminAnalyticsPage from "../pages/AdminAnalyticsPage";
 import FutureSimulatorPage from "../pages/FutureSimulatorPage";
+import CareerLabPage from "../pages/CareerLabPage";
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -67,6 +68,7 @@ export default function AppRouter() {
         path="/modo-2032"
         element={<ProtectedRoute><FutureSimulatorPage /></ProtectedRoute>}
       />
+      <Route path="/career-lab" element={<ProtectedRoute><CareerLabPage /></ProtectedRoute>} />
       <Route
         path="/admin/analytics"
         element={

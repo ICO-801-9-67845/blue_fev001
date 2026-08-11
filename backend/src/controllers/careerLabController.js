@@ -1,0 +1,11 @@
+import * as service from "../services/careerLabService.js";
+const uid = (request) => request.user.sub;
+export const listLabs = async (_req, res) => res.json({ success: true, data: service.listLabs() });
+export const getLab = async (req, res) => res.json({ success: true, data: service.getLab(req.params.labKey) });
+export const startAttempt = async (req, res) => res.status(201).json({ success: true, data: await service.startAttempt(uid(req), req.body) });
+export const listAttempts = async (req, res) => res.json({ success: true, data: await service.listAttempts(uid(req)) });
+export const getAttempt = async (req, res) => res.json({ success: true, data: await service.getAttempt(uid(req), req.params.id) });
+export const act = async (req, res) => res.json({ success: true, data: await service.act(uid(req), req.params.id, req.body) });
+export const reflect = async (req, res) => res.json({ success: true, data: await service.reflect(uid(req), req.params.id, req.body) });
+export const related = async (req, res) => res.json({ success: true, data: await service.relatedCareers(uid(req), req.params.id) });
+export const profile = async (req, res) => res.json({ success: true, data: await service.profile(uid(req)) });
