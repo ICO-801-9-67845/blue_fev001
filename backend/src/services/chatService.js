@@ -1776,6 +1776,12 @@ export async function getChatMessages(chatId, userId) {
   return listMessagesByChatId(chatId);
 }
 
+function isVocationalProfileReflectionRequest(content) {
+  return /\b(?:que|cual|como)\b.*\b(?:entendid|sabes|recuerdas|perfil)\w*\b.*\b(?:mi|mio|mis)\b/u.test(
+    normalizeEducativeText(content),
+  );
+}
+
 export async function sendMessage(chatId, userId, content, action = null) {
   ensureContent(content);
   const chat = await getOwnedChat(chatId, userId);
@@ -1994,16 +2000,20 @@ export async function sendMessage(chatId, userId, content, action = null) {
     content,
     workingState,
   );
-  const assistantReply = await generateAssistantReply(
-    history,
-    [],
-    memoryContext,
-    { isEducativeRequest: false },
-  );
-  const geminiCandidates = detectCareerOptions(
-    assistantReply,
-    { limit: VOCATIONAL_CANDIDATE_LIMIT },
-  );
+  const profileReflectionRequest = isVocationalProfileReflectionRequest(content);
+  const structuredProfileSummary = buildEducativeContinuitySummary(workingState)
+    .replace(/^Contexto educativo actual:\s*/u, "").replace(/\.$/u, "");
+  const assistantReply = profileReflectionRequest && structuredProfileSummary
+    ? "Esto he entendido sobre ti: " + structuredProfileSummary + "."
+    : await generateAssistantReply(
+        history,
+        [],
+        memoryContext,
+        { isEducativeRequest: false },
+      );
+  const geminiCandidates = profileReflectionRequest
+    ? []
+    : detectCareerOptions(assistantReply, { limit: VOCATIONAL_CANDIDATE_LIMIT });
   const geminiRanking = evaluateCareerCandidates(
     workingState,
     geminiCandidates,

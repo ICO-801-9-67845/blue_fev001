@@ -390,6 +390,7 @@ export function extractExplicitVocationalUpdates(input) {
       clauseConcepts = previousClauseConcepts;
     }
     if (!clauseConcepts.length) continue;
+    const restrictionLift = /\b(?:ya no (?:es|representa) (?:una )?restriccion|ya no tengo (?:problema|limitacion) con|puedo trabajar (?:con|en))\b/.test(clause);
     const restriction = /\b(?:no me gusta|no me interesa|prefiero no)\s+trabajar\s+(?:con|en)\b/.test(clause);
     const difficulty = /\b(?:no soy (?:nada )?buen[oa] (?:en|para)|se me dificulta(?:n)?|me cuesta(?:n)?)\b/.test(clause);
     const strength = !difficulty && /\b(?:soy buen[oa](?: (?:en|para))?|se me facilita(?:n)?)\b/.test(clause);
@@ -397,7 +398,9 @@ export function extractExplicitVocationalUpdates(input) {
     const interest = !rejection && /\b(?:me gusta(?:n)?|disfruto|(?:si )?me interesa(?:n)?)\b/.test(clause);
     for (const concept of clauseConcepts) {
       if (handledConcepts.has(`${concept.kind}|${concept.id}`)) continue;
-      if (restriction) {
+      if (restrictionLift) {
+        result.removeSignals.push({ conceptKind: concept.kind, conceptId: concept.id, dimension: "restriction", polarity: "negative" });
+      } else if (restriction) {
         addUpdate(result, concept, "restriction", "negative", 4);
       } else if (difficulty) {
         const intensity = /\bnada bueno\b/.test(clause) ? 5 : intensityFor(clause, 3, { soft: 2, strong: 4 });
