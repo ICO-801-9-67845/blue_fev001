@@ -4,6 +4,7 @@ import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import ChatPage from "../pages/ChatPage";
 import AdminAnalyticsPage from "../pages/AdminAnalyticsPage";
+import FutureSimulatorPage from "../pages/FutureSimulatorPage";
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -61,6 +62,10 @@ export default function AppRouter() {
             <ChatPage />
           </ProtectedRoute>
         }
+      />
+      <Route
+        path="/modo-2032"
+        element={<ProtectedRoute><FutureSimulatorPage /></ProtectedRoute>}
       />
       <Route
         path="/admin/analytics"

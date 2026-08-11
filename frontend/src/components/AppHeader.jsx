@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function AppHeader({ user, onLogout, isSidebarOpen, onToggleSidebar }) {
   return (
     <header className="chat-header">
@@ -17,6 +19,7 @@ export default function AppHeader({ user, onLogout, isSidebarOpen, onToggleSideb
       </div>
 
       <div className="header-actions">
+        <Link className="ghost-button" to="/modo-2032">🔮 Modo 2032</Link>
         <div className="user-chip">
           <span>{user?.name?.split(" ")[0]}</span>
           <small>{user?.email}</small>
