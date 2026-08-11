@@ -296,6 +296,27 @@ function sanitizeContinuityValue(value, maxChars) {
   return truncateAtWord(withoutUrls, maxChars);
 }
 
+function buildVocationalProfileContinuity(profile) {
+  const dimensions = { interest: "interes", ability: "habilidad", preference: "preferencia", restriction: "restriccion" };
+  const polarities = { positive: "positiva", negative: "negativa" };
+  const signals = Array.isArray(profile?.signals) ? profile.signals : [];
+  const items = signals
+    .filter((signal) => typeof signal?.conceptId === "string" && dimensions[signal?.dimension] && polarities[signal?.polarity])
+    .sort((left, right) =>
+      (Number(right.updatedRevision) || 0) - (Number(left.updatedRevision) || 0) ||
+      toText(right.updatedAt).localeCompare(toText(left.updatedAt)) ||
+      toText(left.conceptId).localeCompare(toText(right.conceptId)))
+    .slice(0, 6)
+    .map((signal) => {
+      const concept = sanitizeContinuityValue(signal.conceptId.replace(/_/g, " "), 64);
+      return concept ? concept + ": " + dimensions[signal.dimension] + " " + polarities[signal.polarity] : "";
+    })
+    .filter(Boolean);
+  return items.length
+    ? "perfil vocacional explicito vigente (distingue cada dimension): " + items.join("; ")
+    : "";
+}
+
 export function buildEducativeContinuitySummary(state = {}) {
   const career = sanitizeContinuityValue(
     state?.activeConfirmedCareer?.name,
@@ -307,15 +328,17 @@ export function buildEducativeContinuitySummary(state = {}) {
   );
   const status = sanitizeContinuityValue(state?.status, 40);
   const hasRelevantStatus = status && status !== "idle";
+  const vocationalProfile = buildVocationalProfileContinuity(state?.vocationalProfile);
 
-  if (!career && !level && !hasRelevantStatus) {
+  if (!career && !level && !hasRelevantStatus && !vocationalProfile) {
     return "";
   }
 
   const details = [
-    career ? `el usuario exploró ${career}` : "existe una exploración educativa activa",
+    career ? `el usuario exploró ${career}` : (level || hasRelevantStatus ? "existe una exploración educativa activa" : ""),
     level ? `nivel ${level}` : "",
     hasRelevantStatus ? `estado ${status}` : "",
+    vocationalProfile,
   ].filter(Boolean);
 
   return truncateAtWord(

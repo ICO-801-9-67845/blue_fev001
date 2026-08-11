@@ -1,5 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import {
+  AI_FALLBACK_PROVIDER,
+  AI_PROVIDER,
   GEMINI_API_KEYS,
   GEMINI_CHAT_HISTORY_LIMIT_WITH_SUMMARY,
   GEMINI_CHAT_HISTORY_LIMIT_WITHOUT_SUMMARY,
@@ -19,6 +21,16 @@ import {
   GEMINI_MEMORY_USER_MEMORY_MAX_CHARS,
   GEMINI_MEMORY_TARGET_CHAT_SUMMARY_CHARS,
   GEMINI_MEMORY_TARGET_USER_MEMORY_CHARS,
+  OLLAMA_BASE_URL,
+  OLLAMA_CHAT_MAX_OUTPUT_TOKENS,
+  OLLAMA_CHAT_MODEL,
+  OLLAMA_CHAT_TEMPERATURE,
+  OLLAMA_CONTEXT_LENGTH,
+  OLLAMA_HOST_HEADER,
+  OLLAMA_MEMORY_MAX_OUTPUT_TOKENS,
+  OLLAMA_MEMORY_MODEL,
+  OLLAMA_MEMORY_TEMPERATURE,
+  OLLAMA_TIMEOUT_MS,
 } from "../config/env.js";
 import { ApiError } from "../utils/ApiError.js";
 import { buildAssistantRequestContext } from "./aiContextService.js";
@@ -27,6 +39,15 @@ import {
   buildMemorySummarySystemInstruction,
 } from "./memoryContextService.js";
 
+import {
+  AI_PROVIDER_OPERATIONS,
+  createAiProviderRouter,
+} from "./aiProviderService.js";
+import {
+  OLLAMA_ERROR_CODES,
+  OllamaProviderError,
+  createOllamaGenerator,
+} from "./ollamaProviderService.js";
 const SYSTEM_PROMPT = `
 Habla siempre en espanol natural, cercano y humano.
 Eres una presencia confiable, calida y respetuosa. Suenas como un amigo inteligente que escucha de verdad.
@@ -81,6 +102,7 @@ Reglas adicionales para recomendaciones educativas:
 const EDUCATIVE_SAFETY_RULE = `
 Regla permanente de seguridad educativa:
 - No inventes ni menciones nombres concretos de escuelas, universidades o enlaces cuando no existan opciones educativas validadas en el contexto.
+- Cuando el contexto incluya un perfil vocacional explicito vigente, usalo como fuente preferente: distingue interes, habilidad, dificultad, preferencia y rechazo; no conviertas dificultad en desinteres ni interes en habilidad.
 `;
 
 export const BASE_SYSTEM_INSTRUCTION = `${SYSTEM_PROMPT}
@@ -106,6 +128,14 @@ const MEMORY_CONTEXT_LIMITS = Object.freeze({
   currentChatSummaryMaxChars: GEMINI_MEMORY_CURRENT_CHAT_SUMMARY_MAX_CHARS,
   userMemoryMaxChars: GEMINI_MEMORY_USER_MEMORY_MAX_CHARS,
 });
+
+const generateWithOllama = createOllamaGenerator({
+  baseUrl: OLLAMA_BASE_URL,
+  hostHeader: OLLAMA_HOST_HEADER,
+  timeoutMs: OLLAMA_TIMEOUT_MS,
+  contextLength: OLLAMA_CONTEXT_LENGTH,
+});
+
 
 const OFFER_DETAIL_ID_PATTERN = /\/oferta-educativa\/detalle\/(\d+)/gi;
 
@@ -680,11 +710,29 @@ export function createMemorySummaryGenerator({
 
 const defaultMemorySummaryGenerator = createMemorySummaryGenerator();
 
-export async function generateMemorySummaries(params) {
+async function generateMemorySummariesWithGemini(params) {
   return defaultMemorySummaryGenerator(params);
 }
 
+export async function generateMemorySummaries(params) {
+  return executeAiOperation(AI_PROVIDER_OPERATIONS.MEMORY, params);
+}
+
 export async function generateAssistantReply(
+  history,
+  offerContext = [],
+  memoryContext = {},
+  options = {},
+) {
+  return executeAiOperation(AI_PROVIDER_OPERATIONS.CONVERSATION, {
+    history,
+    offerContext,
+    memoryContext,
+    options,
+  });
+}
+
+async function generateAssistantReplyWithGemini(
   history,
   offerContext = [],
   memoryContext = {},
@@ -716,7 +764,6 @@ export async function generateAssistantReply(
   });
 
   console.log(requestContext.metrics);
-  let lastError;
 
   for (let index = 0; index < GEMINI_API_KEYS.length; index += 1) {
     const apiKey = GEMINI_API_KEYS[index];
@@ -752,8 +799,12 @@ export async function generateAssistantReply(
 
       return response;
     } catch (error) {
-      lastError = error;
-      console.error(`Gemini failed with key index ${index}: ${error.message}`);
+      console.error({
+        event: "gemini_generation_failed",
+        provider: "gemini",
+        model: GEMINI_CHAT_MODEL,
+        keyIndex: index,
+      });
 
       if (!isRecoverableGeminiError(error) && index < GEMINI_API_KEYS.length - 1) {
         continue;
@@ -767,6 +818,165 @@ export async function generateAssistantReply(
 
   throw new ApiError(
     502,
-    `No fue posible obtener respuesta de Gemini. ${lastError?.message || ""}`.trim()
+    "No fue posible generar una respuesta.",
   );
 }
+
+async function generateMemorySummariesWithOllama({
+  messages,
+  currentChatSummary = "",
+  userMemorySummary = "",
+} = {}) {
+  const memoryContext = buildMemoryRequestContext({
+    messages,
+    currentChatSummary,
+    userMemorySummary,
+    model: OLLAMA_MEMORY_MODEL,
+    limits: MEMORY_CONTEXT_LIMITS,
+  });
+  console.info({
+    ...memoryContext.metrics,
+    event: "ai_memory_context_usage",
+    provider: "ollama",
+  });
+
+  if (!memoryContext.messages.length) {
+    return withMemoryMetadata(
+      createMemorySummaryFailure(MEMORY_SUMMARY_FAILURE_REASONS.EMPTY_SUMMARY),
+      { finishReason: "NOT_RUN", responseCharacterCount: 0 },
+    );
+  }
+
+  try {
+    const result = await generateWithOllama({
+      requestType: "memory",
+      model: OLLAMA_MEMORY_MODEL,
+      systemInstruction: MEMORY_SUMMARY_PROMPT,
+      contents: [{ role: "user", parts: [{ text: memoryContext.prompt }] }],
+      maxOutputTokens: OLLAMA_MEMORY_MAX_OUTPUT_TOKENS,
+      temperature: OLLAMA_MEMORY_TEMPERATURE,
+    });
+    const summaryResult = buildMemorySummaryResult(
+      result.content,
+      result.finishReason,
+    );
+    console.info({
+      event: "ai_memory_summary_result",
+      provider: "ollama",
+      model: OLLAMA_MEMORY_MODEL,
+      outcome: summaryResult.ok ? "success" : "failure",
+      reason: summaryResult.reason,
+      finishReason: summaryResult.metadata.finishReason,
+      responseCharacterCount: summaryResult.metadata.responseCharacterCount,
+    });
+    return summaryResult;
+  } catch (error) {
+    console.warn({
+      event: "ai_memory_generation_failed",
+      provider: "ollama",
+      model: OLLAMA_MEMORY_MODEL,
+      status: error instanceof OllamaProviderError ? error.code : "unknown",
+    });
+    return withMemoryMetadata(
+      createMemorySummaryFailure(MEMORY_SUMMARY_FAILURE_REASONS.GENERATION_ERROR),
+      { finishReason: "ERROR", responseCharacterCount: 0 },
+    );
+  }
+}
+
+function ollamaVisibleError(error) {
+  if (error instanceof OllamaProviderError && error.code === OLLAMA_ERROR_CODES.TIMEOUT) {
+    return new ApiError(
+      504,
+      "La respuesta está tardando más de lo esperado. Inténtalo nuevamente.",
+    );
+  }
+  if (
+    error instanceof OllamaProviderError &&
+    [
+      OLLAMA_ERROR_CODES.INVALID_JSON,
+      OLLAMA_ERROR_CODES.EMPTY_RESPONSE,
+      OLLAMA_ERROR_CODES.INCOMPLETE_RESPONSE,
+      OLLAMA_ERROR_CODES.INVALID_RESPONSE,
+      OLLAMA_ERROR_CODES.REASONING_CONTENT,
+    ].includes(error.code)
+  ) {
+    return new ApiError(502, "No fue posible generar una respuesta.");
+  }
+  return new ApiError(
+    503,
+    "El servicio de inteligencia artificial no está disponible en este momento.",
+  );
+}
+
+async function generateAssistantReplyWithOllama(
+  history,
+  offerContext = [],
+  memoryContext = {},
+  options = {},
+) {
+  if (options?.isEducativeRequest && (!Array.isArray(offerContext) || offerContext.length === 0)) {
+    return "No encontre opciones exactas en la base con esos datos. Me dices municipio, nivel o carrera para buscar mejor?";
+  }
+
+  const requestContext = buildAssistantRequestContext({
+    history,
+    offerContext,
+    memoryContext,
+    memoryContextText: buildMemoryContextText(memoryContext),
+    offerContextText: buildOfferContextText(offerContext),
+    baseSystemInstruction: BASE_SYSTEM_INSTRUCTION,
+    educativeOfferRules: EDUCATIVE_OFFER_RULES,
+    model: OLLAMA_CHAT_MODEL,
+    limits: {
+      limitWithSummary: GEMINI_CHAT_HISTORY_LIMIT_WITH_SUMMARY,
+      limitWithoutSummary: GEMINI_CHAT_HISTORY_LIMIT_WITHOUT_SUMMARY,
+      maxCharsWithSummary: GEMINI_CHAT_HISTORY_MAX_CHARS_WITH_SUMMARY,
+      maxCharsWithoutSummary: GEMINI_CHAT_HISTORY_MAX_CHARS_WITHOUT_SUMMARY,
+    },
+  });
+
+  console.info({
+    ...requestContext.metrics,
+    event: "ai_context_usage",
+    provider: "ollama",
+  });
+  try {
+    const result = await generateWithOllama({
+      requestType: "conversation",
+      model: OLLAMA_CHAT_MODEL,
+      systemInstruction: requestContext.systemInstruction,
+      contents: requestContext.contents,
+      maxOutputTokens: OLLAMA_CHAT_MAX_OUTPUT_TOKENS,
+      temperature: OLLAMA_CHAT_TEMPERATURE,
+    });
+    if (hasInvalidOfferLinks(result.content, offerContext)) {
+      console.error({
+        event: "ai_response_blocked",
+        provider: "ollama",
+        reason: "invalid_offer_link",
+      });
+      return INVALID_OFFER_LINK_RESPONSE;
+    }
+    return result.content;
+  } catch (error) {
+    throw ollamaVisibleError(error);
+  }
+}
+
+const executeAiOperation = createAiProviderRouter({
+  activeProvider: AI_PROVIDER,
+  fallbackProvider: AI_FALLBACK_PROVIDER,
+  providers: {
+    gemini: {
+      conversation: ({ history, offerContext, memoryContext, options }) =>
+        generateAssistantReplyWithGemini(history, offerContext, memoryContext, options),
+      memory: generateMemorySummariesWithGemini,
+    },
+    ollama: {
+      conversation: ({ history, offerContext, memoryContext, options }) =>
+        generateAssistantReplyWithOllama(history, offerContext, memoryContext, options),
+      memory: generateMemorySummariesWithOllama,
+    },
+  },
+});

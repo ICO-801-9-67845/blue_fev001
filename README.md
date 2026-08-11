@@ -53,6 +53,20 @@ JWT_SECRET=replace-with-a-strong-secret
 JWT_EXPIRES_IN=7d
 
 FRONTEND_URL=http://localhost:5173
+AI_PROVIDER=ollama
+AI_FALLBACK_PROVIDER=none
+
+OLLAMA_BASE_URL=https://your-private-ollama-host.example
+OLLAMA_HOST_HEADER=localhost:11434
+OLLAMA_CHAT_MODEL=qwen3:1.7b
+OLLAMA_MEMORY_MODEL=qwen3:1.7b
+OLLAMA_TIMEOUT_MS=180000
+OLLAMA_CONTEXT_LENGTH=2048
+OLLAMA_CHAT_MAX_OUTPUT_TOKENS=300
+OLLAMA_MEMORY_MAX_OUTPUT_TOKENS=600
+OLLAMA_CHAT_TEMPERATURE=0.6
+OLLAMA_MEMORY_TEMPERATURE=0.1
+
 
 GEMINI_API_KEYS=tu_api_key_1,tu_api_key_2
 GEMINI_MODEL=gemini-2.5-flash-lite
@@ -166,6 +180,13 @@ npm run dev -w frontend
 
 - Coloca una imagen del personaje en `frontend/public/character.png` si buscas reemplazar el personaje actual.
 - `GEMINI_API_KEYS` acepta varias keys separadas por comas.
+- `AI_PROVIDER` acepta `gemini` u `ollama`. Si se omite, conserva `gemini` por compatibilidad.
+- `AI_FALLBACK_PROVIDER` solo acepta `none`; el backend no cambia automaticamente a Gemini cuando Ollama falla.
+- Ollama se consume exclusivamente desde el backend mediante HTTPS y el encabezado Host configurado.
+- `OLLAMA_BASE_URL` debe ser una URL HTTPS privada sin ruta, credenciales, query ni fragmento.
+- Los modelos, timeout, contexto, limites de salida y temperaturas Ollama se validan al iniciar el backend.
+- La URL privada real pertenece unicamente a `backend/.env`, que no debe rastrearse.
+- Este soporte es un piloto local; no implica conectividad desde Render ni preparacion para produccion.
 - `GEMINI_MODEL` se mantiene por compatibilidad y funciona como fallback para ambos usos.
 - `GEMINI_CHAT_MODEL` y `GEMINI_MEMORY_MODEL` tienen prioridad y permiten configurar por separado conversacion y memoria.
 - Los limites de salida y temperaturas de cada uso se configuran con las variables `GEMINI_*_MAX_OUTPUT_TOKENS` y `GEMINI_*_TEMPERATURE`.

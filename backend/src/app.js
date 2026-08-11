@@ -1,6 +1,6 @@
 import cors from "cors";
 import express from "express";
-import { FRONTEND_URL } from "./config/env.js";
+import { FRONTEND_ORIGINS } from "./config/env.js";
 import authRoutes from "./routes/authRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
@@ -11,7 +11,9 @@ const app = express();
 
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin(origin, callback) {
+      callback(null, !origin || FRONTEND_ORIGINS.includes(origin));
+    },
     credentials: true,
   }),
 );
