@@ -144,7 +144,7 @@ export const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
   .split(",")
   .map((email) => email.trim().toLowerCase())
   .filter(Boolean);
-export const AI_PROVIDER = oneOf("AI_PROVIDER", "gemini", ["gemini", "ollama"]);
+export const AI_PROVIDER = oneOf("AI_PROVIDER", "gemini", ["none", "gemini", "ollama"]);
 export const AI_FALLBACK_PROVIDER = oneOf("AI_FALLBACK_PROVIDER", "none", ["none"]);
 const OLLAMA_IS_ACTIVE = AI_PROVIDER === "ollama";
 export const OLLAMA_BASE_URL = ollamaBaseUrl(process.env.OLLAMA_BASE_URL, OLLAMA_IS_ACTIVE);
