@@ -22,8 +22,8 @@ export default function AppHeader({ user, onLogout, isSidebarOpen, onToggleSideb
         <Link className="ghost-button header-tools-link" to="/tools/schedule">
           Herramientas
         </Link>
-        <Link className="ghost-button" to="/career-lab">🧪 Career Lab</Link>
-        <Link className="ghost-button" to="/modo-2032">🔮 Modo 2032</Link>
+        <Link className="ghost-button" to="/career-lab"> Career Lab</Link>
+        <Link className="ghost-button" to="/modo-2032"> Modo 2032</Link>
         <div className="user-chip">
           <span>{user?.name?.split(" ")[0]}</span>
           <small>{user?.email}</small>
