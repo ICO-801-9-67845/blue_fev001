@@ -22,6 +22,11 @@ const DAY_INDEX = new Map(SCHEDULE_DAYS.map((day, index) => [day.id, index]));
 const VALID_CATEGORIES = new Set(SCHEDULE_CATEGORIES.map((category) => category.id));
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
+export function getScheduleDayIdFromDate(date = new Date()) {
+  const mondayBasedIndex = (date.getDay() + 6) % SCHEDULE_DAYS.length;
+  return SCHEDULE_DAYS[mondayBasedIndex].id;
+}
+
 function timeToMinutes(time) {
   if (!TIME_PATTERN.test(time)) {
     return null;
@@ -89,6 +94,13 @@ export function sortScheduleActivities(activities) {
 
     return first.title.localeCompare(second.title, "es");
   });
+}
+
+export function getScheduleActivitiesForDate(activities, date = new Date()) {
+  const dayId = getScheduleDayIdFromDate(date);
+  return sortScheduleActivities(
+    activities.filter((activity) => activity.day === dayId),
+  );
 }
 
 export function findScheduleConflictIds(activities) {

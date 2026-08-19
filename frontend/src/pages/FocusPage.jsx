@@ -1,13 +1,19 @@
+import { useEffect, useState } from "react";
 import FocusControls from "../components/focus/FocusControls";
+import FocusResources from "../components/focus/FocusResources";
 import FocusSettings from "../components/focus/FocusSettings";
 import FocusTimer from "../components/focus/FocusTimer";
+import FocusTodaySchedule from "../components/focus/FocusTodaySchedule";
 import { useAuth } from "../hooks/useAuth";
 import { useFocusTimer } from "../hooks/useFocusTimer";
+import { getSchedule } from "../storage/scheduleStorage";
 import { FOCUS_MODES, FOCUS_STATUSES } from "../utils/focusUtils";
+import { getScheduleActivitiesForDate } from "../utils/scheduleUtils";
 import "../styles/focus.css";
 
 export default function FocusPage() {
   const { user } = useAuth();
+  const [todayActivities, setTodayActivities] = useState([]);
   const {
     focusState,
     storageError,
@@ -18,6 +24,11 @@ export default function FocusPage() {
     selectMode,
     start,
   } = useFocusTimer(user.id);
+
+  useEffect(() => {
+    const schedule = getSchedule(user.id);
+    setTodayActivities(getScheduleActivitiesForDate(schedule.activities, new Date()));
+  }, [user.id]);
 
   if (!focusState) {
     return <div className="app-shell-centered">Preparando Focus...</div>;
@@ -90,6 +101,9 @@ export default function FocusPage() {
           onSave={saveSettings}
         />
       </section>
+
+      <FocusTodaySchedule activities={todayActivities} />
+      <FocusResources />
     </section>
   );
 }
