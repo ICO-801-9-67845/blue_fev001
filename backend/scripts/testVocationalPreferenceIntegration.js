@@ -451,6 +451,106 @@ await test("34 aspirational engineering does not set current stage", async () =>
   await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar Ingeniería Civil");
   assert.equal(h.chat.educativeState.vocationalProfileV2?.currentAcademicStage || null, null);
 });
+await test("35 generic master request returns only canonical masters", async () => {
+  const h = createHarness(); const result = await sendMessage(h.chat.id,h.chat.userId,"Quiero estudiar maestrías");
+  assert.ok(result.assistantMessage.uiAction.careers.length>0);assert.ok(result.assistantMessage.uiAction.careers.every(career=>career.academicLevel==="maestria"));assert.doesNotMatch(result.assistantMessage.content,/nombre completo/i);
+});
+await test("36 generic doctorate request returns only doctorates", async () => {
+  const h = createHarness(); const result = await sendMessage(h.chat.id,h.chat.userId,"Quiero estudiar un doctorado");
+  assert.ok(result.assistantMessage.uiAction.careers.every(career=>career.academicLevel==="doctorado"));
+});
+await test("37 generic specialty request returns only specialties", async () => {
+  const h = createHarness(); const result = await sendMessage(h.chat.id,h.chat.userId,"Quiero una especialidad");
+  assert.ok(result.assistantMessage.uiAction.careers.every(career=>career.academicLevel==="especialidad"));
+});
+await test("38 generic master request remains aspirational", async () => {
+  const h = createHarness(); await sendMessage(h.chat.id,h.chat.userId,"Quiero estudiar una maestría");
+  assert.equal(h.chat.educativeState.vocationalProfileV2.currentAcademicStage,null);
+});
+await test("39 natural psychology resolves without exact internal name", async () => {
+  const h = createHarness(); const result=await sendMessage(h.chat.id,h.chat.userId,"psicologia");
+  assert.ok(result.assistantMessage.uiAction.careers.some(career=>/PSICOLOG/i.test(career.name)));
+});
+await test("40 psychology typo resolves by deterministic fuzzy matching", async () => {
+  const h = createHarness(); const result=await sendMessage(h.chat.id,h.chat.userId,"psicolojia");
+  assert.ok(result.assistantMessage.uiAction.careers.some(career=>/PSICOLOG/i.test(career.name)));
+});
+await test("41 engineering systems returns related engineering candidates", async () => {
+  const h = createHarness(); const result=await sendMessage(h.chat.id,h.chat.userId,"ingeniería sistemas");
+  assert.ok(result.assistantMessage.uiAction.careers.every(career=>career.academicLevel==="ingenieria"));assert.ok(result.assistantMessage.uiAction.careers.some(career=>/SISTEM/i.test(career.name)));
+});
+await test("42 explicit master level excludes undergraduate administration", async () => {
+  const h = createHarness(); const result=await sendMessage(h.chat.id,h.chat.userId,"Quiero una maestría en administración");
+  assert.ok(result.assistantMessage.uiAction.careers.length>0);assert.ok(result.assistantMessage.uiAction.careers.every(career=>career.academicLevel==="maestria"));
+});
+await test("43 ambiguous administration presents multiple real candidates", async () => {
+  const h = createHarness(); const result=await sendMessage(h.chat.id,h.chat.userId,"administracion");
+  assert.ok(result.assistantMessage.uiAction.careers.length>1);assert.ok(result.assistantMessage.uiAction.careers.every(career=>/ADMINISTR/i.test(career.name)));
+});
+await test("44 nonexistent program is never invented", async () => {
+  const h = createHarness(); const result=await sendMessage(h.chat.id,h.chat.userId,"quiero estudiar asdfghjk");
+  assert.equal(result.assistantMessage.uiAction==null,true);assert.match(result.assistantMessage.content,/(?:no encontr[eé]|no pude identificar) una coincidencia/i);
+});
+await test("45 generic master pagination does not repeat programs", async () => {
+  const h = createHarness(); const first=await sendMessage(h.chat.id,h.chat.userId,"Quiero estudiar maestrías");const firstNames=new Set(first.assistantMessage.uiAction.careers.map(career=>career.name));const second=await sendMessage(h.chat.id,h.chat.userId,"dame más maestrías");assert.ok(second.assistantMessage.uiAction.careers.every(career=>!firstNames.has(career.name)));
+});
+await test("46 prior technology profile prioritizes compatible masters", async () => {
+  const h = createHarness(); await sendMessage(h.chat.id,h.chat.userId,"Me gusta programar, matemáticas y tecnología.");const result=await sendMessage(h.chat.id,h.chat.userId,"Quiero estudiar maestrías");assert.ok(result.assistantMessage.uiAction.careers.some(career=>/COMPUT|TECNOLOG|INGENIER/i.test(career.name)));
+});
+await test("47 arbitrary psychology typo uses a real canonical candidate", async () => {
+  const h = createHarness(); const result = await sendMessage(h.chat.id, h.chat.userId, "psicolojia");
+  assert.equal(result.assistantMessage.uiAction.type, "career_confirmation");
+  assert.ok(result.assistantMessage.uiAction.careers.some((career) => /PSICOLOG/i.test(career.name)));
+});
+await test("48 partial business administration name exposes real candidates", async () => {
+  const h = createHarness(); const result = await sendMessage(h.chat.id, h.chat.userId, "adm empresas");
+  assert.equal(result.assistantMessage.uiAction.type, "career_confirmation");
+  assert.ok(result.assistantMessage.uiAction.careers.some((career) => /ADMINISTR.*EMPRES/i.test(career.name)));
+});
+await test("49 partial computing systems name exposes related real options", async () => {
+  const h = createHarness(); const result = await sendMessage(h.chat.id, h.chat.userId, "sistemas compu");
+  assert.equal(result.assistantMessage.uiAction.type, "career_confirmation");
+  assert.ok(result.assistantMessage.uiAction.careers.some((career) => /SISTEM.*COMPUT/i.test(career.name)));
+});
+await test("50 arbitrary architecture typo uses bounded fuzzy confirmation", async () => {
+  const h = createHarness(); const result = await sendMessage(h.chat.id, h.chat.userId, "arquitecturra");
+  assert.equal(result.assistantMessage.uiAction.type, "career_confirmation");
+  assert.equal(result.assistantMessage.uiAction.careers.length, 1);
+  assert.match(result.assistantMessage.uiAction.careers[0].name, /ARQUITECTURA/i);
+});
+await test("51 explicit master level restricts flexible administration candidates", async () => {
+  const h = createHarness(); const result = await sendMessage(h.chat.id, h.chat.userId, "maestria administracion");
+  assert.ok(result.assistantMessage.uiAction.careers.length > 0);
+  assert.ok(result.assistantMessage.uiAction.careers.every((career) => career.academicLevel === "maestria"));
+});
+await test("52 broad administration creates an action with multiple candidates", async () => {
+  const h = createHarness(); const result = await sendMessage(h.chat.id, h.chat.userId, "administracion");
+  assert.equal(result.assistantMessage.uiAction.type, "career_confirmation");
+  assert.ok(result.assistantMessage.uiAction.careers.length > 1);
+});
+await test("53 non-administration ambiguity also creates real alternatives", async () => {
+  const h = createHarness(); const result = await sendMessage(h.chat.id, h.chat.userId, "sistemas compu");
+  assert.equal(result.assistantMessage.uiAction.type, "career_confirmation");
+  assert.ok(result.assistantMessage.uiAction.careers.length > 1);
+  assert.ok(result.assistantMessage.uiAction.careers.every((career) => career.name && career.academicLevel));
+});
+await test("54 generic prepa discovery includes both upper-secondary levels", async () => {
+  const h = createHarness(); const result = await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar prepa");
+  const levels = new Set(result.assistantMessage.uiAction.careers.map((career) => career.academicLevel));
+  assert.ok(levels.has("bachillerato"));
+  assert.ok(levels.has("tecnico_bachillerato"));
+});
+await test("55 nonexistent standalone input creates no canonical program", async () => {
+  const h = createHarness(); const result = await sendMessage(h.chat.id, h.chat.userId, "asdfghjkl");
+  assert.equal(result.assistantMessage.uiAction, null);
+  assert.equal(h.calls.search, 0);
+});
+await test("56 high-confidence fuzzy waits for confirmation before search", async () => {
+  const h = createHarness(); const result = await sendMessage(h.chat.id, h.chat.userId, "psicolojia");
+  assert.equal(result.assistantMessage.uiAction.type, "career_confirmation");
+  assert.equal(h.calls.search, 0);
+  assert.equal(h.chat.educativeState.searchConfirmed, false);
+});
 
 const passed = results.filter((item) => item.status === "PASS").length;
 const failed = results.length - passed;

@@ -55,6 +55,14 @@ Para especialidad, maestría y doctorado, `priorFields` compatible suma `field_c
 
 Los 462 perfiles se rankean en memoria después de cada cambio V2; el límite histórico de 128 señales V1 no detiene V2. Solo pocos resultados llegan al LLM. Si los tres primeros están próximos, existe una señal no respondida que los discrimina, no hay selección explícita ni acción pendiente y no se preguntó lo mismo recientemente, Blue puede formular como máximo una pregunta determinística. Un ganador con ventaja mayor a 10 puntos no dispara pregunta. La base educativa decide instituciones. Ningún atributo sensible participa. Los IDs se validan contra catálogo y el máximo defensivo es 512.
 
+## Descubrimiento por nivel y nombre natural
+
+Una solicitud genérica de bachillerato, TSU, licenciatura, ingeniería, especialidad, maestría o doctorado filtra primero el catálogo canónico por `program.level`; no requiere inventar ni resolver una carrera concreta. Con dos o más señales positivas, conserva el orden del ranking completo; con evidencia escasa intercala familias determinísticamente. La paginación muestra cinco opciones sin repetición.
+
+La resolución flexible elimina acentos y palabras estructurales, conserva aliases aprobados y calcula `max(0.55 × cobertura de tokens + 0.45 × Dice de bigramas, 0.85 × Dice)`. Se descartan scores menores a 0.52. `high_confidence` requiere score mínimo 0.65 y margen mínimo 0.08; un término único con otra coincidencia dentro de 0.12 permanece ambiguo. Los candidatos ambiguous se limitan a 0.12 del mejor score. El LLM no participa en esta resolución.
+
+La precedencia es determinística: primero coincidencia canónica, alias aprobado o exacta normalizada; después fuzzy seguro por Damerau-Levenshtein acotado; luego cobertura de tokens y Dice para nombres naturales o parciales; finalmente `low_confidence`. Si el fuzzy acotado y el flexible coinciden, prevalece el fuzzy y siempre requiere confirmación. Si proponen programas incompatibles, se presentan alternativas reales y no se selecciona ninguno. Un nivel académico explícito restringe todos los candidatos; el descubrimiento genérico de prepa agrupa `bachillerato` y `tecnico_bachillerato` sin alterar sus niveles canónicos.
+
 ## Limitaciones
 
 Los fallbacks requieren revisión experta individual. Un título académico puede conducir a varias ocupaciones y O*NET describe el mercado estadounidense, no requisitos académicos mexicanos. Los pesos deben recalibrarse con evaluación de calidad y sesgos; los scores expresan orden de afinidad, no probabilidades.
