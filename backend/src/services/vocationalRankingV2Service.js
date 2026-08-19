@@ -13,27 +13,29 @@ const WEIGHTS = Object.freeze({ interestPositive:14, interestNegative:-22, abili
 
 export function migrateVocationalProfileV2(value) {
   const source = value && typeof value === "object" ? value : {};
-  return { version:2, revision:Number.isInteger(source.revision)?source.revision:0, currentAcademicStage:source.currentAcademicStage||null, priorFields:Array.isArray(source.priorFields)?[...new Set(source.priorFields)]:[], signals:Array.isArray(source.signals)?source.signals.map(x=>({...x})):[], exclusions:Array.isArray(source.exclusions)?source.exclusions.map(x=>({...x})):[] };
+  return { version:2, revision:Number.isInteger(source.revision)?source.revision:0, currentAcademicStage:source.currentAcademicStage||null, completedAcademicStage:source.completedAcademicStage||null, priorFields:Array.isArray(source.priorFields)?[...new Set(source.priorFields)]:[], signals:Array.isArray(source.signals)?source.signals.map(x=>({...x})):[], exclusions:Array.isArray(source.exclusions)?source.exclusions.map(x=>({...x})):[] };
+}
+
+export function extractAcademicStageV2(text) {
+  const value=norm(text),completed=/\b(?:ya termine|termine|conclui|complete|egrese)\b/.test(value);
+  const stage=/\b(?:secundaria|tercero de secundaria)\b/.test(value)?"secundaria":/\b(?:prepa|preparatoria|bachillerato)\b/.test(value)?"preparatoria":/\b(?:tsu|tecnico superior universitario)\b/.test(value)?"tsu":/\b(?:licenciatura|universidad)\b/.test(value)?"licenciatura":/\bmaestria\b/.test(value)?"maestria":/\bdoctorado\b/.test(value)?"doctorado":null;
+  return stage ? (completed?{completedAcademicStage:stage}:{currentAcademicStage:stage}) : {};
 }
 
 export function extractVocationalEvidenceV2(text, { revision=1, observedAt=new Date().toISOString() }={}) {
-  const normalized=norm(text); const signals=[];
-  for(const concept of concepts.values()) for(const alias of concept.aliases) if(contains(normalized,alias)) {
-    const before=normalized.slice(0,Math.max(0,normalized.indexOf(norm(alias))));
-    const correction=/antes me gust|ya no|no dije/.test(normalized);
-    const difficulty=/se me dificulta|me cuesta|no soy buen/.test(normalized);
-    const restriction=/no quiero trabajar|prefiero no trabajar|no quiero.*sangre/.test(normalized);
-    const negative=/\bno\b|ya no/.test(before.slice(-30))||correction;
-    const positive=/me gusta|me encanta|disfruto|me interesa|soy buen|se me facilita|quiero/.test(normalized);
-    if(difficulty) signals.push({conceptKind:concept.kind,conceptId:concept.id,dimension:"ability",polarity:"negative",intensity:3,source:"explicit_statement",updatedRevision:revision,updatedAt:observedAt});
-    if(restriction) signals.push({conceptKind:concept.kind,conceptId:concept.id,dimension:"restriction",polarity:"negative",intensity:5,source:"explicit_statement",updatedRevision:revision,updatedAt:observedAt});
-    else if(negative||positive) signals.push({conceptKind:concept.kind,conceptId:concept.id,dimension:"interest",polarity:negative?"negative":"positive",intensity:/encanta|mucho/.test(normalized)?5:4,source:correction?"explicit_correction":"explicit_statement",updatedRevision:revision,updatedAt:observedAt});
-    break;
-  }
+  const clauses=norm(text).split(/\b(?:pero|aunque|mientras que|en cambio)\b|[.!?;]+/).map(x=>x.trim()).filter(Boolean),signals=[];let previousMatches=[];
+  for(const clause of clauses){let matches=[];for(const concept of concepts.values())for(const alias of concept.aliases)if(contains(clause,alias)){matches.push({concept,alias});break;}if(!matches.length&&/se me dificulta|me cuesta|no soy buen|se me facilita|ya no/.test(clause))matches=previousMatches;
+  for(const {concept,alias} of matches) {
+    const position=Math.max(0,clause.indexOf(norm(alias))),local=clause.slice(Math.max(0,position-55),Math.min(clause.length,position+norm(alias).length+35));
+    const correction=/antes me gust|ya no|no dije/.test(local),difficulty=/se me dificulta|me cuesta|no soy buen/.test(local),strength=/soy buen|se me facilita/.test(local),restriction=/no quiero trabajar|prefiero no trabajar|evitar.*(?:sangre|hospital|clinica)/.test(local),negative=/\bno (?:me gusta|me interesa|quiero)\b|ya no/.test(local),positive=!negative&&/me gusta|me encanta|disfruto|me interesa|quiero|atrae/.test(local);
+    const base={conceptKind:concept.kind,conceptId:concept.id,intensity:/encanta|mucho/.test(local)?5:4,source:correction?"explicit_correction":"explicit_statement",updatedRevision:revision,updatedAt:observedAt};
+    if(difficulty)signals.push({...base,dimension:"ability",polarity:"negative",intensity:3});else if(strength)signals.push({...base,dimension:"ability",polarity:"positive"});
+    if(restriction)signals.push({...base,dimension:"restriction",polarity:"negative",intensity:5});else if(negative||positive)signals.push({...base,dimension:"interest",polarity:negative?"negative":"positive"});
+  }if(matches.length)previousMatches=matches;}
   return [...new Map(signals.map(s=>[`${s.conceptId}|${s.dimension}`,s])).values()];
 }
 
-function userRiasec(signals) { const v={R:0,I:0,A:0,S:0,E:0,C:0}; for(const s of signals){const sign=s.polarity==="positive"?1:-1; const c=s.conceptId; if(/mechan|construction|animal|agric|manual|repair|transport/.test(c))v.R+=sign; if(/math|stat|physics|chem|biology|research|data|comput/.test(c))v.I+=sign; if(/art|music|design|drawing|writing|creativ/.test(c))v.A+=sign; if(/teach|psych|listen|help|care|people/.test(c))v.S+=sign; if(/business|sales|negoti|leader|polit|public/.test(c))v.E+=sign; if(/account|finance|organization|office|precision|data/.test(c))v.C+=sign;} return v; }
+function userRiasec(signals) { const v={R:0,I:0,A:0,S:0,E:0,C:0}; for(const s of signals){if(!["interest","preference"].includes(s.dimension))continue;const sign=(s.polarity==="positive"?1:-1)*(s.dimension==="preference"?.7:1),c=s.conceptId;if(/mechan|construction|animal|agric|manual|repair|transport/.test(c))v.R+=sign;if(/math|stat|physics|chem|biology|research|data|comput|program/.test(c))v.I+=sign;if(/art|music|design|drawing|writing|creativ/.test(c))v.A+=sign;if(/teach|psych|listen|help|care|people|empathy/.test(c))v.S+=sign;if(/business|sales|negoti|leader|polit|public/.test(c))v.E+=sign;if(/account|finance|organization|office|precision|data/.test(c))v.C+=sign;}return v;}
 function cosine(a,b){const keys=["R","I","A","S","E","C"], dot=keys.reduce((n,k)=>n+a[k]*b[k],0), x=Math.sqrt(keys.reduce((n,k)=>n+a[k]**2,0)), y=Math.sqrt(keys.reduce((n,k)=>n+b[k]**2,0)); return x&&y?dot/(x*y):0;}
 
 export function rankFullVocationalCatalog({ vocationalProfile, currentRevision, candidateSource="profile_inference", explicitProgramId=null }={}) {

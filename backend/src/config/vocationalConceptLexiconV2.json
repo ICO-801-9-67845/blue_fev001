@@ -65,6 +65,16 @@
     {"id":"learning_variety","kind":"activity","aliases":["variedad","aprender cosas nuevas"]},
     {"id":"creativity","kind":"activity","aliases":["creatividad","crear"]},
     {"id":"precision","kind":"activity","aliases":["precisión","detalle"]},
-    {"id":"organization","kind":"activity","aliases":["organizar","organización"]}
+    {"id":"organization","kind":"activity","aliases":["organizar","organización"]},
+    {"id":"problem_solving","kind":"activity","aliases":["resolver problemas","solución de problemas"]},
+    {"id":"critical_thinking","kind":"activity","aliases":["pensamiento crítico","analizar problemas"]},
+    {"id":"spatial_reasoning","kind":"activity","aliases":["visualización espacial","imaginar objetos en el espacio"]},
+    {"id":"verbal_reasoning","kind":"activity","aliases":["razonamiento verbal","comprender textos"]},
+    {"id":"empathy","kind":"interaction","aliases":["empatía","comprender a otras personas"]},
+    {"id":"adaptability","kind":"activity","aliases":["adaptarme a cambios","adaptabilidad"]},
+    {"id":"attention_to_detail","kind":"activity","aliases":["atención al detalle","cuidar los detalles"]},
+    {"id":"dependability","kind":"activity","aliases":["ser responsable","confiabilidad"]},
+    {"id":"initiative","kind":"activity","aliases":["iniciativa","tomar la iniciativa"]},
+    {"id":"stress_tolerance","kind":"activity","aliases":["trabajar bajo presión","tolerancia al estrés"]}
   ]
 }

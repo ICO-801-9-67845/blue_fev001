@@ -398,6 +398,25 @@ await test("25 stubbed provider failover does not add a logical Gemini call", as
   assert.equal(h.calls.providerAttempts, 2);
   assert.equal(h.chat.educativeState.vocationalProfile.revision, 1);
 });
+await test("26 academic stage persists and full catalog reranks", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Estoy en secundaria");
+  assert.equal(h.chat.educativeState.vocationalProfileV2.currentAcademicStage, "secundaria");
+  assert.equal(h.chat.educativeState.vocationalRankingV2.catalogProgramCount, 462);
+  assert.equal(h.chat.educativeState.vocationalRankingV2.ordered.length, 462);
+});
+await test("27 completed stage is distinct from current stage", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Ya terminé mi licenciatura");
+  assert.equal(h.chat.educativeState.vocationalProfileV2.completedAcademicStage, "licenciatura");
+  assert.equal(h.chat.educativeState.vocationalProfileV2.currentAcademicStage, null);
+});
+await test("28 insufficient guidance asks one deterministic question", async () => {
+  const h = createHarness();
+  const result = await sendMessage(h.chat.id, h.chat.userId, "Ayúdame a elegir una carrera, me gusta la biología");
+  assert.match(result.assistantMessage.content, /nivel de estudios/i);
+  assert.equal(h.calls.gemini, 0);
+});
 
 const passed = results.filter((item) => item.status === "PASS").length;
 const failed = results.length - passed;

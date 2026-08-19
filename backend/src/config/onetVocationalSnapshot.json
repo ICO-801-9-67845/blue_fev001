@@ -1,0 +1,6385 @@
+{
+  "version": 1,
+  "source": {
+    "name": "O*NET Database",
+    "version": "30.3",
+    "license": "CC BY 4.0",
+    "downloadUrl": "https://www.onetcenter.org/database.html",
+    "zipSha256": "78703906d5eb92faaa3d912164bbee7706658d85630143d9716df040f9a9f6aa",
+    "fileSha256": {
+      "career_interest_types.csv": "19f452d51b81a4d59389b500f85baf252563858f596124fe446dd436a9f41206",
+      "knowledge.csv": "ec5cafa88466ae350fdd51eefc3c63ff1cb7765af4c38381a613882a59238db1",
+      "abilities.csv": "17e6a8582a42939acc8ed150a4bde6132a5ddb3156abb39ca85ddc89057e42a7",
+      "essential_skills.csv": "4b709259b07de7e414f2d524365ce79dcce0e1c79c6e9ed35a4bc02163cf3737",
+      "work_styles.csv": "a3e5331df515dbc9ede284667e72189a4f24c8a8af80f61bae908596ea48c926",
+      "work_activities.csv": "494632dc96a8eface5084fbeb4038811cf01b0c9efe7d8c7d13e4d6453d6d8a4",
+      "work_context.csv": "ae720db6c126db24abd32ebe1eb590e8b0b09b131deea3036c36db7880eaa28f",
+      "occupation_data.csv": "a09eae1d6609686e44e05b7290993a1c8b523d8ca224bc0eedc194c855c3ee02"
+    }
+  },
+  "occupations": {
+    "11-1021.00": {
+      "onetSocCode": "11-1021.00",
+      "title": "General and Operations Managers",
+      "riasec": {
+        "E": 1,
+        "C": 0.7629,
+        "S": 0.4829,
+        "I": 0.3386,
+        "R": 0.3143,
+        "A": 0.1843
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.1.a",
+          "name": "Administration and Management",
+          "value": 4.25,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.e",
+          "name": "Customer and Personal Service",
+          "value": 4.15,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 3.7,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.2.a",
+          "name": "Production and Processing",
+          "value": 3.57,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.4.a",
+          "name": "Mathematics",
+          "value": 3.53,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.f",
+          "name": "Personnel and Human Resources",
+          "value": 3.44,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.b",
+          "name": "Administrative",
+          "value": 3.21,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.c",
+          "name": "Economics and Accounting",
+          "value": 3.2,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 4,
+          "date": "08/2023",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 4,
+          "date": "08/2023",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 4,
+          "date": "08/2023",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.4",
+          "name": "Written Expression",
+          "value": 4,
+          "date": "08/2023",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.3",
+          "name": "Problem Sensitivity",
+          "value": 3.88,
+          "date": "08/2023",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.4",
+          "name": "Deductive Reasoning",
+          "value": 3.88,
+          "date": "08/2023",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.b.5",
+          "name": "Speech Clarity",
+          "value": 3.88,
+          "date": "08/2023",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.b.4",
+          "name": "Speech Recognition",
+          "value": 3.62,
+          "date": "08/2023",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 4,
+          "date": "08/2023",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 4,
+          "date": "08/2023",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 4,
+          "date": "08/2023",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.d",
+          "name": "Monitoring",
+          "value": 4,
+          "date": "08/2023",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 3.88,
+          "date": "08/2023",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.62,
+          "date": "08/2023",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 3.5,
+          "date": "08/2023",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.c",
+          "name": "Learning Strategies",
+          "value": 3,
+          "date": "08/2023",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.3.b.1",
+          "name": "Working with Computers",
+          "value": 4.46,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 4.42,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.2",
+          "name": "Communicating with Supervisors, Peers, or Subordinates",
+          "value": 4.34,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.b.1",
+          "name": "Making Decisions and Solving Problems",
+          "value": 4.33,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.4",
+          "name": "Establishing and Maintaining Interpersonal Relationships",
+          "value": 4.28,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.1.b.1",
+          "name": "Identifying Objects, Actions, and Events",
+          "value": 4.22,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.b.6",
+          "name": "Organizing, Planning, and Prioritizing Work",
+          "value": 4.2,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.b.4",
+          "name": "Guiding, Directing, and Motivating Subordinates",
+          "value": 4.2,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.3.a.2.b",
+          "name": "Frequency of Decision Making",
+          "value": 4.92,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.2.h",
+          "name": "E-Mail",
+          "value": 4.86,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.2.l",
+          "name": "Face-to-Face Discussions with Individuals and Within Teams",
+          "value": 4.86,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.3.a.4",
+          "name": "Freedom to Make Decisions",
+          "value": 4.81,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.2.f",
+          "name": "Telephone Conversations",
+          "value": 4.76,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.3.b.8",
+          "name": "Determine Tasks, Priorities and Goals",
+          "value": 4.7,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.4",
+          "name": "Contact With Others",
+          "value": 4.63,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.b.1.e",
+          "name": "Work With or Contribute to a Work Group or Team",
+          "value": 4.62,
+          "date": "08/2023",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "workStyles": []
+    },
+    "11-2021.00": {
+      "onetSocCode": "11-2021.00",
+      "title": "Marketing Managers",
+      "riasec": {
+        "E": 1,
+        "C": 0.6714,
+        "I": 0.4143,
+        "S": 0.4029,
+        "A": 0.35,
+        "R": 0.1429
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.1.d",
+          "name": "Sales and Marketing",
+          "value": 4.85,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 4.48,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.a",
+          "name": "Administration and Management",
+          "value": 4.04,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.e",
+          "name": "Customer and Personal Service",
+          "value": 3.85,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.9.b",
+          "name": "Communications and Media",
+          "value": 3.8,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.3.a",
+          "name": "Computers and Electronics",
+          "value": 3.51,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.4.a",
+          "name": "Mathematics",
+          "value": 3.51,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.3.c",
+          "name": "Design",
+          "value": 3.15,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 4,
+          "date": "07/2015",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 4,
+          "date": "07/2015",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 4,
+          "date": "07/2015",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.4",
+          "name": "Written Expression",
+          "value": 3.88,
+          "date": "07/2015",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.4",
+          "name": "Deductive Reasoning",
+          "value": 3.88,
+          "date": "07/2015",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.1",
+          "name": "Fluency of Ideas",
+          "value": 3.75,
+          "date": "07/2015",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.5",
+          "name": "Inductive Reasoning",
+          "value": 3.75,
+          "date": "07/2015",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.b.5",
+          "name": "Speech Clarity",
+          "value": 3.75,
+          "date": "07/2015",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 3.88,
+          "date": "07/2015",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 3.88,
+          "date": "07/2015",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 3.88,
+          "date": "07/2015",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 3.88,
+          "date": "07/2015",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.88,
+          "date": "07/2015",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.d",
+          "name": "Monitoring",
+          "value": 3.75,
+          "date": "07/2015",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 3.25,
+          "date": "07/2015",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.c",
+          "name": "Learning Strategies",
+          "value": 3.12,
+          "date": "07/2015",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.4.a.2",
+          "name": "Communicating with Supervisors, Peers, or Subordinates",
+          "value": 4.75,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.4",
+          "name": "Establishing and Maintaining Interpersonal Relationships",
+          "value": 4.68,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.3.b.1",
+          "name": "Working with Computers",
+          "value": 4.4,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.b.6",
+          "name": "Organizing, Planning, and Prioritizing Work",
+          "value": 4.35,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.b.1",
+          "name": "Making Decisions and Solving Problems",
+          "value": 4.34,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 4.33,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.b.2",
+          "name": "Thinking Creatively",
+          "value": 4.28,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.6",
+          "name": "Selling or Influencing Others",
+          "value": 4.27,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.1.a.2.h",
+          "name": "E-Mail",
+          "value": 5,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.2.f",
+          "name": "Telephone Conversations",
+          "value": 4.92,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.2.l",
+          "name": "Face-to-Face Discussions with Individuals and Within Teams",
+          "value": 4.76,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.b.1.e",
+          "name": "Work With or Contribute to a Work Group or Team",
+          "value": 4.67,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.3.b.8",
+          "name": "Determine Tasks, Priorities and Goals",
+          "value": 4.63,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.4",
+          "name": "Contact With Others",
+          "value": 4.61,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.2.a.1.a",
+          "name": "Indoors, Environmentally Controlled",
+          "value": 4.53,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.3.a.4",
+          "name": "Freedom to Make Decisions",
+          "value": 4.42,
+          "date": "07/2015",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "workStyles": []
+    },
+    "11-3031.00": {
+      "onetSocCode": "11-3031.00",
+      "title": "Financial Managers",
+      "riasec": {
+        "E": 1,
+        "C": 0.7943,
+        "S": 0.4343,
+        "I": 0.3514,
+        "A": 0.2271,
+        "R": 0.1943
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.1.e",
+          "name": "Customer and Personal Service",
+          "value": 4.66,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.a",
+          "name": "Administration and Management",
+          "value": 4.33,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.c",
+          "name": "Economics and Accounting",
+          "value": 4.07,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.4.a",
+          "name": "Mathematics",
+          "value": 3.73,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.b",
+          "name": "Administrative",
+          "value": 3.7,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.8.b",
+          "name": "Law and Government",
+          "value": 3.6,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.f",
+          "name": "Personnel and Human Resources",
+          "value": 3.5,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.d",
+          "name": "Sales and Marketing",
+          "value": 3.35,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 4.12,
+          "date": "08/2022",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 4.12,
+          "date": "08/2022",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 4.12,
+          "date": "08/2022",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.4",
+          "name": "Deductive Reasoning",
+          "value": 4,
+          "date": "08/2022",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.b.5",
+          "name": "Speech Clarity",
+          "value": 4,
+          "date": "08/2022",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.4",
+          "name": "Written Expression",
+          "value": 3.88,
+          "date": "08/2022",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.3",
+          "name": "Problem Sensitivity",
+          "value": 3.88,
+          "date": "08/2022",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.5",
+          "name": "Inductive Reasoning",
+          "value": 3.88,
+          "date": "08/2022",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 4,
+          "date": "08/2022",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 4,
+          "date": "08/2022",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 4,
+          "date": "08/2022",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 4,
+          "date": "08/2022",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 3.75,
+          "date": "08/2022",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.d",
+          "name": "Monitoring",
+          "value": 3.75,
+          "date": "08/2022",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.e",
+          "name": "Mathematics",
+          "value": 3.5,
+          "date": "08/2022",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.5,
+          "date": "08/2022",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.3.b.1",
+          "name": "Working with Computers",
+          "value": 4.34,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.4",
+          "name": "Establishing and Maintaining Interpersonal Relationships",
+          "value": 4.31,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.2",
+          "name": "Communicating with Supervisors, Peers, or Subordinates",
+          "value": 4.28,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.a.2",
+          "name": "Processing Information",
+          "value": 4.27,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 4.23,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.a.3",
+          "name": "Evaluating Information to Determine Compliance with Standards",
+          "value": 4.22,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.b.1",
+          "name": "Making Decisions and Solving Problems",
+          "value": 4.22,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.b.5",
+          "name": "Coaching and Developing Others",
+          "value": 4.16,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.1.a.2.h",
+          "name": "E-Mail",
+          "value": 4.98,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.2.l",
+          "name": "Face-to-Face Discussions with Individuals and Within Teams",
+          "value": 4.91,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.b.1.e",
+          "name": "Work With or Contribute to a Work Group or Team",
+          "value": 4.77,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.2.a.1.a",
+          "name": "Indoors, Environmentally Controlled",
+          "value": 4.71,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.3.b.4",
+          "name": "Importance of Being Exact or Accurate",
+          "value": 4.69,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.2.f",
+          "name": "Telephone Conversations",
+          "value": 4.58,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.3.d.1",
+          "name": "Time Pressure",
+          "value": 4.54,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.c.2",
+          "name": "Work Outcomes and Results of Other Workers",
+          "value": 4.53,
+          "date": "08/2022",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "workStyles": []
+    },
+    "11-3071.00": {
+      "onetSocCode": "11-3071.00",
+      "title": "Transportation, Storage, and Distribution Managers",
+      "riasec": {
+        "E": 0.8557,
+        "C": 0.82,
+        "R": 0.5143,
+        "I": 0.3771,
+        "S": 0.3414,
+        "A": 0.1429
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.10",
+          "name": "Transportation",
+          "value": 4.46,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.1.a",
+          "name": "Administration and Management",
+          "value": 4.14,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.1.e",
+          "name": "Customer and Personal Service",
+          "value": 3.98,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 3.8,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.4.a",
+          "name": "Mathematics",
+          "value": 3.59,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.1.f",
+          "name": "Personnel and Human Resources",
+          "value": 3.55,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.8.a",
+          "name": "Public Safety and Security",
+          "value": 3.49,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.1.c",
+          "name": "Economics and Accounting",
+          "value": 3.24,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.4",
+          "name": "Written Expression",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.3",
+          "name": "Problem Sensitivity",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.4",
+          "name": "Deductive Reasoning",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.5",
+          "name": "Inductive Reasoning",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.6",
+          "name": "Information Ordering",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.d",
+          "name": "Monitoring",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 3.62,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 3.62,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 3.62,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.62,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.c",
+          "name": "Learning Strategies",
+          "value": 3.38,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.2.b.1",
+          "name": "Making Decisions and Solving Problems",
+          "value": 4.37,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.4.a.2",
+          "name": "Communicating with Supervisors, Peers, or Subordinates",
+          "value": 4.35,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 4.27,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.2.b.6",
+          "name": "Organizing, Planning, and Prioritizing Work",
+          "value": 4.06,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.3.b.1",
+          "name": "Working with Computers",
+          "value": 4.05,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.4.b.2",
+          "name": "Developing and Building Teams",
+          "value": 4,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.4.b.4",
+          "name": "Guiding, Directing, and Motivating Subordinates",
+          "value": 3.97,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.4.a.3",
+          "name": "Communicating with People Outside the Organization",
+          "value": 3.93,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.1.a.2.h",
+          "name": "E-Mail",
+          "value": 4.93,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.1.a.2.f",
+          "name": "Telephone Conversations",
+          "value": 4.86,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.1.a.2.l",
+          "name": "Face-to-Face Discussions with Individuals and Within Teams",
+          "value": 4.79,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.1.a.4",
+          "name": "Contact With Others",
+          "value": 4.62,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.1.b.1.e",
+          "name": "Work With or Contribute to a Work Group or Team",
+          "value": 4.44,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.3.a.2.b",
+          "name": "Frequency of Decision Making",
+          "value": 4.4,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.3.d.1",
+          "name": "Time Pressure",
+          "value": 4.38,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.3.a.4",
+          "name": "Freedom to Make Decisions",
+          "value": 4.16,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        }
+      ],
+      "workStyles": []
+    },
+    "11-9013.00": {
+      "onetSocCode": "11-9013.00",
+      "title": "Farmers, Ranchers, and Other Agricultural Managers",
+      "riasec": {
+        "E": 0.7886,
+        "R": 0.7371,
+        "C": 0.6471,
+        "I": 0.3914,
+        "S": 0.3757,
+        "A": 0.1514
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.1.a",
+          "name": "Administration and Management",
+          "value": 4.13,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.2.a",
+          "name": "Production and Processing",
+          "value": 3.9,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.4.d",
+          "name": "Biology",
+          "value": 3.82,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.4.a",
+          "name": "Mathematics",
+          "value": 3.63,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.1.f",
+          "name": "Personnel and Human Resources",
+          "value": 3.39,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 3.39,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.2.b",
+          "name": "Food Production",
+          "value": 3.37,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.1.c",
+          "name": "Economics and Accounting",
+          "value": 3.29,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.3",
+          "name": "Problem Sensitivity",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.4",
+          "name": "Deductive Reasoning",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.5",
+          "name": "Inductive Reasoning",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.7",
+          "name": "Category Flexibility",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.b.5",
+          "name": "Speech Clarity",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 3.62,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.38,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.d",
+          "name": "Monitoring",
+          "value": 3.38,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 3.25,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.e",
+          "name": "Mathematics",
+          "value": 2.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.2.b.1",
+          "name": "Making Decisions and Solving Problems",
+          "value": 4.43,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.2.b.6",
+          "name": "Organizing, Planning, and Prioritizing Work",
+          "value": 4.24,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.4.a.2",
+          "name": "Communicating with Supervisors, Peers, or Subordinates",
+          "value": 4.09,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.2.b.5",
+          "name": "Scheduling Work and Activities",
+          "value": 3.93,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.2.b.2",
+          "name": "Thinking Creatively",
+          "value": 3.9,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 3.89,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.4.b.1",
+          "name": "Coordinating the Work and Activities of Others",
+          "value": 3.85,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.4.c.3",
+          "name": "Monitoring and Controlling Resources",
+          "value": 3.85,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.1.a.2.l",
+          "name": "Face-to-Face Discussions with Individuals and Within Teams",
+          "value": 4.83,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.2.a.1.c",
+          "name": "Outdoors, Exposed to All Weather Conditions",
+          "value": 4.78,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.3.a.4",
+          "name": "Freedom to Make Decisions",
+          "value": 4.55,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.3.b.8",
+          "name": "Determine Tasks, Priorities and Goals",
+          "value": 4.53,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.1.b.1.e",
+          "name": "Work With or Contribute to a Work Group or Team",
+          "value": 4.45,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.1.a.4",
+          "name": "Contact With Others",
+          "value": 4.27,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.1.c.1",
+          "name": "Health and Safety of Other Workers",
+          "value": 4.22,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.2.a.1.b",
+          "name": "Indoors, Not Environmentally Controlled",
+          "value": 4.18,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        }
+      ],
+      "workStyles": []
+    },
+    "13-1081.00": {
+      "onetSocCode": "13-1081.00",
+      "title": "Logisticians",
+      "riasec": {
+        "C": 0.7771,
+        "E": 0.7171,
+        "I": 0.5443,
+        "R": 0.3357,
+        "S": 0.3329,
+        "A": 0.1571
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.10",
+          "name": "Transportation",
+          "value": 4.75,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 4,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.1.a",
+          "name": "Administration and Management",
+          "value": 3.96,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.1.e",
+          "name": "Customer and Personal Service",
+          "value": 3.92,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.4.a",
+          "name": "Mathematics",
+          "value": 3.71,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.3.a",
+          "name": "Computers and Electronics",
+          "value": 3.62,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.1.c",
+          "name": "Economics and Accounting",
+          "value": 3.33,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.4.g",
+          "name": "Geography",
+          "value": 3.33,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 4,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 4,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 4,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.3",
+          "name": "Problem Sensitivity",
+          "value": 4,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.4",
+          "name": "Deductive Reasoning",
+          "value": 4,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.5",
+          "name": "Inductive Reasoning",
+          "value": 4,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.6",
+          "name": "Information Ordering",
+          "value": 4,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.b.4",
+          "name": "Speech Recognition",
+          "value": 3.88,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 4,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 3.88,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 3.88,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 3.88,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.d",
+          "name": "Monitoring",
+          "value": 3.88,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.5,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 3.38,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.e",
+          "name": "Mathematics",
+          "value": 3,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.4.a.2",
+          "name": "Communicating with Supervisors, Peers, or Subordinates",
+          "value": 4.42,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.b.6",
+          "name": "Organizing, Planning, and Prioritizing Work",
+          "value": 4.38,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.b.1",
+          "name": "Making Decisions and Solving Problems",
+          "value": 4.33,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 4.29,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.3.b.1",
+          "name": "Working with Computers",
+          "value": 4.29,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.4.a.4",
+          "name": "Establishing and Maintaining Interpersonal Relationships",
+          "value": 4.21,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.4.a.3",
+          "name": "Communicating with People Outside the Organization",
+          "value": 4.12,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.4.b.2",
+          "name": "Developing and Building Teams",
+          "value": 4.04,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.1.a.2.f",
+          "name": "Telephone Conversations",
+          "value": 5,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.2.h",
+          "name": "E-Mail",
+          "value": 4.92,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.2.l",
+          "name": "Face-to-Face Discussions with Individuals and Within Teams",
+          "value": 4.61,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.b.1.e",
+          "name": "Work With or Contribute to a Work Group or Team",
+          "value": 4.58,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.4",
+          "name": "Contact With Others",
+          "value": 4.54,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.3.d.1",
+          "name": "Time Pressure",
+          "value": 4.42,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.2.a.1.a",
+          "name": "Indoors, Environmentally Controlled",
+          "value": 4.08,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.3.a.4",
+          "name": "Freedom to Make Decisions",
+          "value": 4.04,
+          "date": "07/2016",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "workStyles": []
+    },
+    "13-2011.00": {
+      "onetSocCode": "13-2011.00",
+      "title": "Accountants and Auditors",
+      "riasec": {
+        "C": 1,
+        "E": 0.5529,
+        "I": 0.51,
+        "S": 0.3043,
+        "R": 0.1629,
+        "A": 0.1543
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.1.c",
+          "name": "Economics and Accounting",
+          "value": 4.65,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 3.96,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.4.a",
+          "name": "Mathematics",
+          "value": 3.92,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.1.a",
+          "name": "Administration and Management",
+          "value": 3.53,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.1.e",
+          "name": "Customer and Personal Service",
+          "value": 3.51,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.8.b",
+          "name": "Law and Government",
+          "value": 3.33,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.1.b",
+          "name": "Administrative",
+          "value": 3.07,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.3.a",
+          "name": "Computers and Electronics",
+          "value": 3.04,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.4",
+          "name": "Written Expression",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.3",
+          "name": "Problem Sensitivity",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.4",
+          "name": "Deductive Reasoning",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.5",
+          "name": "Inductive Reasoning",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.a.1",
+          "name": "Near Vision",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 3.5,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.d",
+          "name": "Monitoring",
+          "value": 3.38,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.e",
+          "name": "Mathematics",
+          "value": 3.25,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.12,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 4.46,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.3.b.1",
+          "name": "Working with Computers",
+          "value": 4.45,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.4.a.2",
+          "name": "Communicating with Supervisors, Peers, or Subordinates",
+          "value": 4.42,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.2.a.3",
+          "name": "Evaluating Information to Determine Compliance with Standards",
+          "value": 4.36,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.3.b.6",
+          "name": "Documenting/Recording Information",
+          "value": 4.27,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.2.a.2",
+          "name": "Processing Information",
+          "value": 4.19,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.2.b.1",
+          "name": "Making Decisions and Solving Problems",
+          "value": 4.17,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.2.b.6",
+          "name": "Organizing, Planning, and Prioritizing Work",
+          "value": 4.17,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.1.a.2.h",
+          "name": "E-Mail",
+          "value": 4.98,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.1.a.2.f",
+          "name": "Telephone Conversations",
+          "value": 4.85,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.3.b.4",
+          "name": "Importance of Being Exact or Accurate",
+          "value": 4.71,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.1.a.2.l",
+          "name": "Face-to-Face Discussions with Individuals and Within Teams",
+          "value": 4.7,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.2.a.1.a",
+          "name": "Indoors, Environmentally Controlled",
+          "value": 4.63,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.1.a.4",
+          "name": "Contact With Others",
+          "value": 4.55,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.2.d.1.a",
+          "name": "Spend Time Sitting",
+          "value": 4.5,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.3.a.2.a",
+          "name": "Impact of Decisions on Co-workers or Company Results",
+          "value": 4.33,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        }
+      ],
+      "workStyles": []
+    },
+    "15-1252.00": {
+      "onetSocCode": "15-1252.00",
+      "title": "Software Developers",
+      "riasec": {
+        "I": 0.8643,
+        "C": 0.8029,
+        "R": 0.5157,
+        "A": 0.3386,
+        "E": 0.2671,
+        "S": 0.2586
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.3.a",
+          "name": "Computers and Electronics",
+          "value": 4.75,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.4.a",
+          "name": "Mathematics",
+          "value": 3.57,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.e",
+          "name": "Customer and Personal Service",
+          "value": 3.56,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 3.27,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.6",
+          "name": "Education and Training",
+          "value": 2.84,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.3.b",
+          "name": "Engineering and Technology",
+          "value": 2.8,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.3.c",
+          "name": "Design",
+          "value": 2.7,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.9.a",
+          "name": "Telecommunications",
+          "value": 2.62,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 3.75,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 3.75,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 3.75,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.3",
+          "name": "Problem Sensitivity",
+          "value": 3.75,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.4",
+          "name": "Deductive Reasoning",
+          "value": 3.75,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.a.1",
+          "name": "Near Vision",
+          "value": 3.75,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.6",
+          "name": "Information Ordering",
+          "value": 3.62,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.4",
+          "name": "Written Expression",
+          "value": 3.5,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 3.88,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 3.5,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.5,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 3.38,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 3.25,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 3.12,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.d",
+          "name": "Monitoring",
+          "value": 3,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.e",
+          "name": "Mathematics",
+          "value": 2.75,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.3.b.1",
+          "name": "Working with Computers",
+          "value": 4.61,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.a.2",
+          "name": "Processing Information",
+          "value": 4.38,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.b.1",
+          "name": "Making Decisions and Solving Problems",
+          "value": 4.34,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.b.2",
+          "name": "Thinking Creatively",
+          "value": 4.33,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.2",
+          "name": "Communicating with Supervisors, Peers, or Subordinates",
+          "value": 4.23,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.a.4",
+          "name": "Analyzing Data or Information",
+          "value": 4.2,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.b.3",
+          "name": "Updating and Using Relevant Knowledge",
+          "value": 4.1,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.b.6",
+          "name": "Organizing, Planning, and Prioritizing Work",
+          "value": 4.06,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.2.d.1.a",
+          "name": "Spend Time Sitting",
+          "value": 4.95,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.b.1.e",
+          "name": "Work With or Contribute to a Work Group or Team",
+          "value": 4.56,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.2.h",
+          "name": "E-Mail",
+          "value": 4.5,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.3.a.4",
+          "name": "Freedom to Make Decisions",
+          "value": 4.27,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.3.b.4",
+          "name": "Importance of Being Exact or Accurate",
+          "value": 4.26,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.3.b.8",
+          "name": "Determine Tasks, Priorities and Goals",
+          "value": 4.19,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.4",
+          "name": "Contact With Others",
+          "value": 3.88,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.b.1.g",
+          "name": "Coordinate or Lead Others in Accomplishing Work Activities",
+          "value": 3.74,
+          "date": "08/2025",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "workStyles": []
+    },
+    "17-1011.00": {
+      "onetSocCode": "17-1011.00",
+      "title": "Architects, Except Landscape and Naval",
+      "riasec": {
+        "R": 0.7029,
+        "C": 0.6343,
+        "A": 0.59,
+        "I": 0.5543,
+        "E": 0.5214,
+        "S": 0.3614
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.3.c",
+          "name": "Design",
+          "value": 4.9,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.3.d",
+          "name": "Building and Construction",
+          "value": 4.81,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.8.a",
+          "name": "Public Safety and Security",
+          "value": 4.1,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.3.b",
+          "name": "Engineering and Technology",
+          "value": 4.05,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.3.a",
+          "name": "Computers and Electronics",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 3.95,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.1.a",
+          "name": "Administration and Management",
+          "value": 3.86,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.1.e",
+          "name": "Customer and Personal Service",
+          "value": 3.81,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.f.2",
+          "name": "Visualization",
+          "value": 4.12,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.4",
+          "name": "Written Expression",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.1",
+          "name": "Fluency of Ideas",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.2",
+          "name": "Originality",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.3",
+          "name": "Problem Sensitivity",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 3.88,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 3.88,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.d",
+          "name": "Monitoring",
+          "value": 3.75,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.62,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.e",
+          "name": "Mathematics",
+          "value": 3.5,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.3.b.1",
+          "name": "Working with Computers",
+          "value": 4.67,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.b.2",
+          "name": "Thinking Creatively",
+          "value": 4.48,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.3.b.2",
+          "name": "Drafting, Laying Out, and Specifying Technical Devices, Parts, and Equipment",
+          "value": 4.48,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.b.1",
+          "name": "Making Decisions and Solving Problems",
+          "value": 4.4,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 4.38,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.3.b.6",
+          "name": "Documenting/Recording Information",
+          "value": 4.29,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.b.3",
+          "name": "Updating and Using Relevant Knowledge",
+          "value": 4.25,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.4.a.2",
+          "name": "Communicating with Supervisors, Peers, or Subordinates",
+          "value": 4.24,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.1.a.2.h",
+          "name": "E-Mail",
+          "value": 4.95,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.2.f",
+          "name": "Telephone Conversations",
+          "value": 4.9,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.2.l",
+          "name": "Face-to-Face Discussions with Individuals and Within Teams",
+          "value": 4.6,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.b.1.e",
+          "name": "Work With or Contribute to a Work Group or Team",
+          "value": 4.58,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.4",
+          "name": "Contact With Others",
+          "value": 4.57,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.2.d.1.a",
+          "name": "Spend Time Sitting",
+          "value": 4.4,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.2.a.1.a",
+          "name": "Indoors, Environmentally Controlled",
+          "value": 4.3,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.b.1.g",
+          "name": "Coordinate or Lead Others in Accomplishing Work Activities",
+          "value": 4.1,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "workStyles": []
+    },
+    "17-2021.00": {
+      "onetSocCode": "17-2021.00",
+      "title": "Agricultural Engineers",
+      "riasec": {
+        "R": 0.95,
+        "I": 0.8986,
+        "C": 0.5386,
+        "E": 0.33,
+        "A": 0.3129,
+        "S": 0.2471
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.3.b",
+          "name": "Engineering and Technology",
+          "value": 4.85,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.3.a",
+          "name": "Computers and Electronics",
+          "value": 4.5,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.3.c",
+          "name": "Design",
+          "value": 4.35,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.4.a",
+          "name": "Mathematics",
+          "value": 4.25,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.4.b",
+          "name": "Physics",
+          "value": 4.25,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.4.d",
+          "name": "Biology",
+          "value": 4.1,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.3.e",
+          "name": "Mechanical",
+          "value": 3.9,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 3.85,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.4",
+          "name": "Written Expression",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.4",
+          "name": "Deductive Reasoning",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.5",
+          "name": "Inductive Reasoning",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.3",
+          "name": "Problem Sensitivity",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.6",
+          "name": "Information Ordering",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.e",
+          "name": "Mathematics",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.f",
+          "name": "Science",
+          "value": 3.38,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.25,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.3.b.1",
+          "name": "Working with Computers",
+          "value": 4.7,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.a.4",
+          "name": "Analyzing Data or Information",
+          "value": 4.55,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.b.1",
+          "name": "Making Decisions and Solving Problems",
+          "value": 4.5,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 4.45,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.b.3",
+          "name": "Updating and Using Relevant Knowledge",
+          "value": 4.45,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.a.2",
+          "name": "Processing Information",
+          "value": 4.35,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.3.b.6",
+          "name": "Documenting/Recording Information",
+          "value": 4.32,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.a.3",
+          "name": "Evaluating Information to Determine Compliance with Standards",
+          "value": 4.3,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.1.a.2.h",
+          "name": "E-Mail",
+          "value": 5,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.2.a.1.a",
+          "name": "Indoors, Environmentally Controlled",
+          "value": 4.5,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.2.l",
+          "name": "Face-to-Face Discussions with Individuals and Within Teams",
+          "value": 4.3,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.2.f",
+          "name": "Telephone Conversations",
+          "value": 4.2,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.b.1.e",
+          "name": "Work With or Contribute to a Work Group or Team",
+          "value": 4.15,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.3.b.4",
+          "name": "Importance of Being Exact or Accurate",
+          "value": 4.15,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.3.a.4",
+          "name": "Freedom to Make Decisions",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.3.b.8",
+          "name": "Determine Tasks, Priorities and Goals",
+          "value": 3.95,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "workStyles": []
+    },
+    "17-2031.00": {
+      "onetSocCode": "17-2031.00",
+      "title": "Bioengineers and Biomedical Engineers",
+      "riasec": {
+        "I": 0.9643,
+        "R": 0.7771,
+        "C": 0.64,
+        "S": 0.35,
+        "A": 0.3014,
+        "E": 0.2629
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.3.b",
+          "name": "Engineering and Technology",
+          "value": 4.57,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.3.a",
+          "name": "Computers and Electronics",
+          "value": 4.48,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.4.a",
+          "name": "Mathematics",
+          "value": 4.43,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.3.c",
+          "name": "Design",
+          "value": 3.95,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.4.b",
+          "name": "Physics",
+          "value": 3.95,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.4.d",
+          "name": "Biology",
+          "value": 3.82,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 3.78,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.5.a",
+          "name": "Medicine and Dentistry",
+          "value": 3.74,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.b.5",
+          "name": "Inductive Reasoning",
+          "value": 4.12,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.4",
+          "name": "Written Expression",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.3",
+          "name": "Problem Sensitivity",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.4",
+          "name": "Deductive Reasoning",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.6",
+          "name": "Information Ordering",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.e",
+          "name": "Mathematics",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.f",
+          "name": "Science",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.3.b.1",
+          "name": "Working with Computers",
+          "value": 4.7,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.a.4",
+          "name": "Analyzing Data or Information",
+          "value": 4.61,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.b.1",
+          "name": "Making Decisions and Solving Problems",
+          "value": 4.45,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 4.39,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.a.2",
+          "name": "Processing Information",
+          "value": 4.35,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.b.3",
+          "name": "Updating and Using Relevant Knowledge",
+          "value": 4.35,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.b.2",
+          "name": "Thinking Creatively",
+          "value": 4.26,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.4.a.2",
+          "name": "Communicating with Supervisors, Peers, or Subordinates",
+          "value": 4.22,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.1.a.2.h",
+          "name": "E-Mail",
+          "value": 4.87,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.2.a.1.a",
+          "name": "Indoors, Environmentally Controlled",
+          "value": 4.57,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.b.1.e",
+          "name": "Work With or Contribute to a Work Group or Team",
+          "value": 4.39,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.3.b.4",
+          "name": "Importance of Being Exact or Accurate",
+          "value": 4.35,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.2.l",
+          "name": "Face-to-Face Discussions with Individuals and Within Teams",
+          "value": 4.3,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.2.d.1.a",
+          "name": "Spend Time Sitting",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.3.a.4",
+          "name": "Freedom to Make Decisions",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.3.b.8",
+          "name": "Determine Tasks, Priorities and Goals",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "workStyles": []
+    },
+    "17-2051.00": {
+      "onetSocCode": "17-2051.00",
+      "title": "Civil Engineers",
+      "riasec": {
+        "R": 0.9186,
+        "I": 0.7357,
+        "C": 0.6586,
+        "E": 0.38,
+        "A": 0.3157,
+        "S": 0.2414
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.3.c",
+          "name": "Design",
+          "value": 4.7,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.3.b",
+          "name": "Engineering and Technology",
+          "value": 4.67,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.3.d",
+          "name": "Building and Construction",
+          "value": 4.53,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.4.a",
+          "name": "Mathematics",
+          "value": 4.48,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.4.b",
+          "name": "Physics",
+          "value": 3.71,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.1.a",
+          "name": "Administration and Management",
+          "value": 3.62,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.1.e",
+          "name": "Customer and Personal Service",
+          "value": 3.43,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.4",
+          "name": "Written Expression",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.3",
+          "name": "Problem Sensitivity",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.4",
+          "name": "Deductive Reasoning",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.5",
+          "name": "Inductive Reasoning",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.6",
+          "name": "Information Ordering",
+          "value": 3.88,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 3.88,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 3.88,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.e",
+          "name": "Mathematics",
+          "value": 3.88,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 3.88,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.f",
+          "name": "Science",
+          "value": 3.75,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 3.25,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.25,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 4.57,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.b.1",
+          "name": "Making Decisions and Solving Problems",
+          "value": 4.45,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.4.a.2",
+          "name": "Communicating with Supervisors, Peers, or Subordinates",
+          "value": 4.29,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.a.3",
+          "name": "Evaluating Information to Determine Compliance with Standards",
+          "value": 4.14,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.b.3",
+          "name": "Updating and Using Relevant Knowledge",
+          "value": 4.14,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.3.b.2",
+          "name": "Drafting, Laying Out, and Specifying Technical Devices, Parts, and Equipment",
+          "value": 4.14,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.3.b.1",
+          "name": "Working with Computers",
+          "value": 4.1,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.4.b.1",
+          "name": "Coordinating the Work and Activities of Others",
+          "value": 4.1,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.1.a.2.h",
+          "name": "E-Mail",
+          "value": 5,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.2.f",
+          "name": "Telephone Conversations",
+          "value": 4.9,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.2.l",
+          "name": "Face-to-Face Discussions with Individuals and Within Teams",
+          "value": 4.76,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.2.a.1.a",
+          "name": "Indoors, Environmentally Controlled",
+          "value": 4.4,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.b.1.e",
+          "name": "Work With or Contribute to a Work Group or Team",
+          "value": 4.38,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.3.b.4",
+          "name": "Importance of Being Exact or Accurate",
+          "value": 4.38,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.4",
+          "name": "Contact With Others",
+          "value": 4.19,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.2.d.1.a",
+          "name": "Spend Time Sitting",
+          "value": 4.14,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "workStyles": []
+    },
+    "19-3011.00": {
+      "onetSocCode": "19-3011.00",
+      "title": "Economists",
+      "riasec": {
+        "I": 1,
+        "C": 0.6471,
+        "E": 0.5614,
+        "A": 0.3471,
+        "S": 0.3429,
+        "R": 0.1929
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.4.a",
+          "name": "Mathematics",
+          "value": 4.54,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.1.c",
+          "name": "Economics and Accounting",
+          "value": 4.46,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 4.04,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.3.a",
+          "name": "Computers and Electronics",
+          "value": 3.78,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.6",
+          "name": "Education and Training",
+          "value": 3.12,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.9.b",
+          "name": "Communications and Media",
+          "value": 2.75,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.8.b",
+          "name": "Law and Government",
+          "value": 2.67,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.1.a",
+          "name": "Administration and Management",
+          "value": 2.62,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 4.12,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.5",
+          "name": "Inductive Reasoning",
+          "value": 4.12,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.c.1",
+          "name": "Mathematical Reasoning",
+          "value": 4.12,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.4",
+          "name": "Written Expression",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.4",
+          "name": "Deductive Reasoning",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.b.5",
+          "name": "Speech Clarity",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 4.12,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.e",
+          "name": "Mathematics",
+          "value": 4.12,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 4.12,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.c",
+          "name": "Learning Strategies",
+          "value": 3.12,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.2.a.4",
+          "name": "Analyzing Data or Information",
+          "value": 4.92,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 4.75,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.3.b.1",
+          "name": "Working with Computers",
+          "value": 4.75,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.a.2",
+          "name": "Processing Information",
+          "value": 4.65,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.4.a.1",
+          "name": "Interpreting the Meaning of Information for Others",
+          "value": 4.46,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.b.3",
+          "name": "Updating and Using Relevant Knowledge",
+          "value": 4.43,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.4.a.2",
+          "name": "Communicating with Supervisors, Peers, or Subordinates",
+          "value": 4.26,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.4.a.3",
+          "name": "Communicating with People Outside the Organization",
+          "value": 4.17,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.1.a.2.h",
+          "name": "E-Mail",
+          "value": 4.92,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.2.d.1.a",
+          "name": "Spend Time Sitting",
+          "value": 4.71,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.3.a.4",
+          "name": "Freedom to Make Decisions",
+          "value": 4.61,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.2.l",
+          "name": "Face-to-Face Discussions with Individuals and Within Teams",
+          "value": 4.43,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.2.f",
+          "name": "Telephone Conversations",
+          "value": 4.42,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.2.a.1.a",
+          "name": "Indoors, Environmentally Controlled",
+          "value": 4.25,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.3.b.8",
+          "name": "Determine Tasks, Priorities and Goals",
+          "value": 4.21,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.3.b.4",
+          "name": "Importance of Being Exact or Accurate",
+          "value": 4.08,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "workStyles": []
+    },
+    "19-3033.00": {
+      "onetSocCode": "19-3033.00",
+      "title": "Clinical and Counseling Psychologists",
+      "riasec": {
+        "S": 0.9386,
+        "I": 0.7971,
+        "C": 0.4986,
+        "A": 0.4371,
+        "E": 0.3786,
+        "R": 0.15
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.4.e",
+          "name": "Psychology",
+          "value": 5,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.5.b",
+          "name": "Therapy and Counseling",
+          "value": 5,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 4.12,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.6",
+          "name": "Education and Training",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.1.e",
+          "name": "Customer and Personal Service",
+          "value": 3.72,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.4.f",
+          "name": "Sociology and Anthropology",
+          "value": 3.6,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.8.b",
+          "name": "Law and Government",
+          "value": 2.84,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.1.a",
+          "name": "Administration and Management",
+          "value": 2.8,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 4.62,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 4.5,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 4.38,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.3",
+          "name": "Problem Sensitivity",
+          "value": 4.38,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.4",
+          "name": "Written Expression",
+          "value": 4.25,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.4",
+          "name": "Deductive Reasoning",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.5",
+          "name": "Inductive Reasoning",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.b.4",
+          "name": "Speech Recognition",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 4.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 4.25,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 4.25,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 4.25,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 4.12,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.d",
+          "name": "Monitoring",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.c",
+          "name": "Learning Strategies",
+          "value": 3.62,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.4.a.4",
+          "name": "Establishing and Maintaining Interpersonal Relationships",
+          "value": 4.68,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.b.1",
+          "name": "Making Decisions and Solving Problems",
+          "value": 4.62,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.4.a.5",
+          "name": "Assisting and Caring for Others",
+          "value": 4.6,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.3.b.6",
+          "name": "Documenting/Recording Information",
+          "value": 4.4,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 4.36,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.b.3",
+          "name": "Updating and Using Relevant Knowledge",
+          "value": 4.33,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.a.3",
+          "name": "Evaluating Information to Determine Compliance with Standards",
+          "value": 4.04,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.a.4",
+          "name": "Analyzing Data or Information",
+          "value": 4.04,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.1.a.2.l",
+          "name": "Face-to-Face Discussions with Individuals and Within Teams",
+          "value": 4.8,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.2.d.1.a",
+          "name": "Spend Time Sitting",
+          "value": 4.78,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.3.b.8",
+          "name": "Determine Tasks, Priorities and Goals",
+          "value": 4.68,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.2.h",
+          "name": "E-Mail",
+          "value": 4.64,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.3.a.4",
+          "name": "Freedom to Make Decisions",
+          "value": 4.64,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.4",
+          "name": "Contact With Others",
+          "value": 4.52,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.2.a.1.a",
+          "name": "Indoors, Environmentally Controlled",
+          "value": 4.46,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.2.f",
+          "name": "Telephone Conversations",
+          "value": 4.4,
+          "date": "08/2024",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "workStyles": []
+    },
+    "19-4012.00": {
+      "onetSocCode": "19-4012.00",
+      "title": "Agricultural Technicians",
+      "riasec": {
+        "R": 0.9743,
+        "I": 0.6529,
+        "C": 0.6086,
+        "E": 0.2843,
+        "S": 0.2086,
+        "A": 0.1429
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.2.b",
+          "name": "Food Production",
+          "value": 3.61,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.4.d",
+          "name": "Biology",
+          "value": 3.55,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.4.c",
+          "name": "Chemistry",
+          "value": 3.4,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.3.e",
+          "name": "Mechanical",
+          "value": 3.36,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.4.a",
+          "name": "Mathematics",
+          "value": 3.15,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.a",
+          "name": "Administration and Management",
+          "value": 3.01,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 2.96,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.6",
+          "name": "Education and Training",
+          "value": 2.87,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.3",
+          "name": "Problem Sensitivity",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.a.1",
+          "name": "Near Vision",
+          "value": 3.62,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 3.5,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.4",
+          "name": "Written Expression",
+          "value": 3.38,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.4",
+          "name": "Deductive Reasoning",
+          "value": 3.38,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.5",
+          "name": "Inductive Reasoning",
+          "value": 3.25,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 3.38,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 3.25,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 3.25,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 3.12,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.12,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.d",
+          "name": "Monitoring",
+          "value": 3.12,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 3,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.e",
+          "name": "Mathematics",
+          "value": 2.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.3.a.4",
+          "name": "Operating Vehicles, Mechanized Devices, or Equipment",
+          "value": 4.08,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.1.b.1",
+          "name": "Identifying Objects, Actions, and Events",
+          "value": 3.84,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.3.b.6",
+          "name": "Documenting/Recording Information",
+          "value": 3.83,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.2",
+          "name": "Communicating with Supervisors, Peers, or Subordinates",
+          "value": 3.8,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 3.72,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.3.a.1",
+          "name": "Performing General Physical Activities",
+          "value": 3.72,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.a.2",
+          "name": "Processing Information",
+          "value": 3.68,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.b.1",
+          "name": "Making Decisions and Solving Problems",
+          "value": 3.67,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.1.a.2.l",
+          "name": "Face-to-Face Discussions with Individuals and Within Teams",
+          "value": 4.6,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.2.d.1.g",
+          "name": "Spend Time Using Your Hands to Handle, Control, or Feel Objects, Tools, or Controls",
+          "value": 4.5,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.2.a.1.c",
+          "name": "Outdoors, Exposed to All Weather Conditions",
+          "value": 4.32,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.2.h",
+          "name": "E-Mail",
+          "value": 4.27,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.3.b.4",
+          "name": "Importance of Being Exact or Accurate",
+          "value": 4.03,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.2.a.1.f",
+          "name": "In an Enclosed Vehicle or Operate Enclosed Equipment",
+          "value": 4.01,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.2.e.1.d",
+          "name": "Wear Common Protective or Safety Equipment such as Safety Shoes, Glasses, Gloves, Hearing Protection, Hard Hats, or Life Jackets",
+          "value": 3.97,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.4",
+          "name": "Contact With Others",
+          "value": 3.95,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "workStyles": []
+    },
+    "23-1011.00": {
+      "onetSocCode": "23-1011.00",
+      "title": "Lawyers",
+      "riasec": {
+        "E": 0.7871,
+        "C": 0.6557,
+        "I": 0.6257,
+        "S": 0.4971,
+        "A": 0.3429,
+        "R": 0.16
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.8.b",
+          "name": "Law and Government",
+          "value": 4.98,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 4.66,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.e",
+          "name": "Customer and Personal Service",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.b",
+          "name": "Administrative",
+          "value": 3.2,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.3.a",
+          "name": "Computers and Electronics",
+          "value": 3.07,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.9.b",
+          "name": "Communications and Media",
+          "value": 3.02,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.a",
+          "name": "Administration and Management",
+          "value": 2.77,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.6",
+          "name": "Education and Training",
+          "value": 2.58,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 4.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 4.62,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 4.62,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.4",
+          "name": "Written Expression",
+          "value": 4.5,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.b.5",
+          "name": "Speech Clarity",
+          "value": 4.38,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.4",
+          "name": "Deductive Reasoning",
+          "value": 4.12,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.3",
+          "name": "Problem Sensitivity",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.5",
+          "name": "Inductive Reasoning",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 4.62,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 4.5,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 4.5,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 4.5,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 4.25,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.d",
+          "name": "Monitoring",
+          "value": 3.38,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.c",
+          "name": "Learning Strategies",
+          "value": 3.12,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 4.62,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.2",
+          "name": "Communicating with Supervisors, Peers, or Subordinates",
+          "value": 4.59,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.b.1",
+          "name": "Making Decisions and Solving Problems",
+          "value": 4.57,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.a.3",
+          "name": "Evaluating Information to Determine Compliance with Standards",
+          "value": 4.51,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.7",
+          "name": "Resolving Conflicts and Negotiating with Others",
+          "value": 4.49,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.1",
+          "name": "Interpreting the Meaning of Information for Others",
+          "value": 4.43,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.4",
+          "name": "Establishing and Maintaining Interpersonal Relationships",
+          "value": 4.35,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.3",
+          "name": "Communicating with People Outside the Organization",
+          "value": 4.24,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.1.a.2.h",
+          "name": "E-Mail",
+          "value": 4.96,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.2.f",
+          "name": "Telephone Conversations",
+          "value": 4.89,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.3.b.8",
+          "name": "Determine Tasks, Priorities and Goals",
+          "value": 4.76,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.4",
+          "name": "Contact With Others",
+          "value": 4.75,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.3.a.4",
+          "name": "Freedom to Make Decisions",
+          "value": 4.67,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.2.d.1.a",
+          "name": "Spend Time Sitting",
+          "value": 4.55,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.3.a.2.a",
+          "name": "Impact of Decisions on Co-workers or Company Results",
+          "value": 4.48,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.2.l",
+          "name": "Face-to-Face Discussions with Individuals and Within Teams",
+          "value": 4.44,
+          "date": "08/2024",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "workStyles": []
+    },
+    "27-3023.00": {
+      "onetSocCode": "27-3023.00",
+      "title": "News Analysts, Reporters, and Journalists",
+      "riasec": {
+        "A": 0.7271,
+        "I": 0.5943,
+        "E": 0.5643,
+        "C": 0.52,
+        "S": 0.4,
+        "R": 0.21
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 4.85,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.9.b",
+          "name": "Communications and Media",
+          "value": 4.71,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.8.b",
+          "name": "Law and Government",
+          "value": 3.7,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.3.a",
+          "name": "Computers and Electronics",
+          "value": 3.4,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.9.a",
+          "name": "Telecommunications",
+          "value": 3.38,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.1.e",
+          "name": "Customer and Personal Service",
+          "value": 3.17,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.4.g",
+          "name": "Geography",
+          "value": 3.04,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "2.C.8.a",
+          "name": "Public Safety and Security",
+          "value": 2.96,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.4",
+          "name": "Written Expression",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.b.5",
+          "name": "Speech Clarity",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.b.4",
+          "name": "Speech Recognition",
+          "value": 3.75,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.a.1",
+          "name": "Near Vision",
+          "value": 3.5,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.3",
+          "name": "Problem Sensitivity",
+          "value": 3.38,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 4.12,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 4,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 3.88,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 3.38,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.25,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.d",
+          "name": "Monitoring",
+          "value": 3,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.c",
+          "name": "Learning Strategies",
+          "value": 2.38,
+          "date": "08/2024",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 4.79,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.4.a.3",
+          "name": "Communicating with People Outside the Organization",
+          "value": 4.46,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.4.a.1",
+          "name": "Interpreting the Meaning of Information for Others",
+          "value": 4.34,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.1.b.1",
+          "name": "Identifying Objects, Actions, and Events",
+          "value": 4.17,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.4.a.4",
+          "name": "Establishing and Maintaining Interpersonal Relationships",
+          "value": 4.09,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.4.a.2",
+          "name": "Communicating with Supervisors, Peers, or Subordinates",
+          "value": 4.08,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.4.a.8",
+          "name": "Performing for or Working Directly with the Public",
+          "value": 3.94,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.A.2.b.3",
+          "name": "Updating and Using Relevant Knowledge",
+          "value": 3.92,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.3.d.1",
+          "name": "Time Pressure",
+          "value": 4.89,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.1.a.2.h",
+          "name": "E-Mail",
+          "value": 4.83,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.1.a.4",
+          "name": "Contact With Others",
+          "value": 4.63,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.3.a.4",
+          "name": "Freedom to Make Decisions",
+          "value": 4.56,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.3.b.4",
+          "name": "Importance of Being Exact or Accurate",
+          "value": 4.54,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.1.a.2.f",
+          "name": "Telephone Conversations",
+          "value": 4.53,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.1.a.2.l",
+          "name": "Face-to-Face Discussions with Individuals and Within Teams",
+          "value": 4.49,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        },
+        {
+          "elementId": "4.C.2.a.1.a",
+          "name": "Indoors, Environmentally Controlled",
+          "value": 4.43,
+          "date": "11/2020",
+          "domainSource": "Analyst - Transition"
+        }
+      ],
+      "workStyles": []
+    },
+    "29-1031.00": {
+      "onetSocCode": "29-1031.00",
+      "title": "Dietitians and Nutritionists",
+      "riasec": {
+        "S": 0.7857,
+        "I": 0.6857,
+        "E": 0.4886,
+        "C": 0.4786,
+        "R": 0.4329,
+        "A": 0.3429
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.4.d",
+          "name": "Biology",
+          "value": 4.41,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.5.a",
+          "name": "Medicine and Dentistry",
+          "value": 4.27,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 4.13,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.5.b",
+          "name": "Therapy and Counseling",
+          "value": 4.07,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.1.e",
+          "name": "Customer and Personal Service",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.4.e",
+          "name": "Psychology",
+          "value": 3.87,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.6",
+          "name": "Education and Training",
+          "value": 3.8,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.4.a",
+          "name": "Mathematics",
+          "value": 3.63,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.4",
+          "name": "Written Expression",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.3",
+          "name": "Problem Sensitivity",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.4",
+          "name": "Deductive Reasoning",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.5",
+          "name": "Inductive Reasoning",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.b.5",
+          "name": "Speech Clarity",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 3.88,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.d",
+          "name": "Monitoring",
+          "value": 3.88,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.c",
+          "name": "Learning Strategies",
+          "value": 3.75,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.62,
+          "date": "08/2021",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.4.a.5",
+          "name": "Assisting and Caring for Others",
+          "value": 4.55,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 4.5,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.b.3",
+          "name": "Updating and Using Relevant Knowledge",
+          "value": 4.37,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.3.b.6",
+          "name": "Documenting/Recording Information",
+          "value": 4.23,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.3.b.1",
+          "name": "Working with Computers",
+          "value": 4.17,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.4.a.1",
+          "name": "Interpreting the Meaning of Information for Others",
+          "value": 4.17,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.b.1",
+          "name": "Making Decisions and Solving Problems",
+          "value": 4.03,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.4.a.4",
+          "name": "Establishing and Maintaining Interpersonal Relationships",
+          "value": 4.03,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.1.a.2.h",
+          "name": "E-Mail",
+          "value": 4.9,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.2.l",
+          "name": "Face-to-Face Discussions with Individuals and Within Teams",
+          "value": 4.89,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.2.f",
+          "name": "Telephone Conversations",
+          "value": 4.63,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.2.a.1.a",
+          "name": "Indoors, Environmentally Controlled",
+          "value": 4.6,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.4",
+          "name": "Contact With Others",
+          "value": 4.59,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.3.a.4",
+          "name": "Freedom to Make Decisions",
+          "value": 4.55,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.3.b.8",
+          "name": "Determine Tasks, Priorities and Goals",
+          "value": 4.2,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.3.b.4",
+          "name": "Importance of Being Exact or Accurate",
+          "value": 4,
+          "date": "08/2021",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "workStyles": []
+    },
+    "29-1131.00": {
+      "onetSocCode": "29-1131.00",
+      "title": "Veterinarians",
+      "riasec": {
+        "R": 0.8543,
+        "I": 0.8543,
+        "C": 0.4957,
+        "S": 0.4929,
+        "E": 0.2429,
+        "A": 0.1429
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.4.d",
+          "name": "Biology",
+          "value": 4.69,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.5.a",
+          "name": "Medicine and Dentistry",
+          "value": 4.69,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.e",
+          "name": "Customer and Personal Service",
+          "value": 4.49,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 4.34,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.4.a",
+          "name": "Mathematics",
+          "value": 3.71,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.6",
+          "name": "Education and Training",
+          "value": 3.46,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.4.c",
+          "name": "Chemistry",
+          "value": 3.37,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.f",
+          "name": "Personnel and Human Resources",
+          "value": 3.34,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 4.12,
+          "date": "08/2020",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 4.12,
+          "date": "08/2020",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 4.12,
+          "date": "08/2020",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.3",
+          "name": "Problem Sensitivity",
+          "value": 4,
+          "date": "08/2020",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.4",
+          "name": "Deductive Reasoning",
+          "value": 4,
+          "date": "08/2020",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.5",
+          "name": "Inductive Reasoning",
+          "value": 4,
+          "date": "08/2020",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.a.1",
+          "name": "Near Vision",
+          "value": 4,
+          "date": "08/2020",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.6",
+          "name": "Information Ordering",
+          "value": 3.75,
+          "date": "08/2020",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 4.12,
+          "date": "08/2020",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 4.12,
+          "date": "08/2020",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 4,
+          "date": "08/2020",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 3.88,
+          "date": "08/2020",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.f",
+          "name": "Science",
+          "value": 3.88,
+          "date": "08/2020",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 3.88,
+          "date": "08/2020",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 3.5,
+          "date": "08/2020",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.d",
+          "name": "Monitoring",
+          "value": 3.25,
+          "date": "08/2020",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.2.b.1",
+          "name": "Making Decisions and Solving Problems",
+          "value": 4.81,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 4.52,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.b.3",
+          "name": "Updating and Using Relevant Knowledge",
+          "value": 4.5,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.1.b.1",
+          "name": "Identifying Objects, Actions, and Events",
+          "value": 4.46,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.3.b.6",
+          "name": "Documenting/Recording Information",
+          "value": 4.26,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.8",
+          "name": "Performing for or Working Directly with the Public",
+          "value": 4.25,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.4",
+          "name": "Establishing and Maintaining Interpersonal Relationships",
+          "value": 4.06,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.1",
+          "name": "Interpreting the Meaning of Information for Others",
+          "value": 4.04,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.1.a.2.l",
+          "name": "Face-to-Face Discussions with Individuals and Within Teams",
+          "value": 5,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.2.f",
+          "name": "Telephone Conversations",
+          "value": 4.97,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.2.a.1.a",
+          "name": "Indoors, Environmentally Controlled",
+          "value": 4.92,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.4",
+          "name": "Contact With Others",
+          "value": 4.86,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.b.1.e",
+          "name": "Work With or Contribute to a Work Group or Team",
+          "value": 4.82,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.3.a.2.b",
+          "name": "Frequency of Decision Making",
+          "value": 4.78,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.3.a.4",
+          "name": "Freedom to Make Decisions",
+          "value": 4.76,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.b.1.f",
+          "name": "Deal With External Customers or the Public in General",
+          "value": 4.65,
+          "date": "08/2020",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "workStyles": []
+    },
+    "35-1011.00": {
+      "onetSocCode": "35-1011.00",
+      "title": "Chefs and Head Cooks",
+      "riasec": {
+        "E": 0.7329,
+        "R": 0.6914,
+        "C": 0.6214,
+        "S": 0.4214,
+        "A": 0.3886,
+        "I": 0.24
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.2.b",
+          "name": "Food Production",
+          "value": 4.12,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.2.a",
+          "name": "Production and Processing",
+          "value": 4.04,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.1.e",
+          "name": "Customer and Personal Service",
+          "value": 3.92,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.1.f",
+          "name": "Personnel and Human Resources",
+          "value": 3.74,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.1.a",
+          "name": "Administration and Management",
+          "value": 3.67,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.4.a",
+          "name": "Mathematics",
+          "value": 3.54,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.6",
+          "name": "Education and Training",
+          "value": 3.5,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 3.33,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 4.12,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.3",
+          "name": "Problem Sensitivity",
+          "value": 4.12,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 4,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.6",
+          "name": "Information Ordering",
+          "value": 4,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.4",
+          "name": "Deductive Reasoning",
+          "value": 3.88,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.b.5",
+          "name": "Speech Clarity",
+          "value": 3.88,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.5",
+          "name": "Inductive Reasoning",
+          "value": 3.75,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.a.1",
+          "name": "Near Vision",
+          "value": 3.75,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.2.d",
+          "name": "Monitoring",
+          "value": 4,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 3.88,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 3.75,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 3.62,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 3.5,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.38,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.c",
+          "name": "Learning Strategies",
+          "value": 3.25,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 3.12,
+          "date": "08/2025",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.4.b.3",
+          "name": "Training and Teaching Others",
+          "value": 4.13,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.4.b.1",
+          "name": "Coordinating the Work and Activities of Others",
+          "value": 4.08,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.4.b.2",
+          "name": "Developing and Building Teams",
+          "value": 4.04,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.b.6",
+          "name": "Organizing, Planning, and Prioritizing Work",
+          "value": 3.92,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 3.91,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.4.b.5",
+          "name": "Coaching and Developing Others",
+          "value": 3.91,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.2.b.1",
+          "name": "Making Decisions and Solving Problems",
+          "value": 3.88,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.A.4.b.4",
+          "name": "Guiding, Directing, and Motivating Subordinates",
+          "value": 3.88,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.1.a.2.h",
+          "name": "E-Mail",
+          "value": 4.88,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.2.l",
+          "name": "Face-to-Face Discussions with Individuals and Within Teams",
+          "value": 4.87,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.2.a.1.a",
+          "name": "Indoors, Environmentally Controlled",
+          "value": 4.79,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.3.d.1",
+          "name": "Time Pressure",
+          "value": 4.75,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.2.e.1.d",
+          "name": "Wear Common Protective or Safety Equipment such as Safety Shoes, Glasses, Gloves, Hearing Protection, Hard Hats, or Life Jackets",
+          "value": 4.67,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.2.d.1.b",
+          "name": "Spend Time Standing",
+          "value": 4.62,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.3.a.2.b",
+          "name": "Frequency of Decision Making",
+          "value": 4.61,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        },
+        {
+          "elementId": "4.C.1.a.4",
+          "name": "Contact With Others",
+          "value": 4.58,
+          "date": "08/2025",
+          "domainSource": "Occupational Expert"
+        }
+      ],
+      "workStyles": []
+    },
+    "41-3041.00": {
+      "onetSocCode": "41-3041.00",
+      "title": "Travel Agents",
+      "riasec": {
+        "E": 0.8257,
+        "C": 0.8243,
+        "S": 0.6157,
+        "A": 0.2714,
+        "I": 0.2157,
+        "R": 0.1643
+      },
+      "knowledge": [
+        {
+          "elementId": "2.C.1.e",
+          "name": "Customer and Personal Service",
+          "value": 4.25,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.7.a",
+          "name": "English Language",
+          "value": 3.97,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.d",
+          "name": "Sales and Marketing",
+          "value": 3.88,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.4.g",
+          "name": "Geography",
+          "value": 3.43,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.3.a",
+          "name": "Computers and Electronics",
+          "value": 3.36,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.1.b",
+          "name": "Administrative",
+          "value": 3.17,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.9.a",
+          "name": "Telecommunications",
+          "value": 3.17,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "2.C.10",
+          "name": "Transportation",
+          "value": 3.09,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "abilities": [
+        {
+          "elementId": "1.A.4.b.4",
+          "name": "Speech Recognition",
+          "value": 4.12,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.1",
+          "name": "Oral Comprehension",
+          "value": 4,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.b.5",
+          "name": "Speech Clarity",
+          "value": 4,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.2",
+          "name": "Written Comprehension",
+          "value": 3.88,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.a.3",
+          "name": "Oral Expression",
+          "value": 3.88,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.4.a.1",
+          "name": "Near Vision",
+          "value": 3.88,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.3",
+          "name": "Problem Sensitivity",
+          "value": 3.5,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "1.A.1.b.6",
+          "name": "Information Ordering",
+          "value": 3.25,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        }
+      ],
+      "skills": [
+        {
+          "elementId": "2.A.1.b",
+          "name": "Active Listening",
+          "value": 4.12,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.a",
+          "name": "Reading Comprehension",
+          "value": 4,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.d",
+          "name": "Speaking",
+          "value": 4,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.c",
+          "name": "Writing",
+          "value": 3.12,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.a",
+          "name": "Critical Thinking",
+          "value": 3.12,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.b",
+          "name": "Active Learning",
+          "value": 3.12,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.2.d",
+          "name": "Monitoring",
+          "value": 3,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        },
+        {
+          "elementId": "2.A.1.e",
+          "name": "Mathematics",
+          "value": 2.88,
+          "date": "07/2016",
+          "domainSource": "Analyst"
+        }
+      ],
+      "activities": [
+        {
+          "elementId": "4.A.3.b.1",
+          "name": "Working with Computers",
+          "value": 4.6,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.1.a.1",
+          "name": "Getting Information",
+          "value": 4.56,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.3",
+          "name": "Communicating with People Outside the Organization",
+          "value": 4.23,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.8",
+          "name": "Performing for or Working Directly with the Public",
+          "value": 4.07,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.4",
+          "name": "Establishing and Maintaining Interpersonal Relationships",
+          "value": 3.93,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.a.2",
+          "name": "Processing Information",
+          "value": 3.89,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.2.b.3",
+          "name": "Updating and Using Relevant Knowledge",
+          "value": 3.8,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.A.4.a.2",
+          "name": "Communicating with Supervisors, Peers, or Subordinates",
+          "value": 3.78,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "contexts": [
+        {
+          "elementId": "4.C.1.a.2.f",
+          "name": "Telephone Conversations",
+          "value": 5,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.2.h",
+          "name": "E-Mail",
+          "value": 4.98,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.2.d.1.a",
+          "name": "Spend Time Sitting",
+          "value": 4.86,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.3.b.4",
+          "name": "Importance of Being Exact or Accurate",
+          "value": 4.78,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.4",
+          "name": "Contact With Others",
+          "value": 4.45,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.b.1.f",
+          "name": "Deal With External Customers or the Public in General",
+          "value": 4.43,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.3.b.8",
+          "name": "Determine Tasks, Priorities and Goals",
+          "value": 4.32,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        },
+        {
+          "elementId": "4.C.1.a.2.j",
+          "name": "Written Letters and Memos",
+          "value": 4.06,
+          "date": "07/2016",
+          "domainSource": "Incumbent"
+        }
+      ],
+      "workStyles": []
+    }
+  }
+}

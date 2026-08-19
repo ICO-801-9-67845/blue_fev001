@@ -8,9 +8,19 @@ RIASEC y las taxonomías sustentan la estructura. La combinación final es un mo
 
 La base teórica incluye la formulación original de [Social Cognitive Career Theory de Lent, Brown y Hackett (1994)](https://doi.org/10.1006/jvbe.1994.1027), el meta-análisis de [Nye et al. (2012)](https://pubmed.ncbi.nlm.nih.gov/26168474/) y la revisión de [de Vries, Meeter y Huizinga (2024)](https://doi.org/10.1016/j.edurev.2024.100619). Esta última encuentra asociaciones positivas pequeñas y heterogeneidad metodológica; por ello Blue usa congruencia como apoyo a la reflexión y no como probabilidad de éxito.
 
+## Datos externos reales
+
+- CMPE 2016 e ISCED-F 2013 se almacenan por separado; las coincidencias de código no implican que ambas taxonomías sean intercambiables.
+- El snapshot compacto `onetVocationalSnapshot.json` se derivó de O*NET Database 30.3. Contiene 21 ocupaciones utilizadas y, para cada una, RIASEC, los ocho elementos principales de Knowledge, Essential Skills, Abilities, Work Activities, Work Context y Work Styles. El ZIP oficial tuvo SHA-256 `78703906d5eb92faaa3d912164bbee7706658d85630143d9716df040f9a9f6aa`.
+- Solo los perfiles con `occupationalMappings` citan O*NET en provenance. Un fallback declara expresamente `O*NET not used`.
+
+## Decisiones de ingeniería de Blue
+
+Los pesos, thresholds, bandas de recencia, reglas de etapa, diversidad, pregunta discriminante y política de confianza son decisiones calibrables de Blue. No provienen directamente de CMPE, ISCED-F u O*NET.
+
 ## Mapping y procedencia
 
-El generador procesa IDs y nombres canónicos en orden estable y aplica reglas explícitas de familia/campo. La jerarquía es evidencia específica revisada → familia/especialidad → campo CMPE/ISCED. En v2 no se afirma equivalencia O*NET-SOC: los mappings ocupacionales quedan vacíos y los perfiles se marcan `medium` o `low`, con revisión pendiente. Cobertura no significa confianza perfecta.
+El generador procesa IDs y nombres canónicos en orden estable. Las excepciones semánticas preceden a reglas generales: veterinaria→0841, psicología→0313 y protección civil→1032, entre otras. La jerarquía es mapping programa–ocupación defendible → agregado de varias ocupaciones → fallback de campo. Un mapping O*NET único se marca high, un agregado defendible medium y un fallback low/revisión experta. Cobertura no significa confianza perfecta.
 
 ## Evidencia, correcciones y migración
 
@@ -40,4 +50,4 @@ Los 462 perfiles se rankean en memoria; solo pocos resultados llegan al LLM. El 
 
 ## Limitaciones
 
-Los perfiles generados requieren revisión experta individual. No hay mappings O*NET-SOC high-confidence en este snapshot. CMPE/ISCED se asignan a campo amplio. Los pesos deben recalibrarse con evaluación de calidad y sesgos; los scores expresan orden de afinidad, no probabilidades.
+Los fallbacks requieren revisión experta individual. Un título académico puede conducir a varias ocupaciones y O*NET describe el mercado estadounidense, no requisitos académicos mexicanos. Los pesos deben recalibrarse con evaluación de calidad y sesgos; los scores expresan orden de afinidad, no probabilidades.

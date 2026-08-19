@@ -54,8 +54,10 @@ import {
 import { rankVocationalFlowCandidates } from "./vocationalRankingIntegrationService.js";
 import {
   diversifyVocationalPresentation,
+  extractAcademicStageV2,
   extractVocationalEvidenceV2,
   migrateVocationalProfileV2,
+  nextBestVocationalQuestion,
   rankFullVocationalCatalog,
   toCanonicalCareerV2,
 } from "./vocationalRankingV2Service.js";
@@ -700,7 +702,8 @@ async function createUserMessageWithVocationalProfile(
     revision: (currentState.vocationalProfileV2?.revision || 0) + 1,
     observedAt: new Date().toISOString(),
   });
-  if (!hasVocationalOperations(extraction) && provisionalV2Signals.length === 0) {
+  const provisionalStage = extractAcademicStageV2(content);
+  if (!hasVocationalOperations(extraction) && provisionalV2Signals.length === 0 && Object.keys(provisionalStage).length === 0) {
     const userMessage = await createMessage({
       chatId: chat.id,
       role: "user",
@@ -718,7 +721,7 @@ async function createUserMessageWithVocationalProfile(
       nextRevision: currentState.vocationalProfile.revision + 1,
       observedAt: userMessage.createdAt.toISOString(),
     });
-    if (!applied.changed && provisionalV2Signals.length === 0) {
+    if (!applied.changed && provisionalV2Signals.length === 0 && Object.keys(provisionalStage).length === 0) {
       return { userMessage, state: currentState, profilePersisted: false };
     }
 
@@ -731,6 +734,8 @@ async function createUserMessageWithVocationalProfile(
       return { userMessage, state: currentState, profilePersisted: false };
     }
     const mergedV2 = new Map(previousV2.signals.map((signal) => [`${signal.conceptId}|${signal.dimension}`, signal]));
+    const stageUpdate = extractAcademicStageV2(content);
+    const stageChanged = Object.entries(stageUpdate).some(([key,value]) => previousV2[key] !== value);
     let v2Changed = false;
     for (const signal of v2Signals) {
       const key = `${signal.conceptId}|${signal.dimension}`;
@@ -740,13 +745,29 @@ async function createUserMessageWithVocationalProfile(
         v2Changed = true;
       }
     }
-    if (!applied.changed && !v2Changed) {
+    if (!applied.changed && !v2Changed && !stageChanged) {
       return { userMessage, state: currentState, profilePersisted: false };
     }
+    const nextProfileV2 = {
+      ...previousV2,
+      ...stageUpdate,
+      revision: v2Changed || stageChanged ? previousV2.revision + 1 : previousV2.revision,
+      signals: [...mergedV2.values()],
+    };
+    const fullRanking = rankFullVocationalCatalog({
+      vocationalProfile: nextProfileV2,
+      currentRevision: nextProfileV2.revision,
+    });
     const nextState = {
       ...currentState,
       vocationalProfile: applied.profile,
-      vocationalProfileV2: { ...previousV2, revision: v2Changed ? previousV2.revision + 1 : previousV2.revision, signals: [...mergedV2.values()] },
+      vocationalProfileV2: nextProfileV2,
+      vocationalRankingV2: {
+        revision: nextProfileV2.revision,
+        catalogProgramCount: fullRanking.catalogProgramCount,
+        ordered: fullRanking.ordered.map(({ canonicalProgramId, academicLevel, classification, score, family }) =>
+          ({ canonicalProgramId, academicLevel, classification, score, family })),
+      },
     };
     const updated = await transaction.chat.updateMany({
       where: { id: chat.id, userId: chat.userId, educativeStateVersion: expectedVersion },
@@ -1930,6 +1951,22 @@ export async function sendMessage(chatId, userId, content, action = null) {
   );
   const userMessage = vocationalResult.userMessage;
   currentState = vocationalResult.state;
+  if (vocationalResult.profilePersisted) {
+    const positiveCount = currentState.vocationalProfileV2.signals
+      .filter((signal) => signal.polarity === "positive" && ["interest", "preference"].includes(signal.dimension)).length;
+    const rankedRows = currentState.vocationalRankingV2?.ordered || [];
+    const asksForGuidance = /\b(?:orientacion vocacional|elegir (?:una )?carrera|que carrera)\b/u.test(normalizeEducativeText(content));
+    if (asksForGuidance && positiveCount < 2 && rankedRows.length) {
+      const question = !currentState.vocationalProfileV2.currentAcademicStage
+        ? "¿En qué nivel de estudios estás actualmente?"
+        : nextBestVocationalQuestion(rankedRows, currentState.vocationalProfileV2);
+      if (question) {
+        const assistantMessage = await createMessage({ chatId, role: "assistant", content: question });
+        await updateTitleAfterMessage(chat, content);
+        return { userMessage, assistantMessage };
+      }
+    }
+  }
   const matchingCareer = getMatchingCareer(controlledMatch);
   if (matchingCareer) {
     const confirmation = await createCareerConfirmation(
