@@ -9,6 +9,7 @@ import {
   OLLAMA_ERROR_CODES,
   OllamaProviderError,
   buildOllamaMessages,
+  createOllamaHttpsAgent,
   createOllamaGenerator,
   requestOllamaJson,
 } from "../src/services/ollamaProviderService.js";
@@ -298,12 +299,56 @@ await test("27 Host incorrecto reproduce 403 y Host correcto 200", async () => {
   assert.equal(captures[1].options.servername, "private-ollama.example");
 });
 
+await test("27a conexion directa no configura agente proxy", async () => {
+  let request;
+  const generator = makeGenerator({ requestJson: async (value) => { request = value; return validResponse(); } });
+  await generator({ requestType: "conversation", model: "qwen3:1.7b", systemInstruction: "Sistema", contents: basicContents, maxOutputTokens: 300, temperature: 0.6 });
+  assert.equal(request.agent, undefined);
+});
+
+await test("27b proxy exclusivo crea https.Agent con HTTPS_PROXY", async () => {
+  const proxyUrl = "http://127.0.0.1:1055";
+  const agent = createOllamaHttpsAgent(proxyUrl);
+  assert.equal(agent.options.proxyEnv.HTTPS_PROXY, proxyUrl);
+  let request;
+  const generator = makeGenerator({ proxyUrl, requestJson: async (value) => { request = value; return validResponse(); } });
+  await generator({ requestType: "conversation", model: "qwen3:1.7b", systemInstruction: "Sistema", contents: basicContents, maxOutputTokens: 300, temperature: 0.6 });
+  assert.equal(request.agent.options.proxyEnv.HTTPS_PROXY, proxyUrl);
+});
+
+await test("27c agente conserva Host y SNI del destino HTTPS", async () => {
+  const captures = [];
+  const agent = createOllamaHttpsAgent("http://127.0.0.1:1055");
+  const requestImpl = mockNodeRequest(() => ({ statusCode: 200, body: validResponse() }), captures);
+  await requestOllamaJson({ url: "https://private-ollama.example/api/chat", hostHeader: "localhost:11434", body: {}, timeoutMs: 1000, agent, requestImpl });
+  assert.equal(captures[0].options.headers.Host, "localhost:11434");
+  assert.equal(captures[0].options.servername, "private-ollama.example");
+  assert.equal(captures[0].options.agent, agent);
+});
+
+await test("27d proxy Ollama no se configura globalmente ni en Gemini", async () => {
+  const source = readFileSync(new URL("../src/services/aiService.js", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /process\.env\.(?:HTTP_PROXY|HTTPS_PROXY|NODE_USE_ENV_PROXY)\s*=/);
+  assert.match(source, /createOllamaGenerator\(\{[\s\S]*?proxyUrl:\s*OLLAMA_PROXY_URL/);
+  assert.doesNotMatch(source, /new GoogleGenerativeAI\([^)]*OLLAMA_PROXY_URL/);
+});
+
+await test("27e scripts no exponen auth key ni exportan proxy global", async () => {
+  const startScript = readFileSync(new URL("./startRenderWithTailscale.sh", import.meta.url), "utf8");
+  const installScript = readFileSync(new URL("./installTailscale.sh", import.meta.url), "utf8");
+  assert.doesNotMatch(`${startScript}\n${installScript}`, /set\s+-[^\n]*x/);
+  assert.doesNotMatch(startScript, /export\s+(?:HTTP_PROXY|HTTPS_PROXY|NODE_USE_ENV_PROXY)/);
+  assert.doesNotMatch(startScript, /(?:echo|printf)[^\n]*\$\{?TAILSCALE_AUTHKEY/);
+  assert.match(startScript, /--auth-key="\$TAILSCALE_AUTHKEY"/);
+});
+
 await test("28 logs de uso no contienen contenido ni URL", async () => {
   const logs = [];
-  const generator = makeGenerator({ requestJson: async () => validResponse(), writeUsage: (entry) => logs.push(entry) });
+  const generator = makeGenerator({ proxyUrl: "http://proxy-user:proxy-password@127.0.0.1:1055", requestJson: async () => validResponse(), writeUsage: (entry) => logs.push(entry) });
   await generator({ requestType: "conversation", model: "qwen3:1.7b", systemInstruction: "SECRETO", contents: basicContents, maxOutputTokens: 300, temperature: 0.6 });
   assert.deepEqual(Object.keys(logs[0]).sort(), ["durationMs", "event", "model", "outputTokenCount", "promptTokenCount", "provider", "requestType", "status"].sort());
   assert.equal(JSON.stringify(logs).includes("SECRETO"), false);
+  assert.equal(JSON.stringify(logs).includes("proxy-password"), false);
   assert.equal(logs[0].promptTokenCount, 40);
   assert.equal(logs[0].outputTokenCount, 12);
 });

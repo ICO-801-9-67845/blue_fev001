@@ -30,6 +30,7 @@ import {
   OLLAMA_MEMORY_MAX_OUTPUT_TOKENS,
   OLLAMA_MEMORY_MODEL,
   OLLAMA_MEMORY_TEMPERATURE,
+  OLLAMA_PROXY_URL,
   OLLAMA_TIMEOUT_MS,
 } from "../config/env.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -134,6 +135,7 @@ const generateWithOllama = createOllamaGenerator({
   hostHeader: OLLAMA_HOST_HEADER,
   timeoutMs: OLLAMA_TIMEOUT_MS,
   contextLength: OLLAMA_CONTEXT_LENGTH,
+  proxyUrl: OLLAMA_PROXY_URL,
 });
 
 
