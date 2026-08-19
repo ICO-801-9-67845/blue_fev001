@@ -25,10 +25,10 @@ export default function CvLanguagesSection({ entries, onChange }) {
           </div>
           <div className="cv-field">
             <label htmlFor="language-level">Nivel *</label>
-            <select id="language-level" value={values.level} onChange={(event) => setField("level", event.target.value)} aria-invalid={Boolean(errors.level)}>
+            <select id="language-level" value={values.level} onChange={(event) => setField("level", event.target.value)} aria-invalid={Boolean(errors.level)} aria-describedby={errors.level ? "language-level-error" : undefined}>
               {LANGUAGE_LEVELS.map((level) => <option key={level} value={level}>{level}</option>)}
             </select>
-            {errors.level && <p className="cv-field-error">{errors.level}</p>}
+            {errors.level && <p id="language-level-error" className="cv-field-error">{errors.level}</p>}
           </div>
         </div>
       )}

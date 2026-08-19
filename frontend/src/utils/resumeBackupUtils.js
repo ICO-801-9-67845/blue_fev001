@@ -2,6 +2,7 @@ import { isPlainObject } from "../storage/storageUtils.js";
 import {
   createInitialResume,
   isResumeStructurallyValid,
+  LANGUAGE_LEVELS,
   normalizeResume,
   sanitizeResumeFilenamePart,
 } from "./resumeUtils.js";
@@ -15,6 +16,15 @@ const OBJECT_SECTIONS = ["basics", "objective"];
 const ARRAY_SECTIONS = RESUME_KEYS.filter(
   (section) => !OBJECT_SECTIONS.includes(section),
 );
+const IDENTIFIED_COLLECTIONS = [
+  "education",
+  "courses",
+  "certifications",
+  "projects",
+  "volunteering",
+  "languages",
+  "experience",
+];
 
 function isCompatibleResumeCandidate(value) {
   if (!isPlainObject(value)) return false;
@@ -30,6 +40,37 @@ function isCompatibleResumeCandidate(value) {
   );
 
   return objectsAreCompatible && arraysAreCompatible;
+}
+
+function validateCollectionIds(resume) {
+  for (const collection of IDENTIFIED_COLLECTIONS) {
+    if (!(collection in resume)) continue;
+
+    const ids = new Set();
+    for (const entry of resume[collection]) {
+      if (!isPlainObject(entry) || typeof entry.id !== "string" || !entry.id.trim()) {
+        return "invalid";
+      }
+
+      if (ids.has(entry.id)) {
+        return "duplicate";
+      }
+
+      ids.add(entry.id);
+    }
+  }
+
+  return "valid";
+}
+
+function hasValidLanguageLevels(resume) {
+  if (!("languages" in resume)) return true;
+
+  return resume.languages.every(
+    (entry) =>
+      !("level" in entry) ||
+      (typeof entry.level === "string" && LANGUAGE_LEVELS.includes(entry.level)),
+  );
 }
 
 export function createResumeBackup(resume, exportedAt = new Date()) {
@@ -75,6 +116,31 @@ export function parseResumeBackup(text) {
       ok: false,
       code: "invalid-resume",
       message: "Este archivo no es un respaldo válido de CV de Project Blue.",
+    };
+  }
+
+  const collectionIdsStatus = validateCollectionIds(backup.resume);
+  if (collectionIdsStatus === "duplicate") {
+    return {
+      ok: false,
+      code: "duplicate-ids",
+      message: "El respaldo contiene registros duplicados y no puede importarse.",
+    };
+  }
+
+  if (collectionIdsStatus === "invalid") {
+    return {
+      ok: false,
+      code: "invalid-resume",
+      message: "Este archivo no es un respaldo válido de CV de Project Blue.",
+    };
+  }
+
+  if (!hasValidLanguageLevels(backup.resume)) {
+    return {
+      ok: false,
+      code: "invalid-language-level",
+      message: "El respaldo contiene un nivel de idioma no válido.",
     };
   }
 
