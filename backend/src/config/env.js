@@ -122,6 +122,40 @@ function hostHeader(value, requiredForProvider) {
   return normalized;
 }
 
+function ollamaProxyUrl(value) {
+  const rawValue = `${value || ""}`.trim();
+  if (!rawValue) return "";
+  if (/[\r\n]/.test(rawValue)) {
+    throw new Error("Invalid environment variable: OLLAMA_PROXY_URL");
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(rawValue);
+  } catch {
+    throw new Error("Invalid environment variable: OLLAMA_PROXY_URL");
+  }
+
+  const port = Number(parsed.port);
+  if (
+    parsed.protocol !== "http:" ||
+    !["127.0.0.1", "localhost"].includes(parsed.hostname.toLowerCase()) ||
+    parsed.username ||
+    parsed.password ||
+    (parsed.pathname !== "/" && parsed.pathname !== "") ||
+    parsed.search ||
+    parsed.hash ||
+    !parsed.port ||
+    !Number.isInteger(port) ||
+    port < 1 ||
+    port > 65535
+  ) {
+    throw new Error("Invalid environment variable: OLLAMA_PROXY_URL");
+  }
+
+  return rawValue.replace(/\/+$/, "");
+}
+
 function ollamaModel(name, fallback) {
   const value = process.env[name]?.trim() || fallback;
   if (value.length > 128 || /[\u0000-\u001f\u007f]/.test(value)) {
@@ -149,6 +183,7 @@ export const AI_FALLBACK_PROVIDER = oneOf("AI_FALLBACK_PROVIDER", "none", ["none
 const OLLAMA_IS_ACTIVE = AI_PROVIDER === "ollama";
 export const OLLAMA_BASE_URL = ollamaBaseUrl(process.env.OLLAMA_BASE_URL, OLLAMA_IS_ACTIVE);
 export const OLLAMA_HOST_HEADER = hostHeader(process.env.OLLAMA_HOST_HEADER, OLLAMA_IS_ACTIVE);
+export const OLLAMA_PROXY_URL = ollamaProxyUrl(process.env.OLLAMA_PROXY_URL);
 export const OLLAMA_CHAT_MODEL = ollamaModel("OLLAMA_CHAT_MODEL", "qwen3:1.7b");
 export const OLLAMA_MEMORY_MODEL = ollamaModel("OLLAMA_MEMORY_MODEL", "qwen3:1.7b");
 export const OLLAMA_TIMEOUT_MS = boundedNumber("OLLAMA_TIMEOUT_MS", 180000, {

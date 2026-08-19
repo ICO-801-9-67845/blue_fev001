@@ -12,6 +12,7 @@ function runEnv(overrides = {}) {
       fallback: config.AI_FALLBACK_PROVIDER,
       url: config.OLLAMA_BASE_URL,
       host: config.OLLAMA_HOST_HEADER,
+      proxy: config.OLLAMA_PROXY_URL,
       chatModel: config.OLLAMA_CHAT_MODEL,
       memoryModel: config.OLLAMA_MEMORY_MODEL,
       timeout: config.OLLAMA_TIMEOUT_MS,
@@ -34,6 +35,7 @@ function runEnv(overrides = {}) {
       AI_FALLBACK_PROVIDER: "none",
       OLLAMA_BASE_URL: "https://private-ollama.example",
       OLLAMA_HOST_HEADER: "localhost:11434",
+      OLLAMA_PROXY_URL: "http://127.0.0.1:1055",
       OLLAMA_CHAT_MODEL: "qwen3:1.7b",
       OLLAMA_MEMORY_MODEL: "qwen3:1.7b",
       OLLAMA_TIMEOUT_MS: "180000",
@@ -73,6 +75,7 @@ await test("01 configuracion Ollama valida y exacta", () => {
     fallback: "none",
     url: "https://private-ollama.example",
     host: "localhost:11434",
+    proxy: "http://127.0.0.1:1055",
     chatModel: "qwen3:1.7b",
     memoryModel: "qwen3:1.7b",
     timeout: 180000,
@@ -100,6 +103,24 @@ await test("13 temperatura de chat invalida", () => expectInvalid({ OLLAMA_CHAT_
 await test("14 temperatura de memoria invalida", () => expectInvalid({ OLLAMA_MEMORY_TEMPERATURE: "NaN" }, "OLLAMA_MEMORY_TEMPERATURE"));
 await test("14a modelo de chat con control invalido", () => expectInvalid({ OLLAMA_CHAT_MODEL: "qwen3\nmalicioso" }, "OLLAMA_CHAT_MODEL"));
 await test("14b modelo de memoria demasiado largo", () => expectInvalid({ OLLAMA_MEMORY_MODEL: "x".repeat(129) }, "OLLAMA_MEMORY_MODEL"));
+await test("14c proxy Ollama opcional permite conexion directa", () => {
+  const result = runEnv({ OLLAMA_PROXY_URL: "" });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout.trim()).proxy, "");
+});
+await test("14d proxy Ollama localhost valido", () => {
+  const result = runEnv({ OLLAMA_PROXY_URL: "http://localhost:1055" });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout.trim()).proxy, "http://localhost:1055");
+});
+await test("14e proxy HTTPS rechazado", () => expectInvalid({ OLLAMA_PROXY_URL: "https://127.0.0.1:1055" }, "OLLAMA_PROXY_URL"));
+await test("14f proxy remoto rechazado", () => expectInvalid({ OLLAMA_PROXY_URL: "http://proxy.example:1055" }, "OLLAMA_PROXY_URL"));
+await test("14g proxy con credenciales rechazado", () => expectInvalid({ OLLAMA_PROXY_URL: "http://user:pass@127.0.0.1:1055" }, "OLLAMA_PROXY_URL"));
+await test("14h proxy con ruta rechazado", () => expectInvalid({ OLLAMA_PROXY_URL: "http://127.0.0.1:1055/connect" }, "OLLAMA_PROXY_URL"));
+await test("14i proxy con query rechazado", () => expectInvalid({ OLLAMA_PROXY_URL: "http://127.0.0.1:1055/?token=secret" }, "OLLAMA_PROXY_URL"));
+await test("14j proxy con hash rechazado", () => expectInvalid({ OLLAMA_PROXY_URL: "http://127.0.0.1:1055/#secret" }, "OLLAMA_PROXY_URL"));
+await test("14k proxy sin puerto rechazado", () => expectInvalid({ OLLAMA_PROXY_URL: "http://127.0.0.1" }, "OLLAMA_PROXY_URL"));
+await test("14l proxy con salto de linea rechazado", () => expectInvalid({ OLLAMA_PROXY_URL: "http://127.0.0.1:1055\nmalicioso" }, "OLLAMA_PROXY_URL"));
 await test("15 Gemini sigue disponible como reversion manual", () => {
   const result = runEnv({ AI_PROVIDER: "gemini", GEMINI_API_KEYS: "manual-key", OLLAMA_BASE_URL: "", OLLAMA_HOST_HEADER: "" });
   assert.equal(result.status, 0, result.stderr);
