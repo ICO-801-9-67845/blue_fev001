@@ -85,8 +85,19 @@ if [[ "${OLLAMA_SMOKE_TEST:-false}" == "true" ]]; then
 fi
 
 echo "Starting Blue backend..."
-npm run start -w backend &
+node backend/src/server.js &
 backend_pid=$!
+echo "Blue backend process started pid=$backend_pid"
+
+sleep 1
+if ! is_running "$backend_pid"; then
+  set +e
+  wait "$backend_pid"
+  backend_status=$?
+  set -e
+  echo "Blue backend exited during startup with status $backend_status" >&2
+  exit "$backend_status"
+fi
 
 set +e
 wait -n "$backend_pid" "$tailscaled_pid"
