@@ -418,12 +418,92 @@
 
 .cv-preview-heading {
   margin-bottom: 0.75rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 .cv-preview-heading h2 {
   margin: 0;
   color: var(--color-primary-dark);
   font-size: 1.25rem;
+}
+
+.cv-preview-actions {
+  display: grid;
+  justify-items: end;
+  gap: 0.35rem;
+}
+
+.cv-preview-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.cv-preview-action {
+  min-height: 44px;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--color-primary);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.cv-preview-action svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.cv-preview-action.is-print {
+  color: var(--color-primary);
+  background: var(--color-surface);
+}
+
+.cv-preview-action.is-download {
+  color: var(--color-surface);
+  background: var(--color-primary);
+}
+
+.cv-preview-action:hover:not(:disabled) {
+  color: var(--color-surface);
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+.cv-preview-action:disabled {
+  color: var(--color-text-soft);
+  background: var(--color-bg);
+  border-color: var(--color-border);
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.cv-preview-actions p {
+  max-width: 230px;
+  margin: 0;
+  color: var(--color-text-soft);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.cv-preview-actions .cv-pdf-error {
+  color: #a63048;
+  font-weight: 650;
 }
 
 .cv-document {
@@ -696,10 +776,155 @@
   .cv-document-inline-list li + li::before {
     content: none;
   }
+
+  .cv-preview-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .cv-preview-actions {
+    justify-items: stretch;
+  }
+
+  .cv-preview-action-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .cv-preview-actions p {
+    max-width: none;
+    text-align: left;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .cv-builder * {
     scroll-behavior: auto;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 15mm;
+}
+
+@media print {
+  html,
+  body,
+  #root {
+    width: 100%;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    color: #171a2b;
+    background: #fff !important;
+  }
+
+  .tools-page,
+  .tools-shell,
+  .tools-content,
+  .cv-builder,
+  .cv-builder-workspace,
+  .cv-preview-panel {
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    display: block !important;
+    position: static;
+    border: 0;
+    border-radius: 0;
+    background: #fff !important;
+    box-shadow: none;
+  }
+
+  .tools-header,
+  .cv-builder > :not(.cv-builder-workspace),
+  .cv-builder-layout,
+  .cv-preview-heading {
+    display: none !important;
+  }
+
+  .cv-preview-document {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    color: #171a2b;
+    background: #fff !important;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    font-size: 10.5pt;
+    line-height: 1.45;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .cv-document-header {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+
+  .cv-document-header h1 {
+    font-size: 24pt;
+  }
+
+  .cv-preview-document .is-placeholder,
+  .cv-document-empty {
+    display: none !important;
+  }
+
+  .cv-document-contact ul,
+  .cv-document-inline-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0;
+  }
+
+  .cv-document-contact li + li::before,
+  .cv-document-inline-list li + li::before {
+    content: "·";
+  }
+
+  .cv-document-section {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  .cv-document-section h2 {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+
+  .cv-document-entries > li,
+  .cv-document-inline-list,
+  .cv-document-interests {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+
+  .cv-document-section p,
+  .cv-document-section li {
+    orphans: 3;
+    widows: 3;
+  }
+
+  .cv-preview-document a,
+  .cv-preview-document p,
+  .cv-preview-document li,
+  .cv-preview-document h1,
+  .cv-preview-document h2,
+  .cv-preview-document h3 {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .cv-preview-document a::after {
+    content: none !important;
   }
 }

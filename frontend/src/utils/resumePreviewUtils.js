@@ -201,3 +201,16 @@ export function getSafePortfolioUrl(value) {
     return "";
   }
 }
+
+export function getResumePdfFilename(fullName) {
+  const safeName = cleanResumeText(fullName)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-+/g, "-")
+    .slice(0, 80)
+    .replace(/-+$/g, "");
+
+  return safeName ? `CV-${safeName}.pdf` : "CV-Project-Blue.pdf";
+}
