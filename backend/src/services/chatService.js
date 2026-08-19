@@ -240,12 +240,138 @@ function getRequestedLevel(content) {
   return "";
 }
 
-function orderGenericLevelCandidates(level,state){
-  const candidates=getCanonicalProgramsByLevel(level),positiveSignals=state.vocationalProfileV2?.signals?.filter(signal=>signal.polarity==="positive"&&["interest","preference"].includes(signal.dimension)).length||0;
-  if(positiveSignals>=2){const ranking=rankFullVocationalCatalog({vocationalProfile:state.vocationalProfileV2,currentRevision:state.vocationalProfileV2.revision}),position=new Map(ranking.ordered.map((row,index)=>[row.canonicalProgramId,index]));return candidates.sort((left,right)=>(position.get(left.canonicalProgramId)??Number.MAX_SAFE_INTEGER)-(position.get(right.canonicalProgramId)??Number.MAX_SAFE_INTEGER)||left.canonicalProgramId.localeCompare(right.canonicalProgramId));}
-  const groups=new Map();for(const candidate of candidates){const key=candidate.familyId||candidate.canonicalProgramId,items=groups.get(key)||[];items.push(candidate);groups.set(key,items);}const ordered=[],queues=[...groups.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([,items])=>items);while(queues.some(items=>items.length))for(const items of queues)if(items.length)ordered.push(items.shift());return ordered;
+function interleaveMediaSuperiorLevels(candidates) {
+  const queues = ["bachillerato", "tecnico_bachillerato"]
+    .map((academicLevel) => candidates.filter((candidate) => candidate.academicLevel === academicLevel));
+  const ordered = [];
+  while (queues.some((items) => items.length)) {
+    for (const items of queues) {
+      if (items.length) ordered.push(items.shift());
+    }
+  }
+  return ordered;
+}
+
+function orderGenericLevelCandidates(level, state) {
+  const candidates = getCanonicalProgramsByLevel(level);
+  const positiveSignals = state.vocationalProfileV2?.signals?.filter(
+    (signal) => signal.polarity === "positive" && ["interest", "preference"].includes(signal.dimension),
+  ).length || 0;
+  let ordered;
+  if (positiveSignals >= 2) {
+    const ranking = rankFullVocationalCatalog({
+      vocationalProfile: state.vocationalProfileV2,
+      currentRevision: state.vocationalProfileV2.revision,
+    });
+    const position = new Map(ranking.ordered.map((row, index) => [row.canonicalProgramId, index]));
+    ordered = candidates.sort((left, right) =>
+      (position.get(left.canonicalProgramId) ?? Number.MAX_SAFE_INTEGER) -
+        (position.get(right.canonicalProgramId) ?? Number.MAX_SAFE_INTEGER) ||
+      left.canonicalProgramId.localeCompare(right.canonicalProgramId));
+  } else {
+    const groups = new Map();
+    for (const candidate of candidates) {
+      const key = candidate.familyId || candidate.canonicalProgramId;
+      const items = groups.get(key) || [];
+      items.push(candidate);
+      groups.set(key, items);
+    }
+    ordered = [];
+    const queues = [...groups.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([, items]) => items);
+    while (queues.some((items) => items.length)) {
+      for (const items of queues) {
+        if (items.length) ordered.push(items.shift());
+      }
+    }
+  }
+  return level === "bachillerato" ? interleaveMediaSuperiorLevels(ordered) : ordered;
 }
 function isGenericLevelDiscoveryRequest(content){const value=normalizeEducativeText(content);return /\b(?:quiero|quisiera|busco|dame|muestrame|mostrar|que|cuales|hay|opciones|estudiar|ver)\b/.test(value)||/^(?:bachillerato|prepa|tsu|licenciaturas?|ingenierias?|especialidades?|maestrias?|doctorados?)$/.test(value);}
+
+function uniqueCanonicalCareers(careers) {
+  const byProgram = new Map();
+  for (const career of careers || []) {
+    if (career?.canonicalProgramId && !byProgram.has(career.canonicalProgramId)) {
+      byProgram.set(career.canonicalProgramId, career);
+    }
+  }
+  return [...byProgram.values()];
+}
+
+function reconcileCareerDiscovery(content, detectedCareers) {
+  const academicLevel = requestedAcademicLevelForText(content);
+  const controlledContext = hasControlledVocationalContext(content, detectedCareers);
+  if (!controlledContext) {
+    return { careers: [], match: null, flexibleStatus: "not_applicable" };
+  }
+
+  const match = matchVocationalCareer(content, { academicLevel });
+  if (["exact", "approved_alias", "normalized_exact"].includes(match.status)) {
+    const career = toCanonicalCareerCandidate(match.programId);
+    const flexible = resolveFlexibleCanonicalPrograms(content, { academicLevel, limit: 5 });
+    const flexibleIds = new Set(flexible.candidates.map((candidate) => candidate.canonicalProgramId));
+    if (
+      career &&
+      flexible.status === "ambiguous" &&
+      flexible.candidates.length >= 3 &&
+      flexibleIds.has(career.canonicalProgramId)
+    ) {
+      return {
+        careers: flexible.candidates,
+        match: { status: "ambiguous", reasonCode: "broader_compatible_candidates" },
+        flexibleStatus: flexible.status,
+      };
+    }
+    return {
+      careers: career ? [career] : detectedCareers,
+      match,
+      flexibleStatus: "not_needed",
+    };
+  }
+
+  if (detectedCareers.length) {
+    return { careers: detectedCareers, match, flexibleStatus: "not_needed" };
+  }
+
+  const flexible = resolveFlexibleCanonicalPrograms(content, { academicLevel, limit: 5 });
+  if (match.status === "ambiguous" && flexible.candidates.length < 2) {
+    return {
+      careers: [],
+      match,
+      flexibleStatus: flexible.status,
+    };
+  }
+  if (match.status === "fuzzy_confirmation_required") {
+    const fuzzyCareer = toCanonicalCareerCandidate(match.programId);
+    const flexibleIds = new Set(flexible.candidates.map((career) => career.canonicalProgramId));
+    if (fuzzyCareer && flexible.candidates.length && !flexibleIds.has(fuzzyCareer.canonicalProgramId)) {
+      return {
+        careers: uniqueCanonicalCareers([fuzzyCareer, ...flexible.candidates]),
+        match: { ...match, status: "ambiguous", reasonCode: "incompatible_matchers" },
+        flexibleStatus: flexible.status,
+      };
+    }
+    return {
+      careers: fuzzyCareer ? [fuzzyCareer] : flexible.candidates,
+      match,
+      flexibleStatus: flexible.status,
+    };
+  }
+
+  if (["high_confidence", "ambiguous"].includes(flexible.status) && flexible.candidates.length) {
+    return {
+      careers: flexible.candidates,
+      match: flexible.status === "high_confidence"
+        ? { status: "flexible_confirmation_required" }
+        : { status: "ambiguous", reasonCode: "flexible_candidates" },
+      flexibleStatus: flexible.status,
+    };
+  }
+
+  return { careers: [], match, flexibleStatus: "low_confidence" };
+}
 
 function getCareerSearchTerms(content) {
   const normalizedContent = normalizeSearchText(content);
@@ -1939,21 +2065,13 @@ export async function sendMessage(chatId, userId, content, action = null) {
       hasMoreResults: false,
     });
   }
-  let detectedCareerMentions = detectCareerOptions(
+  const exactCareerMentions = detectCareerOptions(
     content,
     { limit: VOCATIONAL_CANDIDATE_LIMIT },
   );
-  const flexibleDiscovery=resolveFlexibleCanonicalPrograms(content,{academicLevel:requestedAcademicLevelForText(content),limit:5});
-  if(flexibleDiscovery.status==="ambiguous"&&(flexibleDiscovery.query==="ADMINISTRACION"||(flexibleDiscovery.query==="SISTEMAS"&&requestedAcademicLevelForText(content)==="ingenieria")))detectedCareerMentions=flexibleDiscovery.candidates;
-  const controlledContext = hasControlledVocationalContext(content, detectedCareerMentions);
-  if (!controlledContext) detectedCareerMentions = [];
-  const controlledMatch = controlledContext && detectedCareerMentions.length === 0
-    ? matchVocationalCareer(content)
-    : null;
-  if (["exact", "approved_alias", "normalized_exact"].includes(controlledMatch?.status)) {
-    const controlledCareer = toCanonicalCareerCandidate(controlledMatch.programId);
-    if (controlledCareer) detectedCareerMentions = [controlledCareer];
-  }
+  const discovery = reconcileCareerDiscovery(content, exactCareerMentions);
+  let detectedCareerMentions = discovery.careers;
+  const controlledMatch = discovery.match;
   const vocationalResult = await createUserMessageWithVocationalProfile(
     chat,
     content,
@@ -1966,6 +2084,21 @@ export async function sendMessage(chatId, userId, content, action = null) {
   if(requestedAcademicLevel&&detectedCareerMentions.length===0&&isGenericLevelDiscoveryRequest(content)){
     const levelCareers=orderGenericLevelCandidates(requestedAcademicLevel,currentState);
     if(levelCareers.length){const result=await createCareerConfirmation(chat,`Encontré ${levelCareers.length} opciones reales de ${requestedAcademicLevel}. Te muestro las primeras; elige una o pide más opciones.`,levelCareers,true,{...currentState,pendingRequestedMunicipality:getRequestedMunicipality(content)||null});await updateTitleAfterMessage(chat,content);return {userMessage,assistantMessage:result.assistantMessage};}
+  }
+  if (controlledMatch?.status === "flexible_confirmation_required") {
+    const career = detectedCareerMentions[0];
+    const confirmation = await createCareerConfirmation(
+      chat,
+      `¿Te refieres a ${career.name}?`,
+      [career],
+      false,
+      {
+        ...currentState,
+        pendingRequestedMunicipality: getRequestedMunicipality(content) || null,
+      },
+    );
+    await updateTitleAfterMessage(chat, content);
+    return { userMessage, assistantMessage: confirmation.assistantMessage };
   }
   if (vocationalResult.profilePersisted) {
     const positiveCount = currentState.vocationalProfileV2.signals
@@ -2005,15 +2138,33 @@ export async function sendMessage(chatId, userId, content, action = null) {
     return { userMessage, assistantMessage: confirmation.assistantMessage };
   }
   if (controlledMatch?.status === "ambiguous") {
+    if (detectedCareerMentions.length) {
+      const confirmation = await createCareerConfirmation(
+        chat,
+        "Encontré varias opciones relacionadas. ¿A cuál te refieres?",
+        detectedCareerMentions,
+        false,
+        {
+          ...currentState,
+          pendingRequestedMunicipality: getRequestedMunicipality(content) || null,
+        },
+      );
+      await updateTitleAfterMessage(chat, content);
+      return { userMessage, assistantMessage: confirmation.assistantMessage };
+    }
     const assistantMessage = await createMessage({
       chatId,
       role: "assistant",
-      content: "Encontré varias opciones reales con nombres parecidos. Elige una de las sugerencias o dime el área y nivel educativo que prefieres.",
+      content: "No encontré una coincidencia suficientemente clara. Dime el área o nivel educativo que buscas y te mostraré opciones reales del catálogo.",
     });
     await updateTitleAfterMessage(chat, content);
     return { userMessage, assistantMessage };
   }
-  if (controlledMatch?.status === "no_match" && isControlledVocationalRequest(content)) {
+  if (
+    controlledMatch?.status === "no_match" &&
+    detectedCareerMentions.length === 0 &&
+    isControlledVocationalRequest(content)
+  ) {
     const assistantMessage = await createMessage({
       chatId,
       role: "assistant",

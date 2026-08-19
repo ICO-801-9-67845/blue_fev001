@@ -16,7 +16,6 @@ const DISCOVERY_STOP_WORDS = new Set([
   "LICENCIATURA","LICENCIATURAS","INGENIERIA","INGENIERIAS","MAESTRIA","MAESTRIAS","MASTER",
   "DOCTORADO","DOCTORADOS","ESPECIALIDAD","ESPECIALIDADES","TSU","BACHILLERATO","BACHILLERATOS","PREPA","PREPARATORIA"
 ]);
-const AMBIGUOUS_DISCOVERY_TERMS = new Set(["ADMINISTRACION"]);
 
 export function normalizeProgramText(value) {
   return String(value || "")
@@ -103,7 +102,8 @@ export function resolveFlexibleCanonicalPrograms(text,{academicLevel=null,limit=
   for(const [normalizedAlias,entries] of aliasIndex){const candidateCore=discoveryCore(normalizedAlias);if(candidateCore.length<3)continue;const coverage=tokenCoverage(query,candidateCore),similarity=dice(query,candidateCore),score=Math.round(Math.max(coverage*.55+similarity*.45,similarity*.85)*10000)/10000;for(const entry of entries){if(!allowed.has(entry.program.level))continue;const current=byProgram.get(entry.programId);if(!current||score>current.score)byProgram.set(entry.programId,{entry,score,coverage,similarity});}}
   const ranked=[...byProgram.values()].filter(item=>item.score>=.52).sort((a,b)=>b.score-a.score||b.coverage-a.coverage||a.entry.programId.localeCompare(b.entry.programId));
   if(!ranked.length)return {status:"low_confidence",query,candidates:[]};const margin=ranked[1]?ranked[0].score-ranked[1].score:1;
-  const status=ranked[0].score>=.65&&margin>=.08&&!AMBIGUOUS_DISCOVERY_TERMS.has(query)?"high_confidence":"ambiguous";
+  const broadSingleToken = !query.includes(" ") && Boolean(ranked[1]) && margin < .12;
+  const status=ranked[0].score>=.65&&margin>=.08&&!broadSingleToken?"high_confidence":"ambiguous";
   const selected=status==="high_confidence"?ranked.slice(0,1):ranked.filter(item=>item.score>=ranked[0].score-.12).slice(0,limit);
   return {status,query,topScore:ranked[0].score,margin:Math.round(margin*10000)/10000,algorithm:"token_coverage_0.55_plus_dice_bigrams_0.45",candidates:selected.map(item=>({...toCareerCandidate(item.entry.programId,item.entry.program,item.entry.alias),discoveryScore:item.score}))};
 }
@@ -239,7 +239,15 @@ export function detectCanonicalProgramOptions(text, { limit = 3 } = {}) {
   return selected;
 }
 
-export function getCanonicalProgramsByLevel(level){return Object.entries(programs).filter(([,program])=>program.level===level).sort(([left],[right])=>left.localeCompare(right)).map(([programId,program])=>toCareerCandidate(programId,program,program.canonicalName));}
+export function getCanonicalProgramsByLevel(level) {
+  const allowedLevels = level === "bachillerato"
+    ? new Set(["bachillerato", "tecnico_bachillerato"])
+    : new Set([level]);
+  return Object.entries(programs)
+    .filter(([, program]) => allowedLevels.has(program.level))
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([programId, program]) => toCareerCandidate(programId, program, program.canonicalName));
+}
 
 export function getFamilyCandidateIds(programId) {
   const program = programs[programId];

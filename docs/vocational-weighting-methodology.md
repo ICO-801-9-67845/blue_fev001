@@ -59,7 +59,9 @@ Los 462 perfiles se rankean en memoria después de cada cambio V2; el límite hi
 
 Una solicitud genérica de bachillerato, TSU, licenciatura, ingeniería, especialidad, maestría o doctorado filtra primero el catálogo canónico por `program.level`; no requiere inventar ni resolver una carrera concreta. Con dos o más señales positivas, conserva el orden del ranking completo; con evidencia escasa intercala familias determinísticamente. La paginación muestra cinco opciones sin repetición.
 
-La resolución flexible elimina acentos y palabras estructurales, conserva aliases aprobados y calcula `max(0.55 × cobertura de tokens + 0.45 × Dice de bigramas, 0.85 × Dice)`. Se descartan scores menores a 0.52. `high_confidence` requiere score mínimo 0.65 y margen mínimo 0.08; términos amplios auditados como `administracion` permanecen ambiguos. Los candidatos ambiguous se limitan a 0.12 del mejor score. El LLM no participa en esta resolución.
+La resolución flexible elimina acentos y palabras estructurales, conserva aliases aprobados y calcula `max(0.55 × cobertura de tokens + 0.45 × Dice de bigramas, 0.85 × Dice)`. Se descartan scores menores a 0.52. `high_confidence` requiere score mínimo 0.65 y margen mínimo 0.08; un término único con otra coincidencia dentro de 0.12 permanece ambiguo. Los candidatos ambiguous se limitan a 0.12 del mejor score. El LLM no participa en esta resolución.
+
+La precedencia es determinística: primero coincidencia canónica, alias aprobado o exacta normalizada; después fuzzy seguro por Damerau-Levenshtein acotado; luego cobertura de tokens y Dice para nombres naturales o parciales; finalmente `low_confidence`. Si el fuzzy acotado y el flexible coinciden, prevalece el fuzzy y siempre requiere confirmación. Si proponen programas incompatibles, se presentan alternativas reales y no se selecciona ninguno. Un nivel académico explícito restringe todos los candidatos; el descubrimiento genérico de prepa agrupa `bachillerato` y `tecnico_bachillerato` sin alterar sus niveles canónicos.
 
 ## Limitaciones
 
