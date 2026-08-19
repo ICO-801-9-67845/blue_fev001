@@ -56,32 +56,20 @@ echo "Starting Tailscale userspace..."
   --socket="$SOCKET" &
 tailscaled_pid=$!
 
-ready=false
-for _ in {1..30}; do
+connected=false
+for attempt in {1..30}; do
   if ! is_running "$tailscaled_pid"; then
-    echo "tailscaled stopped before becoming ready" >&2
+    echo "tailscaled stopped before authentication" >&2
     exit 1
   fi
-  if "$BIN_DIR/tailscale" --socket="$SOCKET" status >/dev/null 2>&1; then
-    ready=true
-    break
-  fi
-  sleep 1
-done
-if [[ "$ready" != "true" ]]; then
-  echo "tailscaled did not become ready" >&2
-  exit 1
-fi
 
-connected=false
-for attempt in {1..3}; do
-  if "$BIN_DIR/tailscale" --socket="$SOCKET" up \
+  if [[ -S "$SOCKET" ]] && "$BIN_DIR/tailscale" --socket="$SOCKET" up \
     --auth-key="$TAILSCALE_AUTHKEY" \
     --hostname="$TAILSCALE_HOSTNAME"; then
     connected=true
     break
   fi
-  if (( attempt < 3 )); then sleep 2; fi
+  if (( attempt < 30 )); then sleep 1; fi
 done
 if [[ "$connected" != "true" ]]; then
   echo "Tailscale authentication failed after limited retries" >&2
