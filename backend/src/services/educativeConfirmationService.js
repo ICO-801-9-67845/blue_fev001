@@ -18,6 +18,8 @@ const RELATED_PATTERN = /\b(explorar carreras relacionadas|quiero ver carreras r
 const MORE_RELATED_PATTERN = /\b(mostrar mas carreras relacionadas|muestrame mas carreras relacionadas|mas carreras relacionadas|siguientes carreras relacionadas)\b/;
 const MORE_VOCATIONAL_CAREERS = new Set([
   "mostrar mas carreras", "ver mas carreras", "mas carreras", "otras carreras",
+  "dame mas", "otras opciones", "dame mas maestrias", "muestrame mas maestrias",
+  "dame mas doctorados", "muestrame mas doctorados", "dame mas especialidades", "muestrame mas especialidades",
 ]);
 const ORDINALS = new Map([
   ["la primera", 0], ["el primero", 0], ["primera", 0], ["primero", 0], ["opcion 1", 0],

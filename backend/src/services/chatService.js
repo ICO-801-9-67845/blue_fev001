@@ -41,8 +41,11 @@ import {
   normalizeEducativeText,
 } from "./educativeConfirmationService.js";
 import {
+  getCanonicalProgramsByLevel,
   getFamilyCandidateIds,
   getNearbyCandidateIds,
+  requestedAcademicLevelForText,
+  resolveFlexibleCanonicalPrograms,
   toCanonicalCareerCandidate,
 } from "./educativeProgramRelationsService.js";
 import { matchVocationalCareer } from "./vocationalCareerMatchingService.js";
@@ -78,7 +81,7 @@ const NEGATED_CAREER_REQUEST_PATTERN =
   /\b(?:no|nunca|jamas)\s+(?:quiero|quisiera|deseo|busco|necesito|planeo)\s+(?:estudiar|cursar|explorar|conocer)\b/;
 
 const EDUCATIVE_INTENT_PATTERN =
-  /\b(escuela|escuelas|universidad|universidades|prepa|prepas|preparatoria|preparatorias|bachillerato|carrera|carreras|licenciatura|licenciaturas|ingenieria|ingenierias|opcion|opciones|estudiar|donde estudiar)\b/i;
+  /\b(escuela|escuelas|universidad|universidades|prepa|prepas|preparatoria|preparatorias|bachillerato|bachilleratos|tsu|licenciatura|licenciaturas|ingenieria|ingenierias|especialidad|especialidades|maestria|maestrias|doctorado|doctorados|carrera|carreras|opcion|opciones|estudiar|donde estudiar)\b/i;
 
 const EDUCATIVE_FOLLOW_UP_PATTERN =
   /\b(dame\s+mas\s+opciones|mas\s+opciones|otras\s+opciones|dame\s+otras|hay\s+mas|quiero\s+mas)\b/i;
@@ -227,7 +230,7 @@ function getRequestedLevel(content) {
   }
 
   if (
-    /\b(universidad|universidades|licenciatura|licenciaturas|ingenieria|ingenierias)\b/.test(
+    /\b(universidad|universidades|tsu|licenciatura|licenciaturas|ingenieria|ingenierias|especialidad|especialidades|maestria|maestrias|doctorado|doctorados)\b/.test(
       normalizedContent,
     )
   ) {
@@ -236,6 +239,13 @@ function getRequestedLevel(content) {
 
   return "";
 }
+
+function orderGenericLevelCandidates(level,state){
+  const candidates=getCanonicalProgramsByLevel(level),positiveSignals=state.vocationalProfileV2?.signals?.filter(signal=>signal.polarity==="positive"&&["interest","preference"].includes(signal.dimension)).length||0;
+  if(positiveSignals>=2){const ranking=rankFullVocationalCatalog({vocationalProfile:state.vocationalProfileV2,currentRevision:state.vocationalProfileV2.revision}),position=new Map(ranking.ordered.map((row,index)=>[row.canonicalProgramId,index]));return candidates.sort((left,right)=>(position.get(left.canonicalProgramId)??Number.MAX_SAFE_INTEGER)-(position.get(right.canonicalProgramId)??Number.MAX_SAFE_INTEGER)||left.canonicalProgramId.localeCompare(right.canonicalProgramId));}
+  const groups=new Map();for(const candidate of candidates){const key=candidate.familyId||candidate.canonicalProgramId,items=groups.get(key)||[];items.push(candidate);groups.set(key,items);}const ordered=[],queues=[...groups.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([,items])=>items);while(queues.some(items=>items.length))for(const items of queues)if(items.length)ordered.push(items.shift());return ordered;
+}
+function isGenericLevelDiscoveryRequest(content){const value=normalizeEducativeText(content);return /\b(?:quiero|quisiera|busco|dame|muestrame|mostrar|que|cuales|hay|opciones|estudiar|ver)\b/.test(value)||/^(?:bachillerato|prepa|tsu|licenciaturas?|ingenierias?|especialidades?|maestrias?|doctorados?)$/.test(value);}
 
 function getCareerSearchTerms(content) {
   const normalizedContent = normalizeSearchText(content);
@@ -1933,6 +1943,8 @@ export async function sendMessage(chatId, userId, content, action = null) {
     content,
     { limit: VOCATIONAL_CANDIDATE_LIMIT },
   );
+  const flexibleDiscovery=resolveFlexibleCanonicalPrograms(content,{academicLevel:requestedAcademicLevelForText(content),limit:5});
+  if(flexibleDiscovery.status==="ambiguous"&&(flexibleDiscovery.query==="ADMINISTRACION"||(flexibleDiscovery.query==="SISTEMAS"&&requestedAcademicLevelForText(content)==="ingenieria")))detectedCareerMentions=flexibleDiscovery.candidates;
   const controlledContext = hasControlledVocationalContext(content, detectedCareerMentions);
   if (!controlledContext) detectedCareerMentions = [];
   const controlledMatch = controlledContext && detectedCareerMentions.length === 0
@@ -1950,6 +1962,11 @@ export async function sendMessage(chatId, userId, content, action = null) {
   );
   const userMessage = vocationalResult.userMessage;
   currentState = vocationalResult.state;
+  const requestedAcademicLevel=requestedAcademicLevelForText(content);
+  if(requestedAcademicLevel&&detectedCareerMentions.length===0&&isGenericLevelDiscoveryRequest(content)){
+    const levelCareers=orderGenericLevelCandidates(requestedAcademicLevel,currentState);
+    if(levelCareers.length){const result=await createCareerConfirmation(chat,`Encontré ${levelCareers.length} opciones reales de ${requestedAcademicLevel}. Te muestro las primeras; elige una o pide más opciones.`,levelCareers,true,{...currentState,pendingRequestedMunicipality:getRequestedMunicipality(content)||null});await updateTitleAfterMessage(chat,content);return {userMessage,assistantMessage:result.assistantMessage};}
+  }
   if (vocationalResult.profilePersisted) {
     const positiveCount = currentState.vocationalProfileV2.signals
       .filter((signal) => signal.polarity === "positive" && ["interest", "preference"].includes(signal.dimension)).length;
@@ -1991,7 +2008,7 @@ export async function sendMessage(chatId, userId, content, action = null) {
     const assistantMessage = await createMessage({
       chatId,
       role: "assistant",
-      content: "Hay mas de una carrera posible con un nombre parecido. Indica el nombre completo y el nivel educativo para poder confirmarla.",
+      content: "Encontré varias opciones reales con nombres parecidos. Elige una de las sugerencias o dime el área y nivel educativo que prefieres.",
     });
     await updateTitleAfterMessage(chat, content);
     return { userMessage, assistantMessage };
@@ -2000,7 +2017,7 @@ export async function sendMessage(chatId, userId, content, action = null) {
     const assistantMessage = await createMessage({
       chatId,
       role: "assistant",
-      content: "No pude identificar una carrera canonica con seguridad. Escribe el nombre completo y, si aplica, el nivel educativo.",
+      content: "No pude identificar una coincidencia suficientemente clara. Dime el área o nivel que buscas y te mostraré opciones reales del catálogo.",
     });
     await updateTitleAfterMessage(chat, content);
     return { userMessage, assistantMessage };
