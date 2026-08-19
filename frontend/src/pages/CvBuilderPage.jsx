@@ -7,6 +7,7 @@ import { CvCertificationsSection, CvCoursesSection, CvEducationSection } from ".
 import { CvExperienceSection, CvProjectsSection, CvVolunteeringSection } from "../components/cv/CvExperienceSections.jsx";
 import CvLanguagesSection from "../components/cv/CvLanguagesSection.jsx";
 import CvTextListSection from "../components/cv/CvTextListSection.jsx";
+import CvPreview from "../components/cv/preview/CvPreview.jsx";
 import "../styles/cv.css";
 
 const SECTIONS = [
@@ -27,6 +28,7 @@ export default function CvBuilderPage() {
   const { user } = useAuth();
   const { resume, saveStatus, updateSection, clearResume } = useResumeBuilder(user.id);
   const [activeSection, setActiveSection] = useState("basics");
+  const [viewMode, setViewMode] = useState("edit");
 
   function update(section, value, immediate = false) {
     updateSection(section, value, { immediate });
@@ -75,9 +77,17 @@ export default function CvBuilderPage() {
         </div>
       </header>
 
-      <div className="cv-builder-layout">
-        <CvSectionNavigation sections={SECTIONS} activeSection={activeSection} onChange={setActiveSection} />
-        <main className="cv-editor" key={activeSection}>{sectionContent[activeSection]}</main>
+      <div className="cv-mobile-view-switch" aria-label="Modo del creador de CV">
+        <button type="button" className={viewMode === "edit" ? "is-active" : ""} aria-pressed={viewMode === "edit"} onClick={() => setViewMode("edit")}>Editar</button>
+        <button type="button" className={viewMode === "preview" ? "is-active" : ""} aria-pressed={viewMode === "preview"} onClick={() => setViewMode("preview")}>Vista previa</button>
+      </div>
+
+      <div className={`cv-builder-workspace is-${viewMode}`}>
+        <div className="cv-builder-layout">
+          <CvSectionNavigation sections={SECTIONS} activeSection={activeSection} onChange={setActiveSection} />
+          <main className="cv-editor" key={activeSection}>{sectionContent[activeSection]}</main>
+        </div>
+        <CvPreview resume={resume} />
       </div>
     </section>
   );
