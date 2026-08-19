@@ -281,19 +281,20 @@ await test("07 real conflict calls Gemini zero times", async () => {
   await assert.rejects(sendMessage(h.chat.id, h.chat.userId, "Me gustan las matemáticas"));
   assert.equal(h.calls.gemini, 0);
 });
-await test("08 real capacity rejection saves user message", async () => {
+await test("08 v1 capacity still saves user message", async () => {
   const h = createHarness(fullProfile());
   await sendMessage(h.chat.id, h.chat.userId, "Me gusta la salud");
   assert.equal(h.messages.filter((message) => message.role === "user").length, 1);
 });
-await test("09 real capacity rejection preserves profile", async () => {
+await test("09 v1 capacity preserves v1 while v2 evolves", async () => {
   const profile = fullProfile();
   const h = createHarness(profile);
   await sendMessage(h.chat.id, h.chat.userId, "Me gusta la salud");
   assert.ok(profilesEqual(h.chat.educativeState.vocationalProfile, profile));
-  assert.equal(h.chat.educativeStateVersion, 0);
+  assert.ok(h.chat.educativeState.vocationalProfileV2.signals.some((signal) => signal.conceptId === "health"));
+  assert.equal(h.chat.educativeStateVersion, 1);
 });
-await test("10 real capacity path calls Gemini once", async () => {
+await test("10 v1 capacity path keeps normal reply after v2 persistence", async () => {
   const h = createHarness(fullProfile());
   await sendMessage(h.chat.id, h.chat.userId, "Me gusta la salud");
   assert.equal(h.calls.gemini, 1);
@@ -397,6 +398,58 @@ await test("25 stubbed provider failover does not add a logical Gemini call", as
   assert.equal(h.calls.gemini, 1);
   assert.equal(h.calls.providerAttempts, 2);
   assert.equal(h.chat.educativeState.vocationalProfile.revision, 1);
+});
+await test("26 academic stage persists and full catalog reranks", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Estoy en secundaria");
+  assert.equal(h.chat.educativeState.vocationalProfileV2.currentAcademicStage, "secundaria");
+  assert.equal(h.chat.educativeState.vocationalRankingV2.catalogProgramCount, 462);
+  assert.equal(h.chat.educativeState.vocationalRankingV2.ordered.length, 462);
+});
+await test("27 completed stage is distinct from current stage", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Ya terminé mi licenciatura");
+  assert.equal(h.chat.educativeState.vocationalProfileV2.completedAcademicStage, "licenciatura");
+  assert.equal(h.chat.educativeState.vocationalProfileV2.currentAcademicStage, null);
+});
+await test("28 insufficient guidance asks one deterministic question", async () => {
+  const h = createHarness();
+  const result = await sendMessage(h.chat.id, h.chat.userId, "Ayúdame a elegir una carrera, me gusta la biología");
+  assert.match(result.assistantMessage.content, /nivel de estudios/i);
+  assert.equal(h.calls.gemini, 0);
+});
+await test("29 aspirational master request does not set current stage", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar una maestría");
+  assert.equal(h.chat.educativeState.vocationalProfileV2?.currentAcademicStage || null, null);
+});
+await test("30 explicit current master stage persists", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Estoy cursando una maestría");
+  assert.equal(h.chat.educativeState.vocationalProfileV2.currentAcademicStage, "maestria");
+});
+await test("31 close candidates after two signals ask one discriminant", async () => {
+  const h = createHarness();
+  const result = await sendMessage(h.chat.id, h.chat.userId, "Me gusta diseñar y construir");
+  assert.match(result.assistantMessage.content, /^¿Qué tanto te interesa /);
+  assert.equal(h.messages.filter((message) => message.role === "assistant").length, 1);
+  assert.equal(h.calls.gemini, 0);
+});
+await test("32 current engineering normalizes to undergraduate stage", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Estoy cursando Ingeniería Industrial");
+  assert.equal(h.chat.educativeState.vocationalProfileV2.currentAcademicStage, "licenciatura");
+});
+await test("33 completed engineering persists stage and field", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Ya terminé Ingeniería Mecatrónica");
+  assert.equal(h.chat.educativeState.vocationalProfileV2.completedAcademicStage, "licenciatura");
+  assert.ok(h.chat.educativeState.vocationalProfileV2.priorFields.includes("engineering"));
+});
+await test("34 aspirational engineering does not set current stage", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar Ingeniería Civil");
+  assert.equal(h.chat.educativeState.vocationalProfileV2?.currentAcademicStage || null, null);
 });
 
 const passed = results.filter((item) => item.status === "PASS").length;
