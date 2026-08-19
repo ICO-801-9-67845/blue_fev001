@@ -1,0 +1,60 @@
+{
+  "version": 2,
+  "sourceVersion": "O*NET 30.3",
+  "mappingPolicy": "Exact O*NET Element ID only; no substring inference",
+  "dimensions": {
+    "knowledge": {
+      "2.C.1.a": ["administration"], "2.C.1.b": ["administration", "office_work"], "2.C.1.c": ["accounting", "finance"],
+      "2.C.1.d": ["sales", "business"], "2.C.1.e": ["people_work"], "2.C.1.f": ["administration", "human_behavior"],
+      "2.C.10": ["transport", "logistics"], "2.C.2.a": ["manufacturing"], "2.C.2.b": ["food"],
+      "2.C.3.a": ["computing", "electronics"], "2.C.3.b": ["technology"], "2.C.3.c": ["design"],
+      "2.C.3.d": ["construction"], "2.C.3.e": ["mechanics"], "2.C.4.a": ["mathematics"],
+      "2.C.4.b": ["physics"], "2.C.4.c": ["chemistry"], "2.C.4.d": ["biology"], "2.C.4.e": ["psychology"],
+      "2.C.4.f": ["human_behavior"], "2.C.4.g": ["environment"], "2.C.5.a": ["health"],
+      "2.C.5.b": ["psychology", "helping"], "2.C.6": ["teaching"], "2.C.7.a": ["languages", "writing"],
+      "2.C.8.a": ["law"], "2.C.8.b": ["law", "politics"], "2.C.9.a": ["communication", "technology"],
+      "2.C.9.b": ["communication", "writing"]
+    },
+    "abilities": {
+      "1.A.1.a.1": ["listening"], "1.A.1.a.2": ["verbal_reasoning"], "1.A.1.a.3": ["verbal_reasoning", "communication"],
+      "1.A.1.a.4": ["writing"], "1.A.1.b.1": ["creativity"], "1.A.1.b.2": ["creativity"],
+      "1.A.1.b.3": ["problem_solving"], "1.A.1.b.4": ["critical_thinking"], "1.A.1.b.5": ["critical_thinking"],
+      "1.A.1.b.6": ["organization"], "1.A.1.b.7": ["adaptability"], "1.A.1.c.1": ["mathematics"],
+      "1.A.1.f.2": ["spatial_reasoning"], "1.A.4.a.1": ["attention_to_detail"], "1.A.4.b.4": ["listening"],
+      "1.A.4.b.5": ["communication"]
+    },
+    "skills": {
+      "2.A.1.a": ["verbal_reasoning"], "2.A.1.b": ["listening"], "2.A.1.c": ["writing"],
+      "2.A.1.d": ["communication", "public_speaking"], "2.A.1.e": ["mathematics"], "2.A.1.f": ["research"],
+      "2.A.2.a": ["critical_thinking"], "2.A.2.b": ["learning_variety"], "2.A.2.c": ["learning_variety"],
+      "2.A.2.d": ["attention_to_detail"]
+    },
+    "activities": {
+      "4.A.1.a.1": ["research"], "4.A.1.b.1": ["attention_to_detail"], "4.A.2.a.2": ["problem_solving"],
+      "4.A.2.a.3": ["attention_to_detail"], "4.A.2.a.4": ["data", "research"], "4.A.2.b.1": ["problem_solving"],
+      "4.A.2.b.2": ["creativity"], "4.A.2.b.3": ["learning_variety"], "4.A.2.b.5": ["organization"],
+      "4.A.2.b.6": ["organization"], "4.A.3.a.1": ["manual_work"], "4.A.3.a.4": ["machines_work", "transport"],
+      "4.A.3.b.1": ["computing"], "4.A.3.b.2": ["design", "spatial_reasoning"], "4.A.3.b.6": ["writing", "organization"],
+      "4.A.4.a.1": ["communication"], "4.A.4.a.2": ["communication", "teamwork"], "4.A.4.a.3": ["communication", "people_work"],
+      "4.A.4.a.4": ["people_work", "empathy"], "4.A.4.a.5": ["helping", "care"], "4.A.4.a.6": ["sales", "negotiation"],
+      "4.A.4.a.7": ["negotiation"], "4.A.4.a.8": ["people_work"], "4.A.4.b.1": ["leadership", "organization"],
+      "4.A.4.b.2": ["teamwork", "leadership"], "4.A.4.b.3": ["teaching"], "4.A.4.b.4": ["leadership"],
+      "4.A.4.b.5": ["teaching", "helping"], "4.A.4.c.3": ["administration"]
+    },
+    "contexts": {
+      "4.C.1.a.2.f": ["communication"], "4.C.1.a.2.h": ["office_work"], "4.C.1.a.2.j": ["writing", "office_work"],
+      "4.C.1.a.2.l": ["people_work", "teamwork"], "4.C.1.a.4": ["people_work"], "4.C.1.b.1.e": ["teamwork"],
+      "4.C.1.b.1.f": ["people_work"], "4.C.1.b.1.g": ["leadership"], "4.C.1.c.1": ["care"],
+      "4.C.1.c.2": ["leadership"], "4.C.2.a.1.a": ["office_work"], "4.C.2.a.1.b": ["machines_work"],
+      "4.C.2.a.1.c": ["field_outdoors"], "4.C.2.a.1.f": ["transport", "machines_work"], "4.C.2.d.1.a": ["office_work"],
+      "4.C.2.d.1.b": ["people_work"], "4.C.2.d.1.g": ["manual_work"], "4.C.2.e.1.d": ["machines_work"],
+      "4.C.3.a.2.a": ["dependability"], "4.C.3.a.2.b": ["problem_solving"], "4.C.3.a.4": ["independent_work"],
+      "4.C.3.b.4": ["precision", "attention_to_detail"], "4.C.3.b.8": ["organization"], "4.C.3.d.1": ["stress_tolerance"]
+    },
+    "workStyles": {
+      "1.D.1.a": ["creativity"], "1.D.1.b": ["initiative"], "1.D.1.c": ["learning_variety"], "1.D.1.d": ["adaptability"],
+      "1.D.2.a": ["dependability"], "1.D.2.b": ["attention_to_detail"], "1.D.2.c": ["stress_tolerance"], "1.D.2.d": ["adaptability"],
+      "1.D.3.a": ["initiative"], "1.D.3.b": ["leadership"], "1.D.3.c": ["teamwork"], "1.D.4.a": ["empathy"]
+    }
+  }
+}

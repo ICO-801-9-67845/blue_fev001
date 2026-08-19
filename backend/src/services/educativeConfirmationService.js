@@ -8,6 +8,7 @@ import {
   getDefaultVocationalProfile,
   normalizeVocationalProfile,
 } from "./vocationalPreferenceService.js";
+import { migrateVocationalProfileV2 } from "./vocationalRankingV2Service.js";
 
 const DIRECT_SEARCH_PATTERN = /\b(quiero estudiar|me interesa estudiar|me interesan|busco estudiar|escuelas?|universidades?|instituciones?|opciones de|donde estudiar|que estudiar|carrera|licenciatura|ingenieria|prepa|bachillerato|tsu|maestria|doctorado|posgrado|especialidad)\b/;
 const CONFIRM_PATTERN = /^(?:si|claro|adelante|esta bien|quiero|acepto|por favor|muestrame|muestrame(?: las)? opciones|mostrar opciones|quiero ver escuelas|quiero ver instituciones|ver instituciones|si quiero verlas|quiero conocer las universidades|ensename .+|quiero ver .+)$/;
@@ -17,6 +18,8 @@ const RELATED_PATTERN = /\b(explorar carreras relacionadas|quiero ver carreras r
 const MORE_RELATED_PATTERN = /\b(mostrar mas carreras relacionadas|muestrame mas carreras relacionadas|mas carreras relacionadas|siguientes carreras relacionadas)\b/;
 const MORE_VOCATIONAL_CAREERS = new Set([
   "mostrar mas carreras", "ver mas carreras", "mas carreras", "otras carreras",
+  "dame mas", "otras opciones", "dame mas maestrias", "muestrame mas maestrias",
+  "dame mas doctorados", "muestrame mas doctorados", "dame mas especialidades", "muestrame mas especialidades",
 ]);
 const ORDINALS = new Map([
   ["la primera", 0], ["el primero", 0], ["primera", 0], ["primero", 0], ["opcion 1", 0],
@@ -67,6 +70,7 @@ export function getDefaultEducativeState() {
     shownFamilyProgramIds: [], shownNearbyProgramIds: [], relatedStage: "family",
     eligibleRelatedCareers: [],
     relatedHasMore: false, vocationalProfile: getDefaultVocationalProfile(),
+    vocationalProfileV2: migrateVocationalProfileV2(null),
     vocationalCareerPagination: null,
   };
 }
@@ -101,6 +105,7 @@ export function normalizeEducativeState(value) {
       ? safeValue.vocationalCareerPagination
       : null,
     vocationalProfile: normalizeVocationalProfile(safeValue.vocationalProfile),
+    vocationalProfileV2: migrateVocationalProfileV2(safeValue.vocationalProfileV2 || safeValue.vocationalProfile),
   };
 }
 export function createUiAction(type, payload = {}) {

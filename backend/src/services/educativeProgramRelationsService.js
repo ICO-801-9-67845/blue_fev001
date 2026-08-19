@@ -10,6 +10,12 @@ const relations = JSON.parse(
 
 const programs = relations.programs || {};
 const aliasIndex = new Map();
+const DISCOVERY_STOP_WORDS = new Set([
+  "QUIERO","QUISIERA","BUSCO","DAME","MUESTRAME","MOSTRAR","VER","ESTUDIAR","CURSAR","CONOCER",
+  "CARRERA","CARRERAS","OPCION","OPCIONES","ALGO","RELACIONADO","RELACIONADOS","UNA","UN","DE","DEL","EN","CON",
+  "LICENCIATURA","LICENCIATURAS","INGENIERIA","INGENIERIAS","MAESTRIA","MAESTRIAS","MASTER",
+  "DOCTORADO","DOCTORADOS","ESPECIALIDAD","ESPECIALIDADES","TSU","BACHILLERATO","BACHILLERATOS","PREPA","PREPARATORIA"
+]);
 
 export function normalizeProgramText(value) {
   return String(value || "")
@@ -53,18 +59,53 @@ for (const [programId, program] of Object.entries(programs)) {
   }
 }
 
-function academicLevelsForText(text) {
+export function requestedAcademicLevelForText(text) {
   const normalized = normalizeProgramText(text);
   if (/\b(BACHILLERATO|PREPA|PREPARATORIA|MEDIA SUPERIOR)\b/.test(normalized)) {
-    return new Set(["bachillerato", "tecnico_bachillerato"]);
+    return "bachillerato";
   }
-  if (/\b(TSU|T S U|TECNICO SUPERIOR UNIVERSITARIO)\b/.test(normalized)) {
-    return new Set(["tsu"]);
-  }
-  if (/\bESPECIALIDAD\b/.test(normalized)) return new Set(["especialidad"]);
-  if (/\b(MAESTRIA|MASTER)\b/.test(normalized)) return new Set(["maestria"]);
-  if (/\bDOCTORADO\b/.test(normalized)) return new Set(["doctorado"]);
+  if (/\b(TSU|T S U|TECNICO SUPERIOR UNIVERSITARIO)\b/.test(normalized)) return "tsu";
+  if (/\bESPECIALIDAD(?:ES)?\b/.test(normalized)) return "especialidad";
+  if (/\b(MAESTRIA(?:S)?|MASTER)\b/.test(normalized)) return "maestria";
+  if (/\bDOCTORADO(?:S)?\b/.test(normalized)) return "doctorado";
+  if (/\bINGENIERIA(?:S)?\b/.test(normalized)) return "ingenieria";
+  if (/\bLICENCIATURA(?:S)?\b/.test(normalized)) return "licenciatura";
+  return null;
+}
+
+function academicLevelsForText(text) {
+  const requested = requestedAcademicLevelForText(text);
+  if (requested === "bachillerato") return new Set(["bachillerato", "tecnico_bachillerato"]);
+  if (requested) return new Set([requested]);
   return new Set(["licenciatura", "ingenieria"]);
+}
+
+function discoveryCore(value) {
+  return normalizeProgramText(value).split(" ").filter((token) => token.length > 1 && !DISCOVERY_STOP_WORDS.has(token)).join(" ");
+}
+function bigrams(value) {
+  const compact=value.replace(/\s+/g," "),out=[];
+  for(let index=0;index<compact.length-1;index+=1)out.push(compact.slice(index,index+2));
+  return out;
+}
+function dice(left,right) {
+  const a=bigrams(left),b=bigrams(right);if(!a.length||!b.length)return left===right?1:0;
+  const counts=new Map();for(const item of a)counts.set(item,(counts.get(item)||0)+1);let overlap=0;
+  for(const item of b){const count=counts.get(item)||0;if(count){overlap+=1;counts.set(item,count-1);}}
+  return 2*overlap/(a.length+b.length);
+}
+function tokenCoverage(query,candidate){const queryTokens=[...new Set(query.split(" ").filter(Boolean))],candidateTokens=new Set(candidate.split(" ").filter(Boolean));return queryTokens.length?queryTokens.filter(token=>candidateTokens.has(token)).length/queryTokens.length:0;}
+
+export function resolveFlexibleCanonicalPrograms(text,{academicLevel=null,limit=5}={}){
+  const query=discoveryCore(text);if(query.length<4)return {status:"low_confidence",query,candidates:[]};
+  const allowed=academicLevel?new Set([academicLevel]):academicLevelsForText(text),byProgram=new Map();
+  for(const [normalizedAlias,entries] of aliasIndex){const candidateCore=discoveryCore(normalizedAlias);if(candidateCore.length<3)continue;const coverage=tokenCoverage(query,candidateCore),similarity=dice(query,candidateCore),score=Math.round(Math.max(coverage*.55+similarity*.45,similarity*.85)*10000)/10000;for(const entry of entries){if(!allowed.has(entry.program.level))continue;const current=byProgram.get(entry.programId);if(!current||score>current.score)byProgram.set(entry.programId,{entry,score,coverage,similarity});}}
+  const ranked=[...byProgram.values()].filter(item=>item.score>=.52).sort((a,b)=>b.score-a.score||b.coverage-a.coverage||a.entry.programId.localeCompare(b.entry.programId));
+  if(!ranked.length)return {status:"low_confidence",query,candidates:[]};const margin=ranked[1]?ranked[0].score-ranked[1].score:1;
+  const broadSingleToken = !query.includes(" ") && Boolean(ranked[1]) && margin < .12;
+  const status=ranked[0].score>=.65&&margin>=.08&&!broadSingleToken?"high_confidence":"ambiguous";
+  const selected=status==="high_confidence"?ranked.slice(0,1):ranked.filter(item=>item.score>=ranked[0].score-.12).slice(0,limit);
+  return {status,query,topScore:ranked[0].score,margin:Math.round(margin*10000)/10000,algorithm:"token_coverage_0.55_plus_dice_bigrams_0.45",candidates:selected.map(item=>({...toCareerCandidate(item.entry.programId,item.entry.program,item.entry.alias),discoveryScore:item.score}))};
 }
 
 function containsAt(normalizedText, normalizedAlias, start) {
@@ -196,6 +237,16 @@ export function detectCanonicalProgramOptions(text, { limit = 3 } = {}) {
   }
 
   return selected;
+}
+
+export function getCanonicalProgramsByLevel(level) {
+  const allowedLevels = level === "bachillerato"
+    ? new Set(["bachillerato", "tecnico_bachillerato"])
+    : new Set([level]);
+  return Object.entries(programs)
+    .filter(([, program]) => allowedLevels.has(program.level))
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([programId, program]) => toCareerCandidate(programId, program, program.canonicalName));
 }
 
 export function getFamilyCandidateIds(programId) {

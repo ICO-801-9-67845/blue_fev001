@@ -1,4 +1,4 @@
-import { request as httpsRequest } from "node:https";
+import { Agent as HttpsAgent, request as httpsRequest } from "node:https";
 
 export const OLLAMA_ERROR_CODES = Object.freeze({
   TIMEOUT: "ollama_timeout",
@@ -27,6 +27,15 @@ export class OllamaProviderError extends Error {
     this.code = code;
     this.statusCode = statusCode;
   }
+}
+
+export function createOllamaHttpsAgent(proxyUrl) {
+  if (!proxyUrl) return undefined;
+  return new HttpsAgent({
+    proxyEnv: {
+      HTTPS_PROXY: proxyUrl,
+    },
+  });
 }
 
 function usageCount(value) {
@@ -132,6 +141,7 @@ export function requestOllamaJson({
   hostHeader,
   body,
   timeoutMs,
+  agent,
   requestImpl = httpsRequest,
 }) {
   return new Promise((resolve, reject) => {
@@ -153,6 +163,7 @@ export function requestOllamaJson({
       {
         method: "POST",
         servername: parsedUrl.hostname,
+        ...(agent ? { agent } : {}),
         headers: {
           Host: hostHeader,
           "Content-Type": "application/json",
@@ -229,10 +240,12 @@ export function createOllamaGenerator({
   hostHeader,
   timeoutMs,
   contextLength,
+  proxyUrl = "",
   requestJson = requestOllamaJson,
   writeUsage = (entry) => console.info(entry),
   now = Date.now,
 }) {
+  const agent = createOllamaHttpsAgent(proxyUrl);
   return async function generate({
     requestType,
     model,
@@ -253,6 +266,7 @@ export function createOllamaGenerator({
         url: `${baseUrl}/api/chat`,
         hostHeader,
         timeoutMs,
+        agent,
         body: {
           model,
           messages,

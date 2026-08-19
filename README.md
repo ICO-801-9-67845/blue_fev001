@@ -2,6 +2,8 @@
 
 Aplicacion web de chatbot para orientacion vocacional con enfoque conversacional. El asistente empieza como un amigo cercano, conoce al usuario con naturalidad y despues conecta la charla con intereses, habilidades, estudios y posibles caminos academicos o profesionales.
 
+La cobertura completa, fuentes, scoring y limitaciones del motor v2 se documentan en [docs/vocational-weighting-methodology.md](docs/vocational-weighting-methodology.md).
+
 ## Stack
 
 - Frontend: React + Vite + React Router
@@ -205,6 +207,53 @@ npm run dev -w frontend
 - Los limites conversacionales solo afectan la copia enviada a la conversacion principal de Gemini. La generacion de memoria usa su configuracion independiente y preserva el mensaje de usuario mas reciente.
 - El frontend nunca recibe las API keys; toda la integracion vive en el backend.
 - No subas archivos `.env`, dumps locales ni bases `.db` al repositorio.
+
+## Render + Tailscale + Ollama
+
+La arquitectura de despliegue es:
+
+```text
+Vercel
+  -> Render
+  -> Tailscale userspace networking
+  -> proxy local exclusivo de Ollama
+  -> Tailscale Serve (tailnet-only)
+  -> Ollama
+```
+
+Ollama no se abre a Internet: Tailscale Serve permanece limitado al tailnet y Render se une solamente como cliente, sin anunciar rutas ni la red privada de Render. `OLLAMA_HOST_HEADER=localhost:11434` es intencional para Tailscale Serve, mientras que TLS/SNI continúa validando el hostname real `.ts.net`. `OLLAMA_PROXY_URL` se entrega únicamente al `https.Agent` usado por Ollama; no se exportan `HTTP_PROXY`, `HTTPS_PROXY` ni `NODE_USE_ENV_PROXY`, por lo que Gemini puede seguir configurado sin pasar por Tailscale. `AI_PROVIDER` selecciona el proveedor activo y `AI_FALLBACK_PROVIDER` permanece en `none`.
+
+Configura estas variables en Render sin registrar sus valores secretos en Git:
+
+```env
+NODE_VERSION=22.22.0
+AI_PROVIDER=ollama
+AI_FALLBACK_PROVIDER=none
+OLLAMA_BASE_URL=https://antonio-desktop.tailc04e44.ts.net
+OLLAMA_HOST_HEADER=localhost:11434
+OLLAMA_PROXY_URL=http://127.0.0.1:1055
+OLLAMA_CHAT_MODEL=qwen3:1.7b
+OLLAMA_MEMORY_MODEL=qwen3:1.7b
+OLLAMA_TIMEOUT_MS=180000
+OLLAMA_CONTEXT_LENGTH=2048
+OLLAMA_CHAT_MAX_OUTPUT_TOKENS=300
+OLLAMA_MEMORY_MAX_OUTPUT_TOKENS=600
+OLLAMA_CHAT_TEMPERATURE=0.6
+OLLAMA_MEMORY_TEMPERATURE=0.1
+TAILSCALE_ENABLED=true
+TAILSCALE_AUTHKEY=<SECRET ONLY IN RENDER>
+TAILSCALE_HOSTNAME=blue-render
+TAILSCALE_VERSION=1.96.4
+OLLAMA_SMOKE_TEST=true
+```
+
+Usa `OLLAMA_SMOKE_TEST=true` solo en la primera validación real. Después de observar el éxito en los logs de Render, cámbialo a `false`. El único cambio necesario al comando de inicio del servicio es:
+
+```text
+npm run render:start
+```
+
+El script instala Tailscale localmente si hace falta, inicia `tailscaled` en modo userspace, conecta Render al tailnet y luego inicia el backend. No requiere Docker, `sudo`, systemd, cambios al Build Command ni un Blueprint `render.yaml`.
 
 ## Scripts utiles
 
