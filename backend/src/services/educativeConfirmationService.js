@@ -8,6 +8,7 @@ import {
   getDefaultVocationalProfile,
   normalizeVocationalProfile,
 } from "./vocationalPreferenceService.js";
+import { migrateVocationalProfileV2 } from "./vocationalRankingV2Service.js";
 
 const DIRECT_SEARCH_PATTERN = /\b(quiero estudiar|me interesa estudiar|me interesan|busco estudiar|escuelas?|universidades?|instituciones?|opciones de|donde estudiar|que estudiar|carrera|licenciatura|ingenieria|prepa|bachillerato|tsu|maestria|doctorado|posgrado|especialidad)\b/;
 const CONFIRM_PATTERN = /^(?:si|claro|adelante|esta bien|quiero|acepto|por favor|muestrame|muestrame(?: las)? opciones|mostrar opciones|quiero ver escuelas|quiero ver instituciones|ver instituciones|si quiero verlas|quiero conocer las universidades|ensename .+|quiero ver .+)$/;
@@ -67,6 +68,7 @@ export function getDefaultEducativeState() {
     shownFamilyProgramIds: [], shownNearbyProgramIds: [], relatedStage: "family",
     eligibleRelatedCareers: [],
     relatedHasMore: false, vocationalProfile: getDefaultVocationalProfile(),
+    vocationalProfileV2: migrateVocationalProfileV2(null),
     vocationalCareerPagination: null,
   };
 }
@@ -101,6 +103,7 @@ export function normalizeEducativeState(value) {
       ? safeValue.vocationalCareerPagination
       : null,
     vocationalProfile: normalizeVocationalProfile(safeValue.vocationalProfile),
+    vocationalProfileV2: migrateVocationalProfileV2(safeValue.vocationalProfileV2 || safeValue.vocationalProfile),
   };
 }
 export function createUiAction(type, payload = {}) {

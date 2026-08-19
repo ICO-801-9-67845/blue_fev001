@@ -761,7 +761,7 @@ await test("limite visual se aplica despues del ranking", async () => {
   assert.ok(h.rankingInputs[0].candidates.length >= 4);
   assert.equal(response.assistantMessage.uiAction.careers.length,
     Math.min(h.rankingInputs[0].candidates.length, 5));
-  assert.equal(h.detectorOptions[0].limit, 128);
+  assert.equal(h.detectorOptions[0].limit, 512);
 });
 await test("redirect_url permanece intacto y no se rankea", async () => {
 await test("ocho rankeadas retienen siete validas y muestran cinco", async () => {

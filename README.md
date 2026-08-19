@@ -2,6 +2,8 @@
 
 Aplicacion web de chatbot para orientacion vocacional con enfoque conversacional. El asistente empieza como un amigo cercano, conoce al usuario con naturalidad y despues conecta la charla con intereses, habilidades, estudios y posibles caminos academicos o profesionales.
 
+La cobertura completa, fuentes, scoring y limitaciones del motor v2 se documentan en [docs/vocational-weighting-methodology.md](docs/vocational-weighting-methodology.md).
+
 ## Stack
 
 - Frontend: React + Vite + React Router

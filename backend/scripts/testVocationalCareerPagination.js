@@ -63,7 +63,7 @@ for (const count of [0, 1, 3, 5, 6, 10, 11, 25, 128]) {
 await test("constantes de contrato cerradas", () => {
   assert.equal(VOCATIONAL_CAREER_PAGINATION_VERSION, 1);
   assert.equal(VOCATIONAL_CAREER_PAGE_SIZE, 5);
-  assert.equal(VOCATIONAL_CAREER_MAX_OPTIONS, 128);
+  assert.equal(VOCATIONAL_CAREER_MAX_OPTIONS, 512);
 });
 await test("primera pagina preserva orden", () =>
   assert.deepEqual(getCurrentVocationalCareerPage(state(6)).careers.map((item) => item.name),
@@ -211,8 +211,8 @@ await test("prototipo personalizado rechazado", () => {
   code(() => createVocationalCareerPaginationState([hostile]), "invalid_vocational_career_option");
 });
 await test("limite de 128 aceptado", () => assert.equal(state(128).total, 128));
-await test("candidato 129 falla cerrado", () =>
-  code(() => state(129), "invalid_vocational_career_snapshot"));
+await test("candidato 513 falla cerrado", () =>
+  code(() => state(513), "invalid_vocational_career_snapshot"));
 await test("pagina siguiente incrementa version", () => {
   const first = state(6, { stateVersion: 8 });
   assert.equal(getNextVocationalCareerPage(first).stateVersion, 9);

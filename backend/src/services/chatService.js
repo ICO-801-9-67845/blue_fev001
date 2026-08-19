@@ -53,6 +53,13 @@ import {
 } from "./vocationalPreferenceService.js";
 import { rankVocationalFlowCandidates } from "./vocationalRankingIntegrationService.js";
 import {
+  diversifyVocationalPresentation,
+  extractVocationalEvidenceV2,
+  migrateVocationalProfileV2,
+  rankFullVocationalCatalog,
+  toCanonicalCareerV2,
+} from "./vocationalRankingV2Service.js";
+import {
   closeVocationalCareerPaginationState,
   createVocationalCareerPaginationState,
   getCurrentVocationalCareerPage,
@@ -60,7 +67,7 @@ import {
 } from "./vocationalCareerPaginationService.js";
 
 const MEMORY_SUMMARY_MESSAGE_LIMIT = 12;
-const VOCATIONAL_CANDIDATE_LIMIT = 128;
+const VOCATIONAL_CANDIDATE_LIMIT = 512;
 const SAFE_VOCATIONAL_FALLBACK =
   "Necesito un poco mas de informacion sobre tus intereses antes de sugerir una carrera. Podemos seguir conversando.";
 const EXPLICIT_CAREER_REQUEST_PATTERN =
@@ -689,7 +696,11 @@ async function createUserMessageWithVocationalProfile(
     currentProfile: normalizeVocationalProfile(currentState.vocationalProfile),
     canonicalMentions: detectedCareerMentions,
   });
-  if (!hasVocationalOperations(extraction)) {
+  const provisionalV2Signals = extractVocationalEvidenceV2(content, {
+    revision: (currentState.vocationalProfileV2?.revision || 0) + 1,
+    observedAt: new Date().toISOString(),
+  });
+  if (!hasVocationalOperations(extraction) && provisionalV2Signals.length === 0) {
     const userMessage = await createMessage({
       chatId: chat.id,
       role: "user",
@@ -707,9 +718,36 @@ async function createUserMessageWithVocationalProfile(
       nextRevision: currentState.vocationalProfile.revision + 1,
       observedAt: userMessage.createdAt.toISOString(),
     });
-    if (!applied.changed) return { userMessage, state: currentState, profilePersisted: false };
+    if (!applied.changed && provisionalV2Signals.length === 0) {
+      return { userMessage, state: currentState, profilePersisted: false };
+    }
 
-    const nextState = { ...currentState, vocationalProfile: applied.profile };
+    const previousV2 = migrateVocationalProfileV2(currentState.vocationalProfileV2 || currentState.vocationalProfile);
+    const v2Signals = extractVocationalEvidenceV2(content, {
+      revision: previousV2.revision + 1,
+      observedAt: userMessage.createdAt.toISOString(),
+    });
+    if (!applied.changed && currentState.vocationalProfile.signals.length >= 128) {
+      return { userMessage, state: currentState, profilePersisted: false };
+    }
+    const mergedV2 = new Map(previousV2.signals.map((signal) => [`${signal.conceptId}|${signal.dimension}`, signal]));
+    let v2Changed = false;
+    for (const signal of v2Signals) {
+      const key = `${signal.conceptId}|${signal.dimension}`;
+      const existing = mergedV2.get(key);
+      if (!existing || existing.polarity !== signal.polarity || existing.intensity !== signal.intensity || existing.source !== signal.source) {
+        mergedV2.set(key, signal);
+        v2Changed = true;
+      }
+    }
+    if (!applied.changed && !v2Changed) {
+      return { userMessage, state: currentState, profilePersisted: false };
+    }
+    const nextState = {
+      ...currentState,
+      vocationalProfile: applied.profile,
+      vocationalProfileV2: { ...previousV2, revision: v2Changed ? previousV2.revision + 1 : previousV2.revision, signals: [...mergedV2.values()] },
+    };
     const updated = await transaction.chat.updateMany({
       where: { id: chat.id, userId: chat.userId, educativeStateVersion: expectedVersion },
       data: { educativeState: nextState, educativeStateVersion: { increment: 1 } },
@@ -1950,7 +1988,15 @@ export async function sendMessage(chatId, userId, content, action = null) {
     await updateTitleAfterMessage(chat, content);
     return { userMessage, assistantMessage };
   }
-  const directCareers = await filterRankedCareersForPrompt(directRanking);
+  let directCareers = await filterRankedCareersForPrompt(directRanking);
+  if (!directCareers.length && currentState.vocationalProfileV2?.signals?.filter((signal) => signal.polarity === "positive").length >= 2) {
+    const inferred = rankFullVocationalCatalog({
+      vocationalProfile: currentState.vocationalProfileV2,
+      currentRevision: currentState.vocationalProfileV2.revision,
+    });
+    directCareers = diversifyVocationalPresentation(inferred.ordered, { limit: 5 })
+      .map(toCanonicalCareerV2);
+  }
   const messagesSinceDeferral = currentState.deferredSearch
     ? currentState.messagesSinceDeferral + 1
     : currentState.messagesSinceDeferral;

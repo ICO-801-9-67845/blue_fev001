@@ -1,6 +1,6 @@
 export const VOCATIONAL_CAREER_PAGINATION_VERSION = 1;
 export const VOCATIONAL_CAREER_PAGE_SIZE = 5;
-export const VOCATIONAL_CAREER_MAX_OPTIONS = 128;
+export const VOCATIONAL_CAREER_MAX_OPTIONS = 512;
 
 const OPEN = "open";
 const CLOSED = "closed";
