@@ -9,7 +9,7 @@ const contains = (text, alias) => new RegExp(`(?:^|\\s)${norm(alias).replace(/[.
 const clamp = (n) => Math.max(-100,Math.min(100,Math.round(n*100)/100));
 const recency = (distance) => distance<=8?1:distance<=20?.85:distance<=40?.7:.5;
 const LEVELS = { secundaria:["bachillerato","tecnico_bachillerato"], preparatoria:["tsu","licenciatura","ingenieria"], tsu:["licenciatura","ingenieria"], licenciatura:["especialidad","maestria"], maestria:["doctorado"] };
-const WEIGHTS = Object.freeze({ interestPositive:14, interestNegative:-22, abilityPositive:7, abilityNegative:-5, preferencePositive:10, preferenceNegative:-14, restrictionNegative:-28, riasec:18, stageImmediate:8, stagePathway:-4, explicitRequest:38, explicitSelection:44 });
+const WEIGHTS = Object.freeze({ interestPositive:14, interestNegative:-22, abilityPositive:7, abilityNegative:-5, preferencePositive:10, preferenceNegative:-14, restrictionNegative:-28, riasec:18, stageImmediate:8, stagePathway:-4, fieldContinuityMatch:10, fieldContinuityUncertain:-3, explicitRequest:38, explicitSelection:44 });
 
 export function migrateVocationalProfileV2(value) {
   const source = value && typeof value === "object" ? value : {};
@@ -17,9 +17,20 @@ export function migrateVocationalProfileV2(value) {
 }
 
 export function extractAcademicStageV2(text) {
-  const value=norm(text),completed=/\b(?:ya termine|termine|conclui|complete|egrese)\b/.test(value);
-  const stage=/\b(?:secundaria|tercero de secundaria)\b/.test(value)?"secundaria":/\b(?:prepa|preparatoria|bachillerato)\b/.test(value)?"preparatoria":/\b(?:tsu|tecnico superior universitario)\b/.test(value)?"tsu":/\b(?:licenciatura|universidad)\b/.test(value)?"licenciatura":/\bmaestria\b/.test(value)?"maestria":/\bdoctorado\b/.test(value)?"doctorado":null;
-  return stage ? (completed?{completedAcademicStage:stage}:{currentAcademicStage:stage}) : {};
+  const value=norm(text),aspirational=/\b(?:quiero (?:estudiar|ver|conocer)|me gustaria estudiar|estoy buscando|busco)\b/.test(value);
+  const stages=[
+    ["secundaria",/(?:secundaria|tercero de secundaria)/],["preparatoria",/(?:prepa|preparatoria|bachillerato)/],
+    ["tsu",/(?:tsu|tecnico superior universitario)/],["licenciatura",/(?:licenciatura|universidad)/],
+    ["maestria",/maestria/],["doctorado",/doctorado/]
+  ];
+  const stage=stages.find(([,pattern])=>pattern.test(value))?.[0];
+  if(!stage||aspirational)return {};
+  const completed=/\b(?:ya termine|termine|conclui|complete|egrese(?: de)?)\b/.test(value);
+  const priorFieldPatterns=[["psychology",/psicolog/],["health",/medicin|enfermer|salud|nutric/],["ict",/comput|informat|software|sistemas|ciber/],["engineering",/ingenier|industrial|mecanic|electron/],["business",/administra|contab|finanz|negocio/],["law",/derecho|jurid/],["arts",/arte|diseno|musica/],["education",/educa|pedagog/],["science",/biolog|quimic|fisic|matematic/]];
+  const priorFields=priorFieldPatterns.filter(([,pattern])=>pattern.test(value)).map(([field])=>field);
+  if(completed)return {completedAcademicStage:stage,...(priorFields.length?{priorFields}:{})};
+  const current=/\b(?:estoy (?:en|cursando)|curso|voy en|actualmente estudio)\b/.test(value);
+  return current?{currentAcademicStage:stage}:{};
 }
 
 export function extractVocationalEvidenceV2(text, { revision=1, observedAt=new Date().toISOString() }={}) {
@@ -39,20 +50,21 @@ function userRiasec(signals) { const v={R:0,I:0,A:0,S:0,E:0,C:0}; for(const s of
 function cosine(a,b){const keys=["R","I","A","S","E","C"], dot=keys.reduce((n,k)=>n+a[k]*b[k],0), x=Math.sqrt(keys.reduce((n,k)=>n+a[k]**2,0)), y=Math.sqrt(keys.reduce((n,k)=>n+b[k]**2,0)); return x&&y?dot/(x*y):0;}
 
 export function rankFullVocationalCatalog({ vocationalProfile, currentRevision, candidateSource="profile_inference", explicitProgramId=null }={}) {
-  const p=migrateVocationalProfileV2(vocationalProfile), revision=currentRevision??p.revision, u=userRiasec(p.signals), immediate=new Set(LEVELS[p.currentAcademicStage]||[]);
+  const p=migrateVocationalProfileV2(vocationalProfile), revision=currentRevision??p.revision, u=userRiasec(p.signals),effectiveStage=p.currentAcademicStage||p.completedAcademicStage, immediate=new Set(LEVELS[effectiveStage]||[]);
   const ordered=Object.keys(profiles).map(id=>{const profile=profiles[id], breakdown=[]; let score=0,pos=0,neg=0,blocked=false;
     if(explicitProgramId===id){const n=candidateSource==="explicit_user_selection"?WEIGHTS.explicitSelection:WEIGHTS.explicitRequest;score+=n;breakdown.push({code:candidateSource,value:n});}
     for(const e of p.exclusions) if(e.targetKind==="program"&&e.targetId===id&&e.mode==="exact") blocked=true;
     const weights={...profile.traitWeights.subjects,...profile.traitWeights.activities,...profile.traitWeights.abilities,...profile.traitWeights.workStyles,...profile.traitWeights.contexts};
-    for(const s of p.signals){const affinity=weights[s.conceptId]||0;if(!affinity)continue;const key=`${s.dimension}${s.polarity[0].toUpperCase()+s.polarity.slice(1)}`;const base=WEIGHTS[key]||0,value=base*(s.intensity/3)*recency(revision-s.updatedRevision)*affinity;score+=value;(value>=0?pos++:neg++);breakdown.push({code:key,conceptId:s.conceptId,value:Math.round(value*100)/100});if(s.dimension==="restriction"&&s.polarity==="negative"&&affinity>=1)blocked=true;}
+    for(const s of p.signals){const restriction=profile.contextRestrictions?.[s.conceptId],affinity=weights[s.conceptId]||restriction?.affinity||0;if(!affinity)continue;const key=`${s.dimension}${s.polarity[0].toUpperCase()+s.polarity.slice(1)}`;const base=WEIGHTS[key]||0,value=base*(s.intensity/3)*recency(revision-s.updatedRevision)*affinity;score+=value;(value>=0?pos++:neg++);breakdown.push({code:key,conceptId:s.conceptId,value:Math.round(value*100)/100});if(s.dimension==="restriction"&&s.polarity==="negative"&&restriction?.hardRestrictionEligible&&restriction.affinity>=1)blocked=true;}
     const fit=Math.max(0,cosine(u,profile.riasec))*WEIGHTS.riasec; if(fit){score+=fit;breakdown.push({code:"riasec_fit",value:Math.round(fit*100)/100});}
-    const stage=immediate.has(profile.academicLevel)?WEIGHTS.stageImmediate:(p.currentAcademicStage?WEIGHTS.stagePathway:0);score+=stage;if(stage)breakdown.push({code:stage>0?"academic_stage_match":"pathway_option",value:stage});
+    const stage=immediate.has(profile.academicLevel)?WEIGHTS.stageImmediate:(effectiveStage?WEIGHTS.stagePathway:0);score+=stage;if(stage)breakdown.push({code:stage>0?"academic_stage_match":"pathway_option",value:stage,stageSource:p.currentAcademicStage?"currentAcademicStage":"completedAcademicStage"});
+    if(["especialidad","maestria","doctorado"].includes(profile.academicLevel)&&p.priorFields.length){const compatible=p.priorFields.includes(profile.classification.domainId)||p.priorFields.includes(profile.classification.cmpe2016.fieldCode)||p.priorFields.includes(profile.classification.iscedF2013.fieldCode),continuity=compatible?WEIGHTS.fieldContinuityMatch:WEIGHTS.fieldContinuityUncertain;score+=continuity;breakdown.push({code:compatible?"field_continuity_match":"field_continuity_uncertain",value:continuity});}
     score=blocked?-100:clamp(score);const explicit=explicitProgramId===id;return {canonicalProgramId:id,academicLevel:profile.academicLevel,classification:blocked?"rejected":explicit?"accepted":pos>=2&&score>=20?"accepted":pos>=1&&score>=8?"confirmation_required":"rejected",score,positiveEvidenceCount:pos,negativeEvidenceCount:neg,reasonCodes:[...new Set(breakdown.map(x=>x.code))],scoreBreakdown:breakdown,confidenceBand:profile.provenance.confidenceBand,family:profile.provenance.derivationMethod};
   }).sort((a,b)=>b.score-a.score||b.positiveEvidenceCount-a.positiveEvidenceCount||a.canonicalProgramId.localeCompare(b.canonicalProgramId));
   return {catalogProgramCount:ordered.length,accepted:ordered.filter(x=>x.classification==="accepted"),confirmationRequired:ordered.filter(x=>x.classification==="confirmation_required"),rejected:ordered.filter(x=>x.classification==="rejected"),ordered};
 }
 
 export function diversifyVocationalPresentation(ordered,{limit=5,maxScoreGap=12}={}){const eligible=ordered.filter(x=>x.classification!=="rejected"),out=[],families=new Set();for(const row of eligible){const family=row.family;if(out.length===0||(row.score>=out[0].score-maxScoreGap&&!families.has(family))||out.length>=Math.ceil(limit/2)){out.push(row);families.add(family);}if(out.length===limit)break;}return out;}
-export function nextBestVocationalQuestion(ordered,profile){const top=ordered.filter(x=>x.classification!=="rejected").slice(0,5),known=new Set(migrateVocationalProfileV2(profile).signals.map(x=>x.conceptId));if(top.length<2||top[0].score-top[1].score>10)return null;const candidates=new Map();for(const row of top)for(const [id,w] of Object.entries({...profiles[row.canonicalProgramId].traitWeights.subjects,...profiles[row.canonicalProgramId].traitWeights.activities}))if(!known.has(id)){const a=candidates.get(id)||[];a.push(w);candidates.set(id,a);}const best=[...candidates].sort((a,b)=>(Math.max(...b[1])-Math.min(...b[1]))-(Math.max(...a[1])-Math.min(...a[1]))||a[0].localeCompare(b[0]))[0]?.[0];return best?`¿Qué tanto te interesa ${concepts.get(best)?.aliases[0]||best}?`:null;}
+export function nextBestVocationalQuestion(ordered,profile,{recentQuestionConceptIds=[]}={}){const top=ordered.filter(x=>x.classification!=="rejected").slice(0,3),known=new Set([...migrateVocationalProfileV2(profile).signals.map(x=>x.conceptId),...recentQuestionConceptIds]);if(top.length<2||top[0].score-top[1].score>10)return null;const candidates=new Map();for(const row of top)for(const [id,w] of Object.entries({...profiles[row.canonicalProgramId].traitWeights.subjects,...profiles[row.canonicalProgramId].traitWeights.activities,...profiles[row.canonicalProgramId].traitWeights.contexts}))if(!known.has(id)){const values=candidates.get(id)||[];values.push(w);candidates.set(id,values);}const best=[...candidates].filter(([,values])=>values.length>1).sort((a,b)=>(Math.max(...b[1])-Math.min(...b[1]))-(Math.max(...a[1])-Math.min(...a[1]))||a[0].localeCompare(b[0]))[0]?.[0];return best?{conceptId:best,question:`¿Qué tanto te interesa ${concepts.get(best)?.aliases[0]||best}?`}:null;}
 export function toCanonicalCareerV2(row){const p=relations[row.canonicalProgramId];return {canonicalProgramId:row.canonicalProgramId,name:p.displayName,normalizedName:p.canonicalName,level:p.level,academicLevel:p.level,searchQuery:p.displayName,familyId:p.familyId,exactAliases:[...p.exactAliases],vocationalBucket:row.classification,score:row.score};}
 export { WEIGHTS as VOCATIONAL_V2_WEIGHTS };

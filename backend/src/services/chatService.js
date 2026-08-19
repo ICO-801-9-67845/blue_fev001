@@ -730,12 +730,11 @@ async function createUserMessageWithVocationalProfile(
       revision: previousV2.revision + 1,
       observedAt: userMessage.createdAt.toISOString(),
     });
-    if (!applied.changed && currentState.vocationalProfile.signals.length >= 128) {
-      return { userMessage, state: currentState, profilePersisted: false };
-    }
     const mergedV2 = new Map(previousV2.signals.map((signal) => [`${signal.conceptId}|${signal.dimension}`, signal]));
     const stageUpdate = extractAcademicStageV2(content);
-    const stageChanged = Object.entries(stageUpdate).some(([key,value]) => previousV2[key] !== value);
+    const stageChanged = Object.entries(stageUpdate).some(([key,value]) =>
+      Array.isArray(value) ? JSON.stringify(previousV2[key] || []) !== JSON.stringify(value) : previousV2[key] !== value
+    );
     let v2Changed = false;
     for (const signal of v2Signals) {
       const key = `${signal.conceptId}|${signal.dimension}`;
@@ -1956,11 +1955,17 @@ export async function sendMessage(chatId, userId, content, action = null) {
       .filter((signal) => signal.polarity === "positive" && ["interest", "preference"].includes(signal.dimension)).length;
     const rankedRows = currentState.vocationalRankingV2?.ordered || [];
     const asksForGuidance = /\b(?:orientacion vocacional|elegir (?:una )?carrera|que carrera)\b/u.test(normalizeEducativeText(content));
-    if (asksForGuidance && positiveCount < 2 && rankedRows.length) {
-      const question = !currentState.vocationalProfileV2.currentAcademicStage
-        ? "¿En qué nivel de estudios estás actualmente?"
+    const canAskDiscriminant = positiveCount >= 2
+      && detectedCareerMentions.length === 0
+      && !currentState.pendingConfirmationActionId;
+    if (rankedRows.length && ((asksForGuidance && positiveCount < 2) || canAskDiscriminant)) {
+      const result = asksForGuidance && positiveCount < 2 && !currentState.vocationalProfileV2.currentAcademicStage
+        ? { question: "¿En qué nivel de estudios estás actualmente?" }
         : nextBestVocationalQuestion(rankedRows, currentState.vocationalProfileV2);
-      if (question) {
+      const question = result?.question;
+      const recentMessages = question ? (await listMessagesByChatId(chatId)).slice(-12) : [];
+      const alreadyAsked = recentMessages.some((message) => message.role === "assistant" && message.content === question);
+      if (question && !alreadyAsked) {
         const assistantMessage = await createMessage({ chatId, role: "assistant", content: question });
         await updateTitleAfterMessage(chat, content);
         return { userMessage, assistantMessage };

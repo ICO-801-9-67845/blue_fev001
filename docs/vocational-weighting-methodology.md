@@ -12,7 +12,8 @@ La base teórica incluye la formulación original de [Social Cognitive Career Th
 
 - CMPE 2016 e ISCED-F 2013 se almacenan por separado; las coincidencias de código no implican que ambas taxonomías sean intercambiables.
 - El snapshot compacto `onetVocationalSnapshot.json` se derivó de O*NET Database 30.3. Contiene 21 ocupaciones utilizadas y, para cada una, RIASEC, los ocho elementos principales de Knowledge, Essential Skills, Abilities, Work Activities, Work Context y Work Styles. El ZIP oficial tuvo SHA-256 `78703906d5eb92faaa3d912164bbee7706658d85630143d9716df040f9a9f6aa`.
-- Solo los perfiles con `occupationalMappings` citan O*NET en provenance. Un fallback declara expresamente `O*NET not used`.
+- `onetVocationalCrosswalkV2.json` transforma únicamente coincidencias exactas de `Element ID` a conceptos Blue; no usa coincidencia libre por substring. Knowledge alimenta `subjects`; Work Activities, `activities`; Abilities y Essential Skills, `abilities`; Work Context, `contexts`; y Work Styles, `workStyles`. Los valores se normalizan, se promedian determinísticamente cuando hay varias ocupaciones y conservan evidencia por SOC, elemento, nombre y valor.
+- Si una dimensión mapeada no produce conceptos, solamente esa dimensión usa el crosswalk académico `DOMAINS`. Solo los perfiles con `occupationalMappings` citan O*NET en provenance; un fallback declara expresamente `O*NET not used`.
 
 ## Decisiones de ingeniería de Blue
 
@@ -20,7 +21,9 @@ Los pesos, thresholds, bandas de recencia, reglas de etapa, diversidad, pregunta
 
 ## Mapping y procedencia
 
-El generador procesa IDs y nombres canónicos en orden estable. Las excepciones semánticas preceden a reglas generales: veterinaria→0841, psicología→0313 y protección civil→1032, entre otras. La jerarquía es mapping programa–ocupación defendible → agregado de varias ocupaciones → fallback de campo. Un mapping O*NET único se marca high, un agregado defendible medium y un fallback low/revisión experta. Cobertura no significa confianza perfecta.
+El generador procesa IDs y nombres canónicos en orden estable. Las excepciones semánticas preceden a reglas generales: ciberseguridad→ICT 061, veterinaria→0841, psicología→0313 y protección civil→1032, entre otras. CMPE e ISCED-F guardan independientemente `broad_field`, `narrow_field` o `detailed_field`; el nivel no se deduce de la longitud del código.
+
+Cada regla ocupacional declara `onetSocCodes`, `mappingConfidence`, `mappingRationale` y `mappingType`. La confianza es un juicio semántico explícito: una sola ocupación puede ser medium o low y un agregado puede ser high. El auditor reporta reglas coincidentes, fallbacks generales, términos ambiguos y confianza taxonómica baja.
 
 ## Evidencia, correcciones y migración
 
@@ -35,18 +38,20 @@ La evidencia es el source of truth. Cada señal conserva concepto, dimensión (`
 | interés positivo / negativo | +14 / -22 |
 | habilidad positiva / dificultad | +7 / -5 |
 | preferencia positiva / negativa | +10 / -14 |
-| restricción incompatible | -28; exclusión dura con afinidad plena |
+| restricción incompatible | -28; exclusión dura solo con contexto explícito revisado y confianza alta |
 | RIASEC completo | 0 a +18 |
 | etapa inmediata / trayectoria | +8 / -4 |
 | solicitud / selección explícita | +38 / +44 |
 
-Recencia por distancia de revisión: 0–8 = 1; 9–20 = 0.85; 21–40 = 0.70; más de 40 = 0.50. Exclusión exacta o restricción plenamente incompatible fija -100. Una petición explícita válida puede explorarse con evidencia escasa salvo exclusión vigente.
+Recencia por distancia de revisión: 0–8 = 1; 9–20 = 0.85; 21–40 = 0.70; más de 40 = 0.50. Una exclusión exacta de programa fija -100. Una restricción contextual solo hace hard block si `contextRestrictions` contiene evidencia explícita revisada con confianza alta; los contextos amplios o de fallback solo penalizan. Una petición explícita válida puede explorarse con evidencia escasa salvo exclusión vigente.
 
 ## Niveles y presentación
 
-Secundaria prioriza bachillerato/técnico; preparatoria, TSU/licenciatura/ingeniería; TSU, licenciatura/ingeniería; licenciatura, especialidad/maestría; maestría, doctorado. Otras opciones son trayectorias, sin afirmar prerrequisitos. Bachillerato general usa campo/trayectoria, no ocupación falsa. Posgrados requieren continuidad de campo cuando exista evidencia.
+Secundaria prioriza bachillerato/técnico; preparatoria, TSU/licenciatura/ingeniería; TSU, licenciatura/ingeniería; licenciatura, especialidad/maestría; maestría, doctorado. `currentAcademicStage` tiene precedencia; cuando no existe, `completedAcademicStage` define únicamente afinidad de la siguiente etapa (licenciatura→especialidad/maestría, maestría→doctorado), sin afirmar admisión ni prerrequisitos.
 
-Los 462 perfiles se rankean en memoria; solo pocos resultados llegan al LLM. El ranking completo se conserva para paginación y diversidad solo cambia presentación. La base educativa decide instituciones. Ningún atributo sensible participa. Los IDs se validan contra catálogo y el máximo defensivo es 512.
+Para especialidad, maestría y doctorado, `priorFields` compatible suma `field_continuity_match` (+10). Un campo previo conocido pero distinto produce `field_continuity_uncertain` (-3), nunca un bloqueo. Si el campo previo es desconocido no se presume. Bachillerato general usa campo/trayectoria, no una ocupación falsa.
+
+Los 462 perfiles se rankean en memoria después de cada cambio V2; el límite histórico de 128 señales V1 no detiene V2. Solo pocos resultados llegan al LLM. Si los tres primeros están próximos, existe una señal no respondida que los discrimina, no hay selección explícita ni acción pendiente y no se preguntó lo mismo recientemente, Blue puede formular como máximo una pregunta determinística. Un ganador con ventaja mayor a 10 puntos no dispara pregunta. La base educativa decide instituciones. Ningún atributo sensible participa. Los IDs se validan contra catálogo y el máximo defensivo es 512.
 
 ## Limitaciones
 

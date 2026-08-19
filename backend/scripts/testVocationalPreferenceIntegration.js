@@ -281,19 +281,20 @@ await test("07 real conflict calls Gemini zero times", async () => {
   await assert.rejects(sendMessage(h.chat.id, h.chat.userId, "Me gustan las matemáticas"));
   assert.equal(h.calls.gemini, 0);
 });
-await test("08 real capacity rejection saves user message", async () => {
+await test("08 v1 capacity still saves user message", async () => {
   const h = createHarness(fullProfile());
   await sendMessage(h.chat.id, h.chat.userId, "Me gusta la salud");
   assert.equal(h.messages.filter((message) => message.role === "user").length, 1);
 });
-await test("09 real capacity rejection preserves profile", async () => {
+await test("09 v1 capacity preserves v1 while v2 evolves", async () => {
   const profile = fullProfile();
   const h = createHarness(profile);
   await sendMessage(h.chat.id, h.chat.userId, "Me gusta la salud");
   assert.ok(profilesEqual(h.chat.educativeState.vocationalProfile, profile));
-  assert.equal(h.chat.educativeStateVersion, 0);
+  assert.ok(h.chat.educativeState.vocationalProfileV2.signals.some((signal) => signal.conceptId === "health"));
+  assert.equal(h.chat.educativeStateVersion, 1);
 });
-await test("10 real capacity path calls Gemini once", async () => {
+await test("10 v1 capacity path keeps normal reply after v2 persistence", async () => {
   const h = createHarness(fullProfile());
   await sendMessage(h.chat.id, h.chat.userId, "Me gusta la salud");
   assert.equal(h.calls.gemini, 1);
@@ -415,6 +416,23 @@ await test("28 insufficient guidance asks one deterministic question", async () 
   const h = createHarness();
   const result = await sendMessage(h.chat.id, h.chat.userId, "Ayúdame a elegir una carrera, me gusta la biología");
   assert.match(result.assistantMessage.content, /nivel de estudios/i);
+  assert.equal(h.calls.gemini, 0);
+});
+await test("29 aspirational master request does not set current stage", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar una maestría");
+  assert.equal(h.chat.educativeState.vocationalProfileV2?.currentAcademicStage || null, null);
+});
+await test("30 explicit current master stage persists", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Estoy cursando una maestría");
+  assert.equal(h.chat.educativeState.vocationalProfileV2.currentAcademicStage, "maestria");
+});
+await test("31 close candidates after two signals ask one discriminant", async () => {
+  const h = createHarness();
+  const result = await sendMessage(h.chat.id, h.chat.userId, "Me gusta diseñar y construir");
+  assert.match(result.assistantMessage.content, /^¿Qué tanto te interesa /);
+  assert.equal(h.messages.filter((message) => message.role === "assistant").length, 1);
   assert.equal(h.calls.gemini, 0);
 });
 
