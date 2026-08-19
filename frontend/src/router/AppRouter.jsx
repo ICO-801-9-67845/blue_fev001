@@ -3,6 +3,10 @@ import { useAuth } from "../hooks/useAuth";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import ChatPage from "../pages/ChatPage";
+import SchedulePage from "../pages/SchedulePage";
+import FocusPage from "../pages/FocusPage";
+import CvBuilderPage from "../pages/CvBuilderPage";
+import ToolsLayout from "../components/ToolsLayout";
 import AdminAnalyticsPage from "../pages/AdminAnalyticsPage";
 import FutureSimulatorPage from "../pages/FutureSimulatorPage";
 import CareerLabPage from "../pages/CareerLabPage";
@@ -64,6 +68,19 @@ export default function AppRouter() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/tools"
+        element={
+          <ProtectedRoute>
+            <ToolsLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="/tools/schedule" replace />} />
+        <Route path="schedule" element={<SchedulePage />} />
+        <Route path="focus" element={<FocusPage />} />
+        <Route path="cv" element={<CvBuilderPage />} />
+      </Route>
       <Route
         path="/modo-2032"
         element={<ProtectedRoute><FutureSimulatorPage /></ProtectedRoute>}
