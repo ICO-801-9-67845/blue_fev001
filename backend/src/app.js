@@ -1,15 +1,21 @@
 import cors from "cors";
 import express from "express";
-import { FRONTEND_URL } from "./config/env.js";
+import { FRONTEND_ORIGINS } from "./config/env.js";
 import authRoutes from "./routes/authRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
+import adminAnalyticsRoutes from "./routes/adminAnalyticsRoutes.js";
+import futureSimulatorRoutes from "./routes/futureSimulatorRoutes.js";
+import careerLabRoutes from "./routes/careerLabRoutes.js";
 import { errorHandler, notFoundHandler } from "./middlewares/errorMiddleware.js";
 
 const app = express();
 
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin(origin, callback) {
+      callback(null, !origin || FRONTEND_ORIGINS.includes(origin));
+    },
     credentials: true,
   }),
 );
@@ -21,6 +27,10 @@ app.get("/api/health", (_request, response) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/chats", chatRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/admin/analytics", adminAnalyticsRoutes);
+app.use("/api/future-simulator", futureSimulatorRoutes);
+app.use("/api/career-lab", careerLabRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

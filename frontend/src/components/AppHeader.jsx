@@ -1,17 +1,29 @@
 import { Link } from "react-router-dom";
 
-export default function AppHeader({ user, onLogout }) {
+export default function AppHeader({ user, onLogout, isSidebarOpen, onToggleSidebar }) {
   return (
     <header className="chat-header">
-      <div>
-        <p className="eyebrow">Espacio personal</p>
-        <h2>Conversa a tu ritmo</h2>
+      <div className="chat-header-title">
+        <button
+          className="sidebar-toggle"
+          type="button"
+          onClick={onToggleSidebar}
+          aria-label={isSidebarOpen ? "Cerrar historial" : "Abrir historial"}
+        >
+          {isSidebarOpen ? "×" : "☰"}
+        </button>
+        <div>
+          <p className="eyebrow">Espacio personal</p>
+          <h2>Conversa a tu ritmo</h2>
+        </div>
       </div>
 
       <div className="header-actions">
         <Link className="ghost-button header-tools-link" to="/tools/schedule">
           Herramientas
         </Link>
+        <Link className="ghost-button" to="/career-lab">🧪 Career Lab</Link>
+        <Link className="ghost-button" to="/modo-2032">🔮 Modo 2032</Link>
         <div className="user-chip">
           <span>{user?.name?.split(" ")[0]}</span>
           <small>{user?.email}</small>

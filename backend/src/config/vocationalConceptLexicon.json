@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "concepts": [
+    { "id": "mathematics", "kind": "subject", "aliases": ["matematica", "matematicas"] },
+    { "id": "design", "kind": "activity", "aliases": ["diseno", "disenar"] },
+    { "id": "construction", "kind": "activity", "aliases": ["construccion", "construir", "construir cosas"] },
+    { "id": "drawing", "kind": "activity", "aliases": ["dibujo", "dibujar", "dibujando"] },
+    { "id": "programming", "kind": "activity", "aliases": ["programacion", "programar", "programando"] },
+    { "id": "helping_people", "kind": "activity", "aliases": ["ayudar a las personas", "ayudar personas"] },
+    { "id": "listening_people", "kind": "interaction", "aliases": ["escuchar a las personas", "escuchar personas"] },
+    { "id": "public_speaking", "kind": "activity", "aliases": ["hablar en publico"] },
+    { "id": "health", "kind": "subject", "aliases": ["salud"] },
+    { "id": "hospital_environment", "kind": "environment", "aliases": ["hospital", "hospitales", "trabajar en hospitales"] },
+    { "id": "blood_environment", "kind": "environment", "aliases": ["sangre", "trabajar con sangre"] },
+    { "id": "people_contact", "kind": "interaction", "aliases": ["tratar con personas", "trabajar con personas"] }
+  ]
+}

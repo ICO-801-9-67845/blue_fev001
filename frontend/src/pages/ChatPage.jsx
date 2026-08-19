@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   createChatRequest,
@@ -8,11 +8,11 @@ import {
   sendMessageRequest,
 } from "../api/chatApi";
 import AppHeader from "../components/AppHeader";
-import CharacterPanel from "../components/CharacterPanel";
 import ChatSidebar from "../components/ChatSidebar";
 import MessageComposer from "../components/MessageComposer";
 import MessageList from "../components/MessageList";
 import { useAuth } from "../hooks/useAuth";
+import { useAnalyticsSession } from "../hooks/useAnalyticsSession";
 
 export default function ChatPage() {
   const [chats, setChats] = useState([]);
@@ -21,13 +21,41 @@ export default function ChatPage() {
   const [loadingChats, setLoadingChats] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
+  const [activeActionId, setActiveActionId] = useState("");
+  const sendingGuardRef = useRef(false);
   const [error, setError] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(
+    () => typeof window !== "undefined" && window.innerWidth > 860,
+  );
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  useAnalyticsSession(user);
 
   useEffect(() => {
     loadChats();
   }, []);
+
+  useEffect(() => {
+    function handleResize() {
+      setIsSidebarOpen(window.innerWidth > 860);
+    }
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  function closeSidebarOnCompactScreens() {
+    if (typeof window !== "undefined" && window.innerWidth <= 860) {
+      setIsSidebarOpen(false);
+    }
+  }
+
+  function toggleSidebar() {
+    setIsSidebarOpen((current) => !current);
+  }
 
   async function refreshChats() {
     const nextChats = await getChatsRequest();
@@ -80,9 +108,15 @@ export default function ChatPage() {
     try {
       const chat = await createChatRequest();
       await loadChats(chat.id);
+      closeSidebarOnCompactScreens();
     } catch (requestError) {
       setError(requestError.response?.data?.message || "No fue posible crear la conversacion");
     }
+  }
+
+  async function handleSelectChat(chatId) {
+    await loadMessages(chatId);
+    closeSidebarOnCompactScreens();
   }
 
   async function handleDeleteChat(chatId) {
@@ -95,14 +129,29 @@ export default function ChatPage() {
     }
   }
 
-  async function handleSendMessage(content) {
+  async function handleSendMessage(
+    content,
+    action = null,
+    sourceActionMessageId = "",
+  ) {
+    if (sending || sendingGuardRef.current) {
+      return;
+    }
+
+    sendingGuardRef.current = true;
     let currentChatId = activeChatId;
 
     if (!currentChatId) {
-      const newChat = await createChatRequest();
-      currentChatId = newChat.id;
-      setActiveChatId(currentChatId);
-      setChats((current) => [newChat, ...current]);
+      try {
+        const newChat = await createChatRequest();
+        currentChatId = newChat.id;
+        setActiveChatId(currentChatId);
+        setChats((current) => [newChat, ...current]);
+      } catch (requestError) {
+        sendingGuardRef.current = false;
+        setError(requestError.response?.data?.message || "No fue posible crear la conversacion");
+        return;
+      }
     }
 
     const optimisticUserMessage = {
@@ -111,46 +160,94 @@ export default function ChatPage() {
       content,
     };
 
-    setMessages((current) => [...current, optimisticUserMessage]);
+    setMessages((current) => [
+      ...current.map((message) =>
+        message.id === sourceActionMessageId
+          ? {
+              ...message,
+              uiAction: {
+                ...message.uiAction,
+                status: "processing",
+              },
+            }
+          : message,
+      ),
+      optimisticUserMessage,
+    ]);
+    setActiveActionId(action?.actionId || "");
     setSending(true);
     setError("");
 
     try {
-      const result = await sendMessageRequest(currentChatId, content);
-      setMessages((current) => [
-        ...current.filter((message) => message.id !== optimisticUserMessage.id),
-        result.userMessage,
-        result.assistantMessage,
-      ]);
+      const result = await sendMessageRequest(currentChatId, content, action);
+      try {
+        const nextMessages = await getMessagesRequest(currentChatId);
+        setMessages(nextMessages);
+      } catch {
+        setMessages((current) => [
+          ...current.filter((message) => message.id !== optimisticUserMessage.id),
+          result.userMessage,
+          result.assistantMessage,
+        ]);
+      }
       const nextChats = await refreshChats();
       setChats(nextChats);
     } catch (requestError) {
       setMessages((current) =>
-        current.filter((message) => message.id !== optimisticUserMessage.id),
+        current
+          .filter((message) => message.id !== optimisticUserMessage.id)
+          .map((message) =>
+            message.id === sourceActionMessageId
+              ? {
+                  ...message,
+                  uiAction: {
+                    ...message.uiAction,
+                    status: "pending",
+                  },
+                }
+              : message,
+          ),
       );
       setError(requestError.response?.data?.message || "No fue posible enviar el mensaje");
     } finally {
+      sendingGuardRef.current = false;
+      setActiveActionId("");
       setSending(false);
     }
   }
 
+  async function handleEducativeAction(messageId, content, action) {
+    await handleSendMessage(content, action, messageId);
+  }
   function handleLogout() {
     logout();
     navigate("/login");
   }
 
   return (
-    <main className="chat-page">
+    <main className={`chat-page ${isSidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
+      <button
+        className="sidebar-overlay"
+        type="button"
+        aria-label="Cerrar historial"
+        onClick={() => setIsSidebarOpen(false)}
+      />
+
       <ChatSidebar
         chats={chats}
         activeChatId={activeChatId}
         onCreateChat={handleCreateChat}
-        onSelectChat={loadMessages}
+        onSelectChat={handleSelectChat}
         onDeleteChat={handleDeleteChat}
       />
 
       <section className="chat-main">
-        <AppHeader user={user} onLogout={handleLogout} />
+        <AppHeader
+          user={user}
+          onLogout={handleLogout}
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={toggleSidebar}
+        />
 
         <div className="chat-content">
           <div className="conversation-card">
@@ -159,13 +256,16 @@ export default function ChatPage() {
               <div className="app-shell-centered">Cargando conversacion...</div>
             ) : (
               <>
-                <MessageList messages={messages} isSending={sending} />
+                <MessageList
+                  messages={messages}
+                  isSending={sending}
+                  activeActionId={activeActionId}
+                  onEducativeAction={handleEducativeAction}
+                />
                 <MessageComposer disabled={sending} onSend={handleSendMessage} />
               </>
             )}
           </div>
-
-          <CharacterPanel />
         </div>
       </section>
     </main>

@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
@@ -7,15 +7,28 @@ import SchedulePage from "../pages/SchedulePage";
 import FocusPage from "../pages/FocusPage";
 import CvBuilderPage from "../pages/CvBuilderPage";
 import ToolsLayout from "../components/ToolsLayout";
+import AdminAnalyticsPage from "../pages/AdminAnalyticsPage";
+import FutureSimulatorPage from "../pages/FutureSimulatorPage";
+import CareerLabPage from "../pages/CareerLabPage";
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return <div className="app-shell-centered">Cargando...</div>;
   }
 
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+  return isAuthenticated ? (
+    children
+  ) : (
+    <Navigate
+      to={`/login?from=${encodeURIComponent(
+        `${location.pathname}${location.search}`,
+      )}`}
+      replace
+    />
+  );
 }
 
 function PublicRoute({ children }) {
@@ -68,6 +81,27 @@ export default function AppRouter() {
         <Route path="focus" element={<FocusPage />} />
         <Route path="cv" element={<CvBuilderPage />} />
       </Route>
+      <Route
+        path="/modo-2032"
+        element={<ProtectedRoute><FutureSimulatorPage /></ProtectedRoute>}
+      />
+      <Route path="/career-lab" element={<ProtectedRoute><CareerLabPage /></ProtectedRoute>} />
+      <Route
+        path="/admin/analytics"
+        element={
+          <ProtectedRoute>
+            <AdminAnalyticsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <Navigate to="/admin/analytics" replace />
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<Navigate to="/chat" replace />} />
     </Routes>
   );

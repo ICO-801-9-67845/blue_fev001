@@ -32,7 +32,12 @@ export const getMessages = asyncHandler(async (request, response) => {
 });
 
 export const postMessage = asyncHandler(async (request, response) => {
-  const result = await sendMessage(request.params.chatId, request.user.sub, request.body?.content);
+  const result = await sendMessage(
+    request.params.chatId,
+    request.user.sub,
+    request.body?.content,
+    request.body?.action,
+  );
   response.status(201).json({
     success: true,
     data: result,

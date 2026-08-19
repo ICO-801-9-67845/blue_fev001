@@ -1,0 +1,8 @@
+import assert from "node:assert/strict";
+import { CAREER_LABS, REFLECTION_VALUES, getCareerLab, publicLab } from "../src/config/careerLabDefinitions.js";
+assert.equal(CAREER_LABS.length, 6); assert.equal(new Set(CAREER_LABS.map((lab) => lab.key)).size, 6); assert.equal(getCareerLab("missing"), null); assert.deepEqual(REFLECTION_VALUES, ["BORED", "NEUTRAL", "INTERESTED", "LIKED", "WANT_MORE"]);
+let checks = 4; for (const lab of CAREER_LABS) { assert.equal(lab.version, 1); assert.ok(lab.steps.length >= 2); assert.ok(lab.skills.length >= 3); assert.ok(lab.careerTags.length >= 3); for (const step of lab.steps) { assert.ok(step.options.length >= 2); for (const option of step.options) { assert.ok(option.id); assert.ok(Object.values(option.scores).every((value) => Number.isInteger(value) && value >= 0)); checks += 2; } checks += 1; } const exposed = publicLab(lab); assert.ok(exposed.steps.every((step) => step.options.every((option) => !("scores" in option)))); checks += 5; }
+const forbiddenImports = ["@google/generative-ai", "ollamaProviderService", "aiProviderService", "aiService", "chatService", "memoryContextService", "memoryRefreshService", "embeddings"];
+const source = `${await import("node:fs").then(({ readFileSync }) => readFileSync(new URL("../src/services/careerLabService.js", import.meta.url), "utf8"))}${await import("node:fs").then(({ readFileSync }) => readFileSync(new URL("../src/config/careerLabDefinitions.js", import.meta.url), "utf8"))}`;
+for (const term of forbiddenImports) { assert.equal(source.includes(term), false, `AI dependency found: ${term}`); checks += 1; }
+console.log(`career lab engine tests: ${checks} passed; Gemini calls: 0; Ollama calls: 0`);
