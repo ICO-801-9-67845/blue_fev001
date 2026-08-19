@@ -79,6 +79,19 @@ export function createResumeId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+export function sanitizeResumeFilenamePart(value) {
+  const text = typeof value === "string" ? value.trim() : "";
+
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-+/g, "-")
+    .slice(0, 80)
+    .replace(/-+$/g, "");
+}
+
 function normalizeTextObject(value, defaults) {
   const source = isPlainObject(value) ? value : {};
 

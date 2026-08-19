@@ -1,3 +1,5 @@
+import { sanitizeResumeFilenamePart } from "./resumeUtils.js";
+
 const SPANISH_MONTHS = [
   "ene",
   "feb",
@@ -203,14 +205,7 @@ export function getSafePortfolioUrl(value) {
 }
 
 export function getResumePdfFilename(fullName) {
-  const safeName = cleanResumeText(fullName)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .replace(/-+/g, "-")
-    .slice(0, 80)
-    .replace(/-+$/g, "");
+  const safeName = sanitizeResumeFilenamePart(fullName);
 
   return safeName ? `CV-${safeName}.pdf` : "CV-Project-Blue.pdf";
 }

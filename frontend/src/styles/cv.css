@@ -33,7 +33,7 @@
 }
 
 .cv-privacy-panel {
-  width: min(100%, 310px);
+  width: min(100%, 380px);
   padding: 1rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -58,7 +58,7 @@
 }
 
 .cv-delete-all {
-  margin-top: 0.7rem;
+  margin-top: 0.9rem;
   padding: 0;
   border: 0;
   color: #a63048;
@@ -69,6 +69,146 @@
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
+}
+
+.cv-backup-controls {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.cv-backup-controls h2,
+.cv-import-confirmation h3 {
+  margin: 0;
+  color: var(--color-primary-dark);
+  font-size: 0.92rem;
+}
+
+.cv-backup-controls > div:first-child > p {
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+}
+
+.cv-backup-actions,
+.cv-import-actions {
+  margin-top: 0.7rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cv-backup-button {
+  min-width: 0;
+  min-height: 44px;
+  padding: 0.62rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  color: var(--color-primary);
+  background: var(--color-surface);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cv-backup-button svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.cv-backup-button:hover:not(:disabled) {
+  color: var(--color-primary-dark);
+  background: var(--color-bg);
+}
+
+.cv-backup-button:disabled {
+  color: var(--color-text-soft);
+  background: var(--color-bg);
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.cv-backup-file-input {
+  width: 1px;
+  height: 1px;
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.cv-backup-hint,
+.cv-backup-message {
+  margin-top: 0.55rem !important;
+  font-size: 0.78rem !important;
+}
+
+.cv-backup-message.is-error {
+  color: #a63048;
+  font-weight: 650;
+}
+
+.cv-backup-message.is-success {
+  color: #23633d;
+  font-weight: 700;
+}
+
+.cv-import-confirmation {
+  margin-top: 0.8rem;
+  padding: 0.8rem;
+  border: 1px solid rgba(77, 107, 255, 0.28);
+  border-radius: 12px;
+  background: var(--color-surface);
+}
+
+.cv-import-confirmation dl {
+  margin: 0.65rem 0;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.cv-import-confirmation dl > div {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(78px, auto) minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+.cv-import-confirmation dt {
+  color: var(--color-text-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.cv-import-confirmation dd {
+  min-width: 0;
+  margin: 0;
+  color: var(--color-text);
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.cv-import-confirmation > p {
+  color: #7f283c;
+  font-weight: 650;
+}
+
+.cv-import-actions .primary-button,
+.cv-import-actions .ghost-button {
+  min-height: 44px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.78rem;
 }
 
 .cv-builder-workspace {
@@ -794,6 +934,17 @@
   .cv-preview-actions p {
     max-width: none;
     text-align: left;
+  }
+
+  .cv-backup-actions,
+  .cv-import-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .cv-backup-button,
+  .cv-import-actions button {
+    width: 100%;
   }
 }
 

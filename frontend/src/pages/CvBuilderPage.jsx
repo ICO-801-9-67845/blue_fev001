@@ -7,6 +7,7 @@ import { CvCertificationsSection, CvCoursesSection, CvEducationSection } from ".
 import { CvExperienceSection, CvProjectsSection, CvVolunteeringSection } from "../components/cv/CvExperienceSections.jsx";
 import CvLanguagesSection from "../components/cv/CvLanguagesSection.jsx";
 import CvTextListSection from "../components/cv/CvTextListSection.jsx";
+import CvBackupControls from "../components/cv/CvBackupControls.jsx";
 import CvPreview from "../components/cv/preview/CvPreview.jsx";
 import "../styles/cv.css";
 
@@ -26,7 +27,7 @@ const SECTIONS = [
 
 export default function CvBuilderPage() {
   const { user } = useAuth();
-  const { resume, saveStatus, updateSection, clearResume } = useResumeBuilder(user.id);
+  const { resume, saveStatus, updateSection, clearResume, replaceResume } = useResumeBuilder(user.id);
   const [activeSection, setActiveSection] = useState("basics");
   const [viewMode, setViewMode] = useState("edit");
 
@@ -40,6 +41,15 @@ export default function CvBuilderPage() {
       clearResume();
       setActiveSection("basics");
     }
+  }
+
+  function handleImportResume(nextResume) {
+    const imported = replaceResume(nextResume);
+    if (imported) {
+      setActiveSection("basics");
+      setViewMode("edit");
+    }
+    return imported;
   }
 
   if (!resume) return <p className="cv-loading">Cargando tu CV…</p>;
@@ -73,6 +83,7 @@ export default function CvBuilderPage() {
             {saveStatus === "saved" && "Cambios guardados"}
             {saveStatus === "error" && "No fue posible guardar los cambios en este dispositivo."}
           </p>
+          <CvBackupControls resume={resume} onImport={handleImportResume} />
           <button type="button" className="cv-delete-all" onClick={handleDeleteResume}>Eliminar datos del CV</button>
         </div>
       </header>

@@ -4,7 +4,7 @@ import {
   removeResume,
   saveResume,
 } from "../storage/resumeStorage.js";
-import { createInitialResume } from "../utils/resumeUtils.js";
+import { createInitialResume, normalizeResume } from "../utils/resumeUtils.js";
 
 const SAVE_DELAY_MS = 650;
 
@@ -79,5 +79,28 @@ export function useResumeBuilder(userId) {
     return true;
   }, [userId]);
 
-  return { resume, saveStatus, updateSection, clearResume };
+  const replaceResume = useCallback(
+    (nextResume) => {
+      const normalizedResume = normalizeResume(nextResume);
+      const saved = saveResume(userId, normalizedResume);
+
+      if (!saved) {
+        setSaveStatus("error");
+        return false;
+      }
+
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = null;
+      }
+
+      resumeRef.current = normalizedResume;
+      setResume(normalizedResume);
+      setSaveStatus("saved");
+      return true;
+    },
+    [userId],
+  );
+
+  return { resume, saveStatus, updateSection, clearResume, replaceResume };
 }
