@@ -435,6 +435,22 @@ await test("31 close candidates after two signals ask one discriminant", async (
   assert.equal(h.messages.filter((message) => message.role === "assistant").length, 1);
   assert.equal(h.calls.gemini, 0);
 });
+await test("32 current engineering normalizes to undergraduate stage", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Estoy cursando Ingeniería Industrial");
+  assert.equal(h.chat.educativeState.vocationalProfileV2.currentAcademicStage, "licenciatura");
+});
+await test("33 completed engineering persists stage and field", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Ya terminé Ingeniería Mecatrónica");
+  assert.equal(h.chat.educativeState.vocationalProfileV2.completedAcademicStage, "licenciatura");
+  assert.ok(h.chat.educativeState.vocationalProfileV2.priorFields.includes("engineering"));
+});
+await test("34 aspirational engineering does not set current stage", async () => {
+  const h = createHarness();
+  await sendMessage(h.chat.id, h.chat.userId, "Quiero estudiar Ingeniería Civil");
+  assert.equal(h.chat.educativeState.vocationalProfileV2?.currentAcademicStage || null, null);
+});
 
 const passed = results.filter((item) => item.status === "PASS").length;
 const failed = results.length - passed;

@@ -21,13 +21,15 @@ Los pesos, thresholds, bandas de recencia, reglas de etapa, diversidad, pregunta
 
 ## Mapping y procedencia
 
-El generador procesa IDs y nombres canónicos en orden estable. Las excepciones semánticas preceden a reglas generales: ciberseguridad→ICT 061, veterinaria→0841, psicología→0313 y protección civil→1032, entre otras. CMPE e ISCED-F guardan independientemente `broad_field`, `narrow_field` o `detailed_field`; el nivel no se deduce de la longitud del código.
+El generador procesa IDs y nombres canónicos en orden estable. Las excepciones semánticas preceden a reglas generales: ciberseguridad→ICT 061, veterinaria→0841, psicología→0313 y protección civil→1032, entre otras. CMPE e ISCED-F guardan independientemente `broad_field`, `narrow_field` o `detailed_field`. ISCED-F aplica su jerarquía oficial: 2 dígitos broad, 3 narrow y 4 detailed; esta regla no se copia a CMPE, cuyos niveles se mantienen definidos por separado.
 
 Cada regla ocupacional declara `onetSocCodes`, `mappingConfidence`, `mappingRationale` y `mappingType`. La confianza es un juicio semántico explícito: una sola ocupación puede ser medium o low y un agregado puede ser high. El auditor reporta reglas coincidentes, fallbacks generales, términos ambiguos y confianza taxonómica baja.
 
 ## Evidencia, correcciones y migración
 
 La evidencia es el source of truth. Cada señal conserva concepto, dimensión (`interest`, `ability`, `preference`, `restriction`), polaridad, intensidad, fuente, revisión y fecha. Concepto + dimensión es la clave lógica: la señal reciente sustituye la anterior. Así, dificultad no borra interés; una corrección explícita sí reemplaza la señal de su dimensión. La migración v1→v2 conserva señales/exclusiones válidas.
+
+`SIGNAL_AFFINITY_ROUTES` evita aplanar dimensiones: interés consulta subjects (1.0), activities (0.9), workStyles (0.25) y contexts (0.2); habilidad consulta únicamente abilities (1.0); preferencia consulta workStyles (1.0), contexts (0.9) y activities (0.35); restricción consulta únicamente contexts (1.0) y `contextRestrictions` revisadas. Si un concepto aparece en varias rutas se usa la afinidad ponderada máxima, no la suma, y `scoreBreakdown.sourceDimensions` registra el origen efectivo.
 
 ## Fórmula y pesos
 
@@ -47,7 +49,7 @@ Recencia por distancia de revisión: 0–8 = 1; 9–20 = 0.85; 21–40 = 0.70; m
 
 ## Niveles y presentación
 
-Secundaria prioriza bachillerato/técnico; preparatoria, TSU/licenciatura/ingeniería; TSU, licenciatura/ingeniería; licenciatura, especialidad/maestría; maestría, doctorado. `currentAcademicStage` tiene precedencia; cuando no existe, `completedAcademicStage` define únicamente afinidad de la siguiente etapa (licenciatura→especialidad/maestría, maestría→doctorado), sin afirmar admisión ni prerrequisitos.
+Secundaria prioriza bachillerato/técnico; preparatoria, TSU/licenciatura/ingeniería; TSU, licenciatura/ingeniería; licenciatura, especialidad/maestría; maestría, doctorado. Una ingeniería explícitamente cursada o terminada se normaliza como etapa `licenciatura` y campo `engineering`; expresiones aspiracionales no actualizan la etapa. `currentAcademicStage` tiene precedencia; cuando no existe, `completedAcademicStage` define únicamente afinidad de la siguiente etapa (licenciatura→especialidad/maestría, maestría→doctorado), sin afirmar admisión ni prerrequisitos.
 
 Para especialidad, maestría y doctorado, `priorFields` compatible suma `field_continuity_match` (+10). Un campo previo conocido pero distinto produce `field_continuity_uncertain` (-3), nunca un bloqueo. Si el campo previo es desconocido no se presume. Bachillerato general usa campo/trayectoria, no una ocupación falsa.
 
