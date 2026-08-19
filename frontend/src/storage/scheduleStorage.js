@@ -5,6 +5,7 @@ import {
   removeStoredValue,
   writeStoredJson,
 } from "./storageUtils.js";
+import { isValidScheduleActivity } from "../utils/scheduleUtils.js";
 
 const SCHEDULE_STORAGE_NAMESPACE = "blue:tools:schedule:v1";
 
@@ -15,7 +16,11 @@ function createInitialSchedule() {
 }
 
 function isValidSchedule(value) {
-  return isPlainObject(value) && Array.isArray(value.activities);
+  return (
+    isPlainObject(value) &&
+    Array.isArray(value.activities) &&
+    value.activities.every(isValidScheduleActivity)
+  );
 }
 
 function getStorageKey(userId) {
